@@ -7,7 +7,9 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('RestoranApp'), findsOneWidget);
-    expect(find.text('Modern restoran operasyon deneyimi'), findsOneWidget);
-    expect(find.text('Yol haritasini kur'), findsOneWidget);
+    expect(find.text('Musteri girisi'), findsWidgets);
+    expect(find.text('Garson girisi'), findsWidgets);
+    expect(find.text('Yonetici girisi'), findsWidgets);
+    expect(find.text('Musteri olarak devam et'), findsOneWidget);
   });
 }

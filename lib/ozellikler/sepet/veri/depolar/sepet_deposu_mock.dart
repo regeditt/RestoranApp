@@ -1,4 +1,5 @@
 import 'package:restoran_app/ozellikler/menu/alan/depolar/menu_deposu.dart';
+import 'package:restoran_app/ozellikler/menu/alan/varliklar/urun_secenegi_varligi.dart';
 import 'package:restoran_app/ozellikler/menu/alan/varliklar/urun_varligi.dart';
 import 'package:restoran_app/ozellikler/sepet/alan/depolar/sepet_deposu.dart';
 import 'package:restoran_app/ozellikler/sepet/alan/varliklar/sepet_kalemi_varligi.dart';
@@ -22,7 +23,9 @@ class SepetDeposuMock implements SepetDeposu {
               ? SepetKalemiVarligi(
                   id: kalem.id,
                   urun: kalem.urun,
+                  birimFiyat: kalem.birimFiyat,
                   adet: adet,
+                  secenekAdi: kalem.secenekAdi,
                   notMetni: kalem.notMetni,
                 )
               : kalem,
@@ -57,6 +60,7 @@ class SepetDeposuMock implements SepetDeposu {
   Future<SepetVarligi> urunEkle({
     required String urunId,
     required int adet,
+    String? secenekId,
     String? notMetni,
   }) async {
     final UrunVarligi? urun = await _menuDeposu.urunGetir(urunId);
@@ -65,10 +69,17 @@ class SepetDeposuMock implements SepetDeposu {
       throw StateError('Urun bulunamadi');
     }
 
+    final UrunSecenegiVarligi? secilenSecenek = _secenekSec(
+      urun: urun,
+      secenekId: secenekId,
+    );
+
     final SepetKalemiVarligi yeniKalem = SepetKalemiVarligi(
       id: 'kalem_${_sepet.kalemler.length + 1}',
       urun: urun,
+      birimFiyat: urun.fiyat + (secilenSecenek?.fiyatFarki ?? 0),
       adet: adet,
+      secenekAdi: secilenSecenek?.ad,
       notMetni: notMetni,
     );
 
@@ -78,5 +89,26 @@ class SepetDeposuMock implements SepetDeposu {
     );
 
     return _sepet;
+  }
+
+  UrunSecenegiVarligi? _secenekSec({
+    required UrunVarligi urun,
+    required String? secenekId,
+  }) {
+    if (urun.secenekler.isEmpty) {
+      return null;
+    }
+
+    if (secenekId == null) {
+      return urun.varsayilanSecenek;
+    }
+
+    for (final UrunSecenegiVarligi secenek in urun.secenekler) {
+      if (secenek.id == secenekId) {
+        return secenek;
+      }
+    }
+
+    return urun.varsayilanSecenek;
   }
 }

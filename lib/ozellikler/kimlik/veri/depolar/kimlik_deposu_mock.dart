@@ -20,13 +20,17 @@ class KimlikDeposuMock implements KimlikDeposu {
   Future<KullaniciVarligi> girisYap({
     required String telefon,
     required String sifre,
+    KullaniciRolu rol = KullaniciRolu.musteri,
+    String? adSoyad,
+    String? adresMetni,
   }) async {
     _aktifKullanici = KullaniciVarligi(
       id: 'kul_001',
-      adSoyad: 'Deneme Kullanici',
+      adSoyad: adSoyad ?? 'Deneme Kullanici',
       telefon: telefon,
       eposta: 'deneme@restoranapp.com',
-      rol: KullaniciRolu.musteri,
+      adresMetni: adresMetni,
+      rol: rol,
     );
 
     return _aktifKullanici!;
@@ -37,11 +41,13 @@ class KimlikDeposuMock implements KimlikDeposu {
     required String adSoyad,
     required String telefon,
     String? eposta,
+    String? adres,
   }) async {
     return MisafirBilgisiVarligi(
       adSoyad: adSoyad,
       telefon: telefon,
       eposta: eposta,
+      adres: adres,
     );
   }
 }

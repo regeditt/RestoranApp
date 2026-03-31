@@ -5,6 +5,7 @@ class SiparisKalemiVarligi {
     required this.urunAdi,
     required this.birimFiyat,
     required this.adet,
+    this.secenekAdi,
     this.notMetni,
   });
 
@@ -13,6 +14,7 @@ class SiparisKalemiVarligi {
   final String urunAdi;
   final double birimFiyat;
   final int adet;
+  final String? secenekAdi;
   final String? notMetni;
 
   double get araToplam => birimFiyat * adet;

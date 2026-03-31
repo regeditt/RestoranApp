@@ -10,11 +10,13 @@ class MisafirOlusturUseCase {
     required String adSoyad,
     required String telefon,
     String? eposta,
+    String? adres,
   }) {
     return _kimlikDeposu.misafirOlustur(
       adSoyad: adSoyad,
       telefon: telefon,
       eposta: eposta,
+      adres: adres,
     );
   }
 }

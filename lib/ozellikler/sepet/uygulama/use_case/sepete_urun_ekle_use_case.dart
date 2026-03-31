@@ -9,11 +9,13 @@ class SepeteUrunEkleUseCase {
   Future<SepetVarligi> call({
     required String urunId,
     int adet = 1,
+    String? secenekId,
     String? notMetni,
   }) {
     return _sepetDeposu.urunEkle(
       urunId: urunId,
       adet: adet,
+      secenekId: secenekId,
       notMetni: notMetni,
     );
   }

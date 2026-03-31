@@ -7,6 +7,7 @@ class KullaniciVarligi {
     required this.telefon,
     required this.rol,
     this.eposta,
+    this.adresMetni,
     this.aktifMi = true,
   });
 
@@ -14,6 +15,7 @@ class KullaniciVarligi {
   final String adSoyad;
   final String telefon;
   final String? eposta;
+  final String? adresMetni;
   final KullaniciRolu rol;
   final bool aktifMi;
 }

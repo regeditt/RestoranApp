@@ -1,3 +1,4 @@
 {
-    "cmake.sourceDirectory": "C:/Users/Admin/AndroidStudioProjects/RestoranApp/linux"
+    "cmake.sourceDirectory": "C:/Users/Admin/AndroidStudioProjects/RestoranApp/linux",
+    "dart.mcpServer": true
 }

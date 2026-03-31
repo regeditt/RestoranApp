@@ -16,4 +16,4 @@ Bu proje, Flutter ile gelistirilen cok platformlu restoran yonetim ve siparis uy
 - `lib/uygulama_kabugu`: uygulama giris kabugu
 - `lib/ozellikler`: feature bazli moduller
 
-Kurallar icin [RULES.md](RULES.md) dosyasina bakilmalidir.
+Kurallar ve mevcut gelistirme plani icin [RULES.md](RULES.md) dosyasina bakilmalidir.

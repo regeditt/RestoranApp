@@ -13,6 +13,9 @@ class SiparisVarligi {
     required this.kalemler,
     required this.olusturmaTarihi,
     this.adresMetni,
+    this.masaNo,
+    this.bolumAdi,
+    this.kaynak,
   });
 
   final String id;
@@ -23,6 +26,9 @@ class SiparisVarligi {
   final List<SiparisKalemiVarligi> kalemler;
   final DateTime olusturmaTarihi;
   final String? adresMetni;
+  final String? masaNo;
+  final String? bolumAdi;
+  final String? kaynak;
 
   double get toplamTutar =>
       kalemler.fold<double>(0, (toplam, kalem) => toplam + kalem.araToplam);

@@ -1,20 +1,56 @@
 import 'package:restoran_app/ozellikler/kimlik/alan/depolar/kimlik_deposu.dart';
 import 'package:restoran_app/ozellikler/kimlik/uygulama/use_case/aktif_kullanici_getir_use_case.dart';
+import 'package:restoran_app/ozellikler/kimlik/uygulama/use_case/cikis_yap_use_case.dart';
+import 'package:restoran_app/ozellikler/kimlik/uygulama/use_case/giris_yap_use_case.dart';
 import 'package:restoran_app/ozellikler/kimlik/uygulama/use_case/misafir_olustur_use_case.dart';
 import 'package:restoran_app/ozellikler/kimlik/veri/depolar/kimlik_deposu_mock.dart';
 import 'package:restoran_app/ozellikler/menu/alan/depolar/menu_deposu.dart';
+import 'package:restoran_app/ozellikler/menu/uygulama/use_case/kategori_ekle_use_case.dart';
+import 'package:restoran_app/ozellikler/menu/uygulama/use_case/kategori_guncelle_use_case.dart';
+import 'package:restoran_app/ozellikler/menu/uygulama/use_case/kategori_sil_use_case.dart';
 import 'package:restoran_app/ozellikler/menu/uygulama/use_case/kategoriye_gore_urunleri_getir_use_case.dart';
 import 'package:restoran_app/ozellikler/menu/uygulama/use_case/kategorileri_getir_use_case.dart';
+import 'package:restoran_app/ozellikler/menu/uygulama/use_case/urun_ekle_use_case.dart';
+import 'package:restoran_app/ozellikler/menu/uygulama/use_case/urun_guncelle_use_case.dart';
+import 'package:restoran_app/ozellikler/menu/uygulama/use_case/urun_sil_use_case.dart';
 import 'package:restoran_app/ozellikler/menu/uygulama/use_case/urunleri_getir_use_case.dart';
 import 'package:restoran_app/ozellikler/menu/veri/depolar/menu_deposu_mock.dart';
 import 'package:restoran_app/ozellikler/sepet/alan/depolar/sepet_deposu.dart';
 import 'package:restoran_app/ozellikler/sepet/uygulama/use_case/sepete_urun_ekle_use_case.dart';
 import 'package:restoran_app/ozellikler/sepet/uygulama/use_case/sepeti_getir_use_case.dart';
+import 'package:restoran_app/ozellikler/sepet/uygulama/use_case/sepeti_temizle_use_case.dart';
 import 'package:restoran_app/ozellikler/sepet/veri/depolar/sepet_deposu_mock.dart';
 import 'package:restoran_app/ozellikler/siparis/alan/depolar/siparis_deposu.dart';
 import 'package:restoran_app/ozellikler/siparis/uygulama/use_case/siparis_olustur_use_case.dart';
+import 'package:restoran_app/ozellikler/siparis/uygulama/use_case/siparisi_yazdir_use_case.dart';
 import 'package:restoran_app/ozellikler/siparis/uygulama/use_case/siparisleri_getir_use_case.dart';
 import 'package:restoran_app/ozellikler/siparis/veri/depolar/siparis_deposu_mock.dart';
+import 'package:restoran_app/ozellikler/stok/alan/depolar/stok_deposu.dart';
+import 'package:restoran_app/ozellikler/stok/uygulama/use_case/hammadde_ekle_use_case.dart';
+import 'package:restoran_app/ozellikler/stok/uygulama/use_case/hammadde_guncelle_use_case.dart';
+import 'package:restoran_app/ozellikler/stok/uygulama/use_case/hammaddeleri_getir_use_case.dart';
+import 'package:restoran_app/ozellikler/stok/uygulama/use_case/siparise_gore_stok_dus_use_case.dart';
+import 'package:restoran_app/ozellikler/stok/uygulama/use_case/stok_ozeti_getir_use_case.dart';
+import 'package:restoran_app/ozellikler/stok/veri/depolar/stok_deposu_mock.dart';
+import 'package:restoran_app/ozellikler/yonetim/alan/depolar/personel_deposu.dart';
+import 'package:restoran_app/ozellikler/yonetim/alan/depolar/salon_plani_deposu.dart';
+import 'package:restoran_app/ozellikler/yonetim/alan/depolar/yazici_deposu.dart';
+import 'package:restoran_app/ozellikler/yonetim/uygulama/use_case/masa_ekle_use_case.dart';
+import 'package:restoran_app/ozellikler/yonetim/uygulama/use_case/masa_guncelle_use_case.dart';
+import 'package:restoran_app/ozellikler/yonetim/uygulama/use_case/masa_sil_use_case.dart';
+import 'package:restoran_app/ozellikler/yonetim/uygulama/use_case/personelleri_getir_use_case.dart';
+import 'package:restoran_app/ozellikler/yonetim/uygulama/use_case/salon_bolumu_ekle_use_case.dart';
+import 'package:restoran_app/ozellikler/yonetim/uygulama/use_case/salon_bolumu_guncelle_use_case.dart';
+import 'package:restoran_app/ozellikler/yonetim/uygulama/use_case/salon_bolumu_sil_use_case.dart';
+import 'package:restoran_app/ozellikler/yonetim/uygulama/use_case/salon_bolumlerini_getir_use_case.dart';
+import 'package:restoran_app/ozellikler/yonetim/uygulama/use_case/sistem_yazicilarini_getir_use_case.dart';
+import 'package:restoran_app/ozellikler/yonetim/uygulama/use_case/yazici_ekle_use_case.dart';
+import 'package:restoran_app/ozellikler/yonetim/uygulama/use_case/yazici_guncelle_use_case.dart';
+import 'package:restoran_app/ozellikler/yonetim/uygulama/use_case/yazici_sil_use_case.dart';
+import 'package:restoran_app/ozellikler/yonetim/uygulama/use_case/yazicilari_getir_use_case.dart';
+import 'package:restoran_app/ozellikler/yonetim/veri/depolar/personel_deposu_mock.dart';
+import 'package:restoran_app/ozellikler/yonetim/veri/depolar/salon_plani_deposu_mock.dart';
+import 'package:restoran_app/ozellikler/yonetim/veri/depolar/yazici_deposu_mock.dart';
 
 class ServisKaydi {
   ServisKaydi._() {
@@ -22,18 +58,52 @@ class ServisKaydi {
     _kimlikDeposu = KimlikDeposuMock();
     _sepetDeposu = SepetDeposuMock(_menuDeposu);
     _siparisDeposu = SiparisDeposuMock();
+    _yaziciDeposu = YaziciDeposuMock();
+    _personelDeposu = PersonelDeposuMock();
+    _salonPlaniDeposu = SalonPlaniDeposuMock();
+    _stokDeposu = StokDeposuMock();
 
     aktifKullaniciGetirUseCase = AktifKullaniciGetirUseCase(_kimlikDeposu);
+    girisYapUseCase = GirisYapUseCase(_kimlikDeposu);
+    cikisYapUseCase = CikisYapUseCase(_kimlikDeposu);
     misafirOlusturUseCase = MisafirOlusturUseCase(_kimlikDeposu);
     kategorileriGetirUseCase = KategorileriGetirUseCase(_menuDeposu);
+    kategoriEkleUseCase = KategoriEkleUseCase(_menuDeposu);
+    kategoriGuncelleUseCase = KategoriGuncelleUseCase(_menuDeposu);
+    kategoriSilUseCase = KategoriSilUseCase(_menuDeposu);
     kategoriyeGoreUrunleriGetirUseCase = KategoriyeGoreUrunleriGetirUseCase(
       _menuDeposu,
     );
     urunleriGetirUseCase = UrunleriGetirUseCase(_menuDeposu);
+    urunEkleUseCase = UrunEkleUseCase(_menuDeposu);
+    urunGuncelleUseCase = UrunGuncelleUseCase(_menuDeposu);
+    urunSilUseCase = UrunSilUseCase(_menuDeposu);
     sepetiGetirUseCase = SepetiGetirUseCase(_sepetDeposu);
     sepeteUrunEkleUseCase = SepeteUrunEkleUseCase(_sepetDeposu);
+    sepetiTemizleUseCase = SepetiTemizleUseCase(_sepetDeposu);
     siparisOlusturUseCase = SiparisOlusturUseCase(_siparisDeposu);
+    siparisiYazdirUseCase = SiparisiYazdirUseCase(_yaziciDeposu);
     siparisleriGetirUseCase = SiparisleriGetirUseCase(_siparisDeposu);
+    yazicilariGetirUseCase = YazicilariGetirUseCase(_yaziciDeposu);
+    yaziciEkleUseCase = YaziciEkleUseCase(_yaziciDeposu);
+    yaziciGuncelleUseCase = YaziciGuncelleUseCase(_yaziciDeposu);
+    yaziciSilUseCase = YaziciSilUseCase(_yaziciDeposu);
+    sistemYazicilariniGetirUseCase = const SistemYazicilariniGetirUseCase();
+    personelleriGetirUseCase = PersonelleriGetirUseCase(_personelDeposu);
+    salonBolumleriniGetirUseCase = SalonBolumleriniGetirUseCase(
+      _salonPlaniDeposu,
+    );
+    salonBolumuEkleUseCase = SalonBolumuEkleUseCase(_salonPlaniDeposu);
+    salonBolumuGuncelleUseCase = SalonBolumuGuncelleUseCase(_salonPlaniDeposu);
+    salonBolumuSilUseCase = SalonBolumuSilUseCase(_salonPlaniDeposu);
+    masaEkleUseCase = MasaEkleUseCase(_salonPlaniDeposu);
+    masaGuncelleUseCase = MasaGuncelleUseCase(_salonPlaniDeposu);
+    masaSilUseCase = MasaSilUseCase(_salonPlaniDeposu);
+    hammaddeleriGetirUseCase = HammaddeleriGetirUseCase(_stokDeposu);
+    hammaddeEkleUseCase = HammaddeEkleUseCase(_stokDeposu);
+    hammaddeGuncelleUseCase = HammaddeGuncelleUseCase(_stokDeposu);
+    stokOzetiGetirUseCase = StokOzetiGetirUseCase(_stokDeposu, _menuDeposu);
+    sipariseGoreStokDusUseCase = SipariseGoreStokDusUseCase(_stokDeposu);
   }
 
   static final ServisKaydi ortak = ServisKaydi._();
@@ -42,15 +112,47 @@ class ServisKaydi {
   late final MenuDeposu _menuDeposu;
   late final SepetDeposu _sepetDeposu;
   late final SiparisDeposu _siparisDeposu;
+  late final YaziciDeposu _yaziciDeposu;
+  late final PersonelDeposu _personelDeposu;
+  late final SalonPlaniDeposu _salonPlaniDeposu;
+  late final StokDeposu _stokDeposu;
 
   late final AktifKullaniciGetirUseCase aktifKullaniciGetirUseCase;
+  late final GirisYapUseCase girisYapUseCase;
+  late final CikisYapUseCase cikisYapUseCase;
   late final MisafirOlusturUseCase misafirOlusturUseCase;
   late final KategorileriGetirUseCase kategorileriGetirUseCase;
+  late final KategoriEkleUseCase kategoriEkleUseCase;
+  late final KategoriGuncelleUseCase kategoriGuncelleUseCase;
+  late final KategoriSilUseCase kategoriSilUseCase;
   late final KategoriyeGoreUrunleriGetirUseCase
   kategoriyeGoreUrunleriGetirUseCase;
   late final UrunleriGetirUseCase urunleriGetirUseCase;
+  late final UrunEkleUseCase urunEkleUseCase;
+  late final UrunGuncelleUseCase urunGuncelleUseCase;
+  late final UrunSilUseCase urunSilUseCase;
   late final SepetiGetirUseCase sepetiGetirUseCase;
   late final SepeteUrunEkleUseCase sepeteUrunEkleUseCase;
+  late final SepetiTemizleUseCase sepetiTemizleUseCase;
   late final SiparisOlusturUseCase siparisOlusturUseCase;
+  late final SiparisiYazdirUseCase siparisiYazdirUseCase;
   late final SiparisleriGetirUseCase siparisleriGetirUseCase;
+  late final YazicilariGetirUseCase yazicilariGetirUseCase;
+  late final YaziciEkleUseCase yaziciEkleUseCase;
+  late final YaziciGuncelleUseCase yaziciGuncelleUseCase;
+  late final YaziciSilUseCase yaziciSilUseCase;
+  late final SistemYazicilariniGetirUseCase sistemYazicilariniGetirUseCase;
+  late final PersonelleriGetirUseCase personelleriGetirUseCase;
+  late final SalonBolumleriniGetirUseCase salonBolumleriniGetirUseCase;
+  late final SalonBolumuEkleUseCase salonBolumuEkleUseCase;
+  late final SalonBolumuGuncelleUseCase salonBolumuGuncelleUseCase;
+  late final SalonBolumuSilUseCase salonBolumuSilUseCase;
+  late final MasaEkleUseCase masaEkleUseCase;
+  late final MasaGuncelleUseCase masaGuncelleUseCase;
+  late final MasaSilUseCase masaSilUseCase;
+  late final HammaddeleriGetirUseCase hammaddeleriGetirUseCase;
+  late final HammaddeEkleUseCase hammaddeEkleUseCase;
+  late final HammaddeGuncelleUseCase hammaddeGuncelleUseCase;
+  late final StokOzetiGetirUseCase stokOzetiGetirUseCase;
+  late final SipariseGoreStokDusUseCase sipariseGoreStokDusUseCase;
 }

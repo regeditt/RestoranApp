@@ -6,6 +6,7 @@ abstract class SepetDeposu {
   Future<SepetVarligi> urunEkle({
     required String urunId,
     required int adet,
+    String? secenekId,
     String? notMetni,
   });
 
