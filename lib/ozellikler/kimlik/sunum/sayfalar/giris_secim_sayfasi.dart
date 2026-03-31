@@ -84,7 +84,12 @@ class _GirisSecimSayfasiState extends State<GirisSecimSayfasi> {
       }
 
       Navigator.of(context).pushReplacementNamed(
-        hedef == _GirisHedefi.pos ? RotaYapisi.pos : RotaYapisi.yonetimPaneli,
+        switch (hedef) {
+          _GirisHedefi.pos => RotaYapisi.pos,
+          _GirisHedefi.yonetim => RotaYapisi.yonetimPaneli,
+          _GirisHedefi.mutfak => RotaYapisi.mutfak,
+          _GirisHedefi.qrMenu => RotaYapisi.qrMenu,
+        },
       );
     } finally {
       if (mounted) {
@@ -236,9 +241,10 @@ class _GirisSecimSayfasiState extends State<GirisSecimSayfasi> {
                               ),
                             )
                           else
-                            Row(
+                            Column(
                               children: [
-                                Expanded(
+                                SizedBox(
+                                  width: double.infinity,
                                   child: FilledButton(
                                     onPressed: _islemde
                                         ? null
@@ -258,8 +264,30 @@ class _GirisSecimSayfasiState extends State<GirisSecimSayfasi> {
                                     ),
                                   ),
                                 ),
-                                const SizedBox(width: 12),
-                                Expanded(
+                                const SizedBox(height: 12),
+                                SizedBox(
+                                  width: double.infinity,
+                                  child: OutlinedButton(
+                                    onPressed: _islemde
+                                        ? null
+                                        : () => _devamEt(
+                                            hedef: _GirisHedefi.mutfak,
+                                          ),
+                                    style: OutlinedButton.styleFrom(
+                                      foregroundColor: const Color(0xFF241036),
+                                      side: const BorderSide(
+                                        color: Color(0xFF241036),
+                                      ),
+                                      padding: const EdgeInsets.symmetric(
+                                        vertical: 16,
+                                      ),
+                                    ),
+                                    child: const Text('Mutfak ekranina git'),
+                                  ),
+                                ),
+                                const SizedBox(height: 12),
+                                SizedBox(
+                                  width: double.infinity,
                                   child: OutlinedButton(
                                     onPressed: _islemde
                                         ? null
@@ -318,7 +346,7 @@ enum _GirisModu {
   final String butonMetni;
 }
 
-enum _GirisHedefi { qrMenu, pos, yonetim }
+enum _GirisHedefi { qrMenu, pos, yonetim, mutfak }
 
 class _RolKarti extends StatelessWidget {
   const _RolKarti({

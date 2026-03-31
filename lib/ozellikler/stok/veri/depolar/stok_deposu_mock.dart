@@ -63,7 +63,7 @@ class StokDeposuMock implements StokDeposu {
   ];
 
   final Map<String, List<ReceteKalemiVarligi>> _receteler =
-      const <String, List<ReceteKalemiVarligi>>{
+      <String, List<ReceteKalemiVarligi>>{
         'urn_001': <ReceteKalemiVarligi>[
           ReceteKalemiVarligi(hammaddeId: 'ham_001', miktar: 1),
           ReceteKalemiVarligi(hammaddeId: 'ham_002', miktar: 1),
@@ -92,6 +92,14 @@ class StokDeposuMock implements StokDeposu {
   @override
   Future<List<ReceteKalemiVarligi>> receteyiGetir(String urunId) async {
     return _receteler[urunId] ?? const <ReceteKalemiVarligi>[];
+  }
+
+  @override
+  Future<void> receteyiKaydet(
+    String urunId,
+    List<ReceteKalemiVarligi> recete,
+  ) async {
+    _receteler[urunId] = List<ReceteKalemiVarligi>.from(recete);
   }
 
   @override

@@ -22,6 +22,7 @@ import 'package:restoran_app/ozellikler/sepet/uygulama/use_case/sepeti_temizle_u
 import 'package:restoran_app/ozellikler/sepet/veri/depolar/sepet_deposu_mock.dart';
 import 'package:restoran_app/ozellikler/siparis/alan/depolar/siparis_deposu.dart';
 import 'package:restoran_app/ozellikler/siparis/uygulama/use_case/siparis_olustur_use_case.dart';
+import 'package:restoran_app/ozellikler/siparis/uygulama/use_case/siparis_durumu_guncelle_use_case.dart';
 import 'package:restoran_app/ozellikler/siparis/uygulama/use_case/siparisi_yazdir_use_case.dart';
 import 'package:restoran_app/ozellikler/siparis/uygulama/use_case/siparisleri_getir_use_case.dart';
 import 'package:restoran_app/ozellikler/siparis/veri/depolar/siparis_deposu_mock.dart';
@@ -29,6 +30,8 @@ import 'package:restoran_app/ozellikler/stok/alan/depolar/stok_deposu.dart';
 import 'package:restoran_app/ozellikler/stok/uygulama/use_case/hammadde_ekle_use_case.dart';
 import 'package:restoran_app/ozellikler/stok/uygulama/use_case/hammadde_guncelle_use_case.dart';
 import 'package:restoran_app/ozellikler/stok/uygulama/use_case/hammaddeleri_getir_use_case.dart';
+import 'package:restoran_app/ozellikler/stok/uygulama/use_case/receteyi_getir_use_case.dart';
+import 'package:restoran_app/ozellikler/stok/uygulama/use_case/receteyi_kaydet_use_case.dart';
 import 'package:restoran_app/ozellikler/stok/uygulama/use_case/siparise_gore_stok_dus_use_case.dart';
 import 'package:restoran_app/ozellikler/stok/uygulama/use_case/stok_ozeti_getir_use_case.dart';
 import 'package:restoran_app/ozellikler/stok/veri/depolar/stok_deposu_mock.dart';
@@ -73,8 +76,9 @@ class ServisKaydi {
     kategoriSilUseCase = KategoriSilUseCase(_menuDeposu);
     kategoriyeGoreUrunleriGetirUseCase = KategoriyeGoreUrunleriGetirUseCase(
       _menuDeposu,
+      _stokDeposu,
     );
-    urunleriGetirUseCase = UrunleriGetirUseCase(_menuDeposu);
+    urunleriGetirUseCase = UrunleriGetirUseCase(_menuDeposu, _stokDeposu);
     urunEkleUseCase = UrunEkleUseCase(_menuDeposu);
     urunGuncelleUseCase = UrunGuncelleUseCase(_menuDeposu);
     urunSilUseCase = UrunSilUseCase(_menuDeposu);
@@ -82,6 +86,7 @@ class ServisKaydi {
     sepeteUrunEkleUseCase = SepeteUrunEkleUseCase(_sepetDeposu);
     sepetiTemizleUseCase = SepetiTemizleUseCase(_sepetDeposu);
     siparisOlusturUseCase = SiparisOlusturUseCase(_siparisDeposu);
+    siparisDurumuGuncelleUseCase = SiparisDurumuGuncelleUseCase(_siparisDeposu);
     siparisiYazdirUseCase = SiparisiYazdirUseCase(_yaziciDeposu);
     siparisleriGetirUseCase = SiparisleriGetirUseCase(_siparisDeposu);
     yazicilariGetirUseCase = YazicilariGetirUseCase(_yaziciDeposu);
@@ -102,6 +107,8 @@ class ServisKaydi {
     hammaddeleriGetirUseCase = HammaddeleriGetirUseCase(_stokDeposu);
     hammaddeEkleUseCase = HammaddeEkleUseCase(_stokDeposu);
     hammaddeGuncelleUseCase = HammaddeGuncelleUseCase(_stokDeposu);
+    receteyiGetirUseCase = ReceteyiGetirUseCase(_stokDeposu);
+    receteyiKaydetUseCase = ReceteyiKaydetUseCase(_stokDeposu);
     stokOzetiGetirUseCase = StokOzetiGetirUseCase(_stokDeposu, _menuDeposu);
     sipariseGoreStokDusUseCase = SipariseGoreStokDusUseCase(_stokDeposu);
   }
@@ -135,6 +142,7 @@ class ServisKaydi {
   late final SepeteUrunEkleUseCase sepeteUrunEkleUseCase;
   late final SepetiTemizleUseCase sepetiTemizleUseCase;
   late final SiparisOlusturUseCase siparisOlusturUseCase;
+  late final SiparisDurumuGuncelleUseCase siparisDurumuGuncelleUseCase;
   late final SiparisiYazdirUseCase siparisiYazdirUseCase;
   late final SiparisleriGetirUseCase siparisleriGetirUseCase;
   late final YazicilariGetirUseCase yazicilariGetirUseCase;
@@ -153,6 +161,8 @@ class ServisKaydi {
   late final HammaddeleriGetirUseCase hammaddeleriGetirUseCase;
   late final HammaddeEkleUseCase hammaddeEkleUseCase;
   late final HammaddeGuncelleUseCase hammaddeGuncelleUseCase;
+  late final ReceteyiGetirUseCase receteyiGetirUseCase;
+  late final ReceteyiKaydetUseCase receteyiKaydetUseCase;
   late final StokOzetiGetirUseCase stokOzetiGetirUseCase;
   late final SipariseGoreStokDusUseCase sipariseGoreStokDusUseCase;
 }

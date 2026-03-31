@@ -6,6 +6,11 @@ abstract class StokDeposu {
 
   Future<List<ReceteKalemiVarligi>> receteyiGetir(String urunId);
 
+  Future<void> receteyiKaydet(
+    String urunId,
+    List<ReceteKalemiVarligi> recete,
+  );
+
   Future<void> hammaddeEkle(HammaddeStokVarligi hammadde);
 
   Future<void> hammaddeGuncelle(HammaddeStokVarligi hammadde);

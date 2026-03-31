@@ -18,10 +18,14 @@ class KritikMalzemeVarligi {
   const KritikMalzemeVarligi({
     required this.ad,
     required this.kalanMiktarMetni,
+    required this.uyariEtiketi,
+    required this.aciliyetOrani,
   });
 
   final String ad;
   final String kalanMiktarMetni;
+  final String uyariEtiketi;
+  final double aciliyetOrani;
 }
 
 class MenuMaliyetVarligi {
@@ -30,10 +34,12 @@ class MenuMaliyetVarligi {
     required this.satisFiyati,
     required this.receteMaliyeti,
     required this.karMarjiOrani,
+    required this.uretilebilirAdet,
   });
 
   final String urunAdi;
   final double satisFiyati;
   final double receteMaliyeti;
   final double karMarjiOrani;
+  final int uretilebilirAdet;
 }

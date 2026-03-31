@@ -40,6 +40,12 @@ class _MusteriMenuSayfasiState extends State<MusteriMenuSayfasi> {
   }
 
   Future<void> _verileriYukle() async {
+    if (mounted) {
+      setState(() {
+        _yukleniyor = true;
+      });
+    }
+
     try {
       final List<KategoriVarligi> kategoriler = await _servisKaydi
           .kategorileriGetirUseCase();
@@ -121,6 +127,11 @@ class _MusteriMenuSayfasiState extends State<MusteriMenuSayfasi> {
     String? secenekId,
     String? notMetni,
   }) async {
+    if (!urun.stoktaMi) {
+      _hataBildir('${urun.ad} su an stokta yok');
+      return;
+    }
+
     setState(() {
       _yukleniyor = true;
     });
@@ -198,15 +209,7 @@ class _MusteriMenuSayfasiState extends State<MusteriMenuSayfasi> {
     }
 
     try {
-      final SepetVarligi bosSepet = await _servisKaydi.sepetiGetirUseCase();
-
-      if (!mounted) {
-        return;
-      }
-
-      setState(() {
-        _sepet = bosSepet;
-      });
+      await _verileriYukle();
     } catch (_) {
       if (!mounted) {
         return;
@@ -748,18 +751,20 @@ class _HizliIslemSeridi extends StatelessWidget {
                   .toList(),
             ),
           )
-        : Column(
-            children: islemler
-                .map(
-                  (islem) => Padding(
-                    padding: const EdgeInsets.only(bottom: 10),
-                    child: _HizliIslemKutusu(
-                      islem: islem,
-                      seciliMi: islem.baslik.startsWith('Salon'),
+        : SingleChildScrollView(
+            child: Column(
+              children: islemler
+                  .map(
+                    (islem) => Padding(
+                      padding: const EdgeInsets.only(bottom: 10),
+                      child: _HizliIslemKutusu(
+                        islem: islem,
+                        seciliMi: islem.baslik.startsWith('Salon'),
+                      ),
                     ),
-                  ),
-                )
-                .toList(),
+                  )
+                  .toList(),
+            ),
           );
 
     return Container(
@@ -1223,13 +1228,14 @@ class _UrunKarti extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final List<Color> renkler = _urunRenkleri(urun.id);
+    final bool etkilesimeAcik = urun.stoktaMi && !islemedeMi;
 
     return Material(
-      color: Colors.white,
+      color: urun.stoktaMi ? Colors.white : const Color(0xFFF2ECF5),
       borderRadius: BorderRadius.circular(18),
       child: InkWell(
         borderRadius: BorderRadius.circular(18),
-        onTap: islemedeMi ? null : () => urunDetayiAc(urun),
+        onTap: etkilesimeAcik ? () => urunDetayiAc(urun) : null,
         child: Padding(
           padding: const EdgeInsets.all(10),
           child: Column(
@@ -1252,6 +1258,29 @@ class _UrunKarti extends StatelessWidget {
                         painter: _TabakDeseniPainter(renk: Colors.white),
                       ),
                     ),
+                    if (!urun.stoktaMi)
+                      Positioned(
+                        top: 10,
+                        left: 10,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 6,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.black.withValues(alpha: 0.45),
+                            borderRadius: BorderRadius.circular(999),
+                          ),
+                          child: const Text(
+                            'Stokta yok',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 11,
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                        ),
+                      ),
                     Align(
                       alignment: Alignment.bottomRight,
                       child: Padding(
@@ -1272,7 +1301,9 @@ class _UrunKarti extends StatelessWidget {
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  color: const Color(0xFF412454),
+                  color: urun.stoktaMi
+                      ? const Color(0xFF412454)
+                      : const Color(0xFF8D7C9A),
                   fontWeight: FontWeight.w800,
                 ),
               ),
@@ -1283,7 +1314,9 @@ class _UrunKarti extends StatelessWidget {
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: const Color(0xFF887694),
+                    color: urun.stoktaMi
+                        ? const Color(0xFF887694)
+                        : const Color(0xFFA89AB2),
                     height: 1.35,
                   ),
                 ),
@@ -1301,7 +1334,9 @@ class _UrunKarti extends StatelessWidget {
                             : '${_paraYaz(urun.fiyat)}+',
                         style: Theme.of(context).textTheme.titleMedium
                             ?.copyWith(
-                              color: const Color(0xFFE04374),
+                              color: urun.stoktaMi
+                                  ? const Color(0xFFE04374)
+                                  : const Color(0xFF9E90A8),
                               fontWeight: FontWeight.w900,
                             ),
                       ),
@@ -1319,13 +1354,17 @@ class _UrunKarti extends StatelessWidget {
                     width: 28,
                     height: 28,
                     decoration: BoxDecoration(
-                      color: const Color(0xFFFFE2EB),
+                      color: urun.stoktaMi
+                          ? const Color(0xFFFFE2EB)
+                          : const Color(0xFFE2D9E8),
                       borderRadius: BorderRadius.circular(10),
                     ),
-                    child: const Icon(
+                    child: Icon(
                       Icons.add,
                       size: 18,
-                      color: Color(0xFFE04374),
+                      color: urun.stoktaMi
+                          ? const Color(0xFFE04374)
+                          : const Color(0xFF8D7C9A),
                     ),
                   ),
                 ],
@@ -1573,7 +1612,8 @@ class _UrunDetayAltSayfasiState extends State<_UrunDetayAltSayfasi> {
                 SizedBox(
                   width: double.infinity,
                   child: FilledButton(
-                    onPressed: () {
+                    onPressed: widget.urun.stoktaMi
+                        ? () {
                       Navigator.of(context).pop(
                         _SepeteEkleTalebi(
                           adet: _adet,
@@ -1583,14 +1623,17 @@ class _UrunDetayAltSayfasiState extends State<_UrunDetayAltSayfasi> {
                           ),
                         ),
                       );
-                    },
+                    }
+                        : null,
                     style: FilledButton.styleFrom(
                       backgroundColor: const Color(0xFFFF5D8F),
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(vertical: 18),
                     ),
                     child: Text(
-                      '${_paraYaz(_seciliBirimFiyat * _adet)} ile ekle',
+                      widget.urun.stoktaMi
+                          ? '${_paraYaz(_seciliBirimFiyat * _adet)} ile ekle'
+                          : 'Stokta yok',
                     ),
                   ),
                 ),

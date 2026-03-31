@@ -6,6 +6,7 @@ import 'package:restoran_app/ozellikler/menu/sunum/sayfalar/musteri_menu_sayfasi
 import 'package:restoran_app/ozellikler/menu/sunum/sayfalar/qr_menu_sayfasi.dart';
 import 'package:restoran_app/ozellikler/sepet/alan/varliklar/sepet_varligi.dart';
 import 'package:restoran_app/ozellikler/siparis/alan/varliklar/siparis_ozeti_girdisi_varligi.dart';
+import 'package:restoran_app/ozellikler/siparis/sunum/sayfalar/mutfak_siparis_sayfasi.dart';
 import 'package:restoran_app/ozellikler/siparis/sunum/sayfalar/siparis_ozeti_sayfasi.dart';
 import 'package:restoran_app/ozellikler/yonetim/sunum/sayfalar/yonetim_paneli_sayfasi.dart';
 
@@ -18,6 +19,7 @@ class RotaYapisi {
   static const String musteriMenusu = '/musteri-menusu';
   static const String qrMenu = '/qr-menu';
   static const String pos = '/pos';
+  static const String mutfak = '/mutfak';
   static const String siparisOzeti = '/siparis-ozeti';
   static const String yonetimPaneli = '/yonetim-paneli';
 
@@ -46,6 +48,11 @@ class RotaYapisi {
       case pos:
         return MaterialPageRoute<void>(
           builder: (_) => const MusteriMenuSayfasi(),
+          settings: ayarlar,
+        );
+      case mutfak:
+        return MaterialPageRoute<void>(
+          builder: (_) => const MutfakSiparisSayfasi(),
           settings: ayarlar,
         );
       case hesabim:

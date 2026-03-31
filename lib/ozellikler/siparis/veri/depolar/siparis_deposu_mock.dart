@@ -123,6 +123,25 @@ class SiparisDeposuMock implements SiparisDeposu {
   }
 
   @override
+  Future<SiparisVarligi> siparisDurumuGuncelle(
+    String siparisId,
+    SiparisDurumu yeniDurum,
+  ) async {
+    final int index = _siparisler.indexWhere(
+      (SiparisVarligi siparis) => siparis.id == siparisId,
+    );
+    if (index < 0) {
+      throw StateError('Siparis bulunamadi');
+    }
+
+    final SiparisVarligi guncelSiparis = _siparisler[index].copyWith(
+      durum: yeniDurum,
+    );
+    _siparisler[index] = guncelSiparis;
+    return guncelSiparis;
+  }
+
+  @override
   Future<List<SiparisVarligi>> siparisleriGetir() async {
     return _siparisler;
   }

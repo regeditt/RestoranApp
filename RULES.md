@@ -71,6 +71,10 @@ Bu dosya, proje boyunca uyulacak temel kurallari icerir. Tum gelistirme adimlari
 ## Web Uyumlulugu
 
 - Responsive tasarim bastan dusunulecek.
+- On yuz tamamen dokunmatik ekran kullanimina uygun olacak.
+- Tum ana aksiyonlar parmakla rahat secilebilecek buyuklukte ve boslukta tasarlanacak.
+- Hover bagimli etkilesimler zorunlu kabul edilmeyecek; temel akislar dokunma ile tamamlanabilecek.
+- Yonetim, POS ve musteri ekranlarinda once dokunmatik kullanim ergonomisi dikkate alinacak.
 - Router yapisi web URL uyumlu olacak.
 - Yonetim ekranlari web oncelikli dusunulecek.
 - Musteri deneyimi mobil odakli ama web uyumlu olacak.
@@ -86,10 +90,10 @@ Bu dosya, proje boyunca uyulacak temel kurallari icerir. Tum gelistirme adimlari
 
 ## Gelistirme Onceligi
 
-- Su asamada gelistirme masaustu oncelikli yapilacak.
-- UI kararlarinda once desktop yerlesim ve kullanim senaryolari dikkate alinacak.
-- Mobil ve web destegi tamamen kaldirilmadan, aktif tasarim hedefi masaustu olacak.
-- Yonetim paneli, yazici yonetimi, garson yonetimi ve patron raporlari masaustu odakli gelistirilecek.
+- Su asamada gelistirme dokunmatik ekran oncelikli yapilacak.
+- UI kararlarinda once dokunmatik yerlesim, hedef boyutu ve kullanim ergonomisi dikkate alinacak.
+- Mobil, tablet, kiosk ve dokunmatik masaustu kullanimlari ayni tasarim dili icinde desteklenecek.
+- Yonetim paneli, yazici yonetimi, garson yonetimi ve patron raporlari fare olmadan da verimli kullanilabilecek sekilde gelistirilecek.
 
 ## Mevcut Durum
 

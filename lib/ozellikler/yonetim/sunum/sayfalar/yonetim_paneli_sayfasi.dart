@@ -10,6 +10,7 @@ import 'package:restoran_app/ozellikler/siparis/alan/enumlar/siparis_durumu.dart
 import 'package:restoran_app/ozellikler/siparis/alan/enumlar/teslimat_tipi.dart';
 import 'package:restoran_app/ozellikler/siparis/alan/varliklar/siparis_varligi.dart';
 import 'package:restoran_app/ozellikler/stok/alan/varliklar/hammadde_stok_varligi.dart';
+import 'package:restoran_app/ozellikler/stok/alan/varliklar/recete_kalemi_varligi.dart';
 import 'package:restoran_app/ozellikler/stok/alan/varliklar/stok_ozeti_varligi.dart';
 import 'package:restoran_app/ozellikler/yonetim/alan/varliklar/personel_durumu_varligi.dart';
 import 'package:restoran_app/ozellikler/yonetim/alan/varliklar/patron_raporu_ozeti_varligi.dart';
@@ -32,6 +33,7 @@ class YonetimPaneliSayfasi extends StatefulWidget {
 class _YonetimPaneliSayfasiState extends State<YonetimPaneliSayfasi> {
   final ServisKaydi _servisKaydi = ServisKaydi.ortak;
   final TextEditingController _aramaDenetleyici = TextEditingController();
+  final ScrollController _sayfaKaydirmaDenetleyicisi = ScrollController();
 
   bool _yukleniyor = true;
   List<SiparisVarligi> _siparisler = const <SiparisVarligi>[];
@@ -57,6 +59,7 @@ class _YonetimPaneliSayfasiState extends State<YonetimPaneliSayfasi> {
   @override
   void dispose() {
     _aramaDenetleyici.dispose();
+    _sayfaKaydirmaDenetleyicisi.dispose();
     super.dispose();
   }
 
@@ -251,8 +254,12 @@ class _YonetimPaneliSayfasiState extends State<YonetimPaneliSayfasi> {
                     constraints: const BoxConstraints(maxWidth: 1500),
                     child: Padding(
                       padding: EdgeInsets.all(masaustu ? 22 : 14),
-                      child: ListView(
-                        children: [
+                      child: Scrollbar(
+                        thumbVisibility: true,
+                        controller: _sayfaKaydirmaDenetleyicisi,
+                        child: ListView(
+                          controller: _sayfaKaydirmaDenetleyicisi,
+                          children: [
                           _KompaktUstAlan(
                             ozet: ozet,
                             seciliFiltre: _seciliFiltre,
@@ -343,7 +350,8 @@ class _YonetimPaneliSayfasiState extends State<YonetimPaneliSayfasi> {
                                     ),
                                   ],
                                 ),
-                        ],
+                          ],
+                        ),
                       ),
                     ),
                   ),
@@ -871,6 +879,7 @@ class _OperasyonMetrigi extends StatelessWidget {
         borderRadius: BorderRadius.circular(20),
       ),
       child: Column(
+        mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
@@ -1095,96 +1104,137 @@ class _YanPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Container(
-          width: double.infinity,
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(28),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Kanal dagilimi',
-                style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  color: const Color(0xFF25192E),
-                ),
-              ),
-              const SizedBox(height: 6),
-              const Text(
-                'Siparislerin hangi kanal uzerinden geldigini anlik izleyin.',
-                style: TextStyle(color: Color(0xFF7A6D86)),
-              ),
-              const SizedBox(height: 18),
-              SizedBox(height: 220, child: _KanalDagilimiGrafik(ozet: ozet)),
-              const SizedBox(height: 18),
-              _KanalSatiri(
-                etiket: 'Restoranda ye',
-                sayi: ozet.restorandaYeSayisi,
-                renk: const Color(0xFFFF7A59),
-              ),
-              const SizedBox(height: 10),
-              _KanalSatiri(
-                etiket: 'Gel al',
-                sayi: ozet.gelAlSayisi,
-                renk: const Color(0xFF5B8CFF),
-              ),
-              const SizedBox(height: 10),
-              _KanalSatiri(
-                etiket: 'Paket servis',
-                sayi: ozet.paketServisSayisi,
-                renk: const Color(0xFF30C48D),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 18),
-        if (stokOzeti != null) ...[
-          _StokVeMaliyetKarti(ozet: stokOzeti!),
-          const SizedBox(height: 18),
-        ],
-        _MasaPlaniKarti(siparisler: siparisler, salonBolumleri: salonBolumleri),
-        const SizedBox(height: 18),
-        Container(
-          width: double.infinity,
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(28),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Saatlik siparis trendi',
-                style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  color: const Color(0xFF25192E),
-                ),
-              ),
-              const SizedBox(height: 6),
-              const Text(
-                'Son saatlerdeki siparis yogunlugunun mini ozeti.',
-                style: TextStyle(color: Color(0xFF7A6D86)),
-              ),
-              const SizedBox(height: 18),
+    return LayoutBuilder(
+      builder: (BuildContext context, BoxConstraints constraints) {
+        final double genislik = constraints.maxWidth;
+        final bool ikiKolon = genislik >= 760;
+        final double yariGenislik = ikiKolon ? (genislik - 18) / 2 : genislik;
+
+        return Wrap(
+          spacing: 18,
+          runSpacing: 18,
+          children: [
+            SizedBox(width: yariGenislik, child: _KanalDagilimiKarti(ozet: ozet)),
+            SizedBox(
+              width: yariGenislik,
+              child: _SaatlikTrendKarti(veriler: saatlikVeriler),
+            ),
+            if (stokOzeti != null)
               SizedBox(
-                height: 220,
-                child: _SaatlikTrendGrafik(veriler: saatlikVeriler),
+                width: yariGenislik,
+                child: _StokVeMaliyetKarti(ozet: stokOzeti!),
               ),
-            ],
+            SizedBox(
+              width: yariGenislik,
+              child: _PatronRaporuKarti(
+                siparisler: siparisler,
+                saatlikVeriler: saatlikVeriler,
+              ),
+            ),
+            SizedBox(
+              width: yariGenislik,
+              child: _PersonelYonetimiKarti(personeller: personeller),
+            ),
+            SizedBox(
+              width: genislik,
+              child: _MasaPlaniKarti(
+                siparisler: siparisler,
+                salonBolumleri: salonBolumleri,
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+class _KanalDagilimiKarti extends StatelessWidget {
+  const _KanalDagilimiKarti({required this.ozet});
+
+  final YonetimPaneliOzetiVarligi ozet;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(28),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Kanal dagilimi',
+            style: Theme.of(context).textTheme.titleLarge?.copyWith(
+              color: const Color(0xFF25192E),
+            ),
           ),
-        ),
-        const SizedBox(height: 18),
-        _PatronRaporuKarti(
-          siparisler: siparisler,
-          saatlikVeriler: saatlikVeriler,
-        ),
-        const SizedBox(height: 18),
-        _PersonelYonetimiKarti(personeller: personeller),
-      ],
+          const SizedBox(height: 6),
+          const Text(
+            'Siparislerin hangi kanal uzerinden geldigini anlik izleyin.',
+            style: TextStyle(color: Color(0xFF7A6D86)),
+          ),
+          const SizedBox(height: 18),
+          SizedBox(height: 220, child: _KanalDagilimiGrafik(ozet: ozet)),
+          const SizedBox(height: 18),
+          _KanalSatiri(
+            etiket: 'Restoranda ye',
+            sayi: ozet.restorandaYeSayisi,
+            renk: const Color(0xFFFF7A59),
+          ),
+          const SizedBox(height: 10),
+          _KanalSatiri(
+            etiket: 'Gel al',
+            sayi: ozet.gelAlSayisi,
+            renk: const Color(0xFF5B8CFF),
+          ),
+          const SizedBox(height: 10),
+          _KanalSatiri(
+            etiket: 'Paket servis',
+            sayi: ozet.paketServisSayisi,
+            renk: const Color(0xFF30C48D),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _SaatlikTrendKarti extends StatelessWidget {
+  const _SaatlikTrendKarti({required this.veriler});
+
+  final List<SaatlikSiparisOzetiVarligi> veriler;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(28),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Saatlik siparis trendi',
+            style: Theme.of(context).textTheme.titleLarge?.copyWith(
+              color: const Color(0xFF25192E),
+            ),
+          ),
+          const SizedBox(height: 6),
+          const Text(
+            'Son saatlerdeki siparis yogunlugunun mini ozeti.',
+            style: TextStyle(color: Color(0xFF7A6D86)),
+          ),
+          const SizedBox(height: 18),
+          SizedBox(height: 220, child: _SaatlikTrendGrafik(veriler: veriler)),
+        ],
+      ),
     );
   }
 }
@@ -1372,7 +1422,7 @@ class _StokVeMaliyetKarti extends StatelessWidget {
                   ),
                   const SizedBox(height: 6),
                   Text(
-                    '${enDusukMarjli.urunAdi} icin recete maliyeti ${_paraYaz(enDusukMarjli.receteMaliyeti)}. Tahmini marj %${enDusukMarjli.karMarjiOrani.toStringAsFixed(0)}.',
+                    '${enDusukMarjli.urunAdi} icin recete maliyeti ${_paraYaz(enDusukMarjli.receteMaliyeti)}. Tahmini marj %${enDusukMarjli.karMarjiOrani.toStringAsFixed(0)}. Mevcut stokla yaklasik ${enDusukMarjli.uretilebilirAdet} adet cikabilir.',
                     style: const TextStyle(
                       color: Colors.white,
                       fontWeight: FontWeight.w800,
@@ -1395,30 +1445,58 @@ class _StokUyariSatiri extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final bool acilMi = malzeme.aciliyetOrani <= 0.5;
+    final Color vurguRengi = acilMi
+        ? const Color(0xFFFFC1B4)
+        : const Color(0xFFFFE6A6);
+
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.10),
+        color: Colors.white.withValues(alpha: acilMi ? 0.16 : 0.10),
         borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: vurguRengi.withValues(alpha: 0.45)),
       ),
       child: Row(
         children: [
-          const Icon(Icons.inventory_2_outlined, color: Colors.white),
+          Icon(Icons.inventory_2_outlined, color: vurguRengi),
           const SizedBox(width: 10),
           Expanded(
-            child: Text(
-              malzeme.ad,
-              style: const TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.w800,
-              ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  malzeme.ad,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  malzeme.uyariEtiketi,
+                  style: TextStyle(
+                    color: vurguRengi,
+                    fontWeight: FontWeight.w700,
+                    fontSize: 12,
+                  ),
+                ),
+              ],
             ),
           ),
-          Text(
-            malzeme.kalanMiktarMetni,
-            style: const TextStyle(
-              color: Color(0xFFDDF4EA),
-              fontWeight: FontWeight.w700,
+          const SizedBox(width: 12),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+            decoration: BoxDecoration(
+              color: Colors.black.withValues(alpha: 0.14),
+              borderRadius: BorderRadius.circular(999),
+            ),
+            child: Text(
+              malzeme.kalanMiktarMetni,
+              style: TextStyle(
+                color: acilMi ? const Color(0xFFFFF0EB) : const Color(0xFFDDF4EA),
+                fontWeight: FontWeight.w800,
+              ),
             ),
           ),
         ],
@@ -1867,31 +1945,6 @@ class _YaziciSatiri extends StatelessWidget {
             ],
           ),
         ],
-      ),
-    );
-  }
-}
-
-class _SistemYaziciRozeti extends StatelessWidget {
-  const _SistemYaziciRozeti({required this.etiket});
-
-  final String etiket;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.10),
-        borderRadius: BorderRadius.circular(999),
-      ),
-      child: Text(
-        etiket,
-        style: const TextStyle(
-          color: Color(0xFFE8DDF0),
-          fontSize: 12,
-          fontWeight: FontWeight.w600,
-        ),
       ),
     );
   }
@@ -2402,28 +2455,31 @@ class _MasaPlaniKutusu extends StatelessWidget {
                 ),
                 child: Icon(masa.ikon, color: masa.renk, size: 18),
               ),
-              const Spacer(),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 10,
-                  vertical: 6,
-                ),
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.80),
-                  borderRadius: BorderRadius.circular(999),
-                ),
-                child: Text(
-                  masa.durumEtiketi,
-                  style: TextStyle(
-                    color: masa.renk,
-                    fontSize: 11,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-              ),
             ],
           ),
-          const Spacer(),
+          const SizedBox(height: 10),
+          Align(
+            alignment: Alignment.centerLeft,
+            child: Container(
+              padding: const EdgeInsets.symmetric(
+                horizontal: 10,
+                vertical: 6,
+              ),
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.80),
+                borderRadius: BorderRadius.circular(999),
+              ),
+              child: Text(
+                masa.durumEtiketi,
+                style: TextStyle(
+                  color: masa.renk,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 14),
           Text(
             masa.baslik,
             style: const TextStyle(
@@ -3340,6 +3396,8 @@ class _YonetimAyarlariDialogState extends State<_YonetimAyarlariDialog> {
   late List<KategoriVarligi> _menuKategorileri;
   late List<UrunVarligi> _menuUrunleri;
   List<HammaddeStokVarligi> _hammaddeler = const <HammaddeStokVarligi>[];
+  Map<String, List<ReceteKalemiVarligi>> _urunReceteleri =
+      const <String, List<ReceteKalemiVarligi>>{};
 
   @override
   void initState() {
@@ -3347,18 +3405,34 @@ class _YonetimAyarlariDialogState extends State<_YonetimAyarlariDialog> {
     _salonBolumleri = widget.salonBolumleri;
     _menuKategorileri = widget.menuKategorileri;
     _menuUrunleri = widget.menuUrunleri;
-    _hammaddeleriYukle();
+    _stokVerileriniYukle();
   }
 
-  Future<void> _hammaddeleriYukle() async {
+  Future<void> _stokVerileriniYukle() async {
     final List<HammaddeStokVarligi> hammaddeler = await widget.servisKaydi
         .hammaddeleriGetirUseCase();
+    final Map<String, List<ReceteKalemiVarligi>> urunReceteleri =
+        await _urunReceteleriniYukle(_menuUrunleri);
     if (!mounted) {
       return;
     }
     setState(() {
       _hammaddeler = hammaddeler;
+      _urunReceteleri = urunReceteleri;
     });
+  }
+
+  Future<Map<String, List<ReceteKalemiVarligi>>> _urunReceteleriniYukle(
+    List<UrunVarligi> urunler,
+  ) async {
+    final Map<String, List<ReceteKalemiVarligi>> receteler =
+        <String, List<ReceteKalemiVarligi>>{};
+    for (final UrunVarligi urun in urunler) {
+      receteler[urun.id] = await widget.servisKaydi.receteyiGetirUseCase(
+        urun.id,
+      );
+    }
+    return receteler;
   }
 
   Future<void> _yenile() async {
@@ -3371,6 +3445,8 @@ class _YonetimAyarlariDialogState extends State<_YonetimAyarlariDialog> {
         .urunleriGetirUseCase();
     final List<HammaddeStokVarligi> hammaddeler = await widget.servisKaydi
         .hammaddeleriGetirUseCase();
+    final Map<String, List<ReceteKalemiVarligi>> urunReceteleri =
+        await _urunReceteleriniYukle(menuUrunleri);
 
     if (!mounted) {
       return;
@@ -3381,6 +3457,7 @@ class _YonetimAyarlariDialogState extends State<_YonetimAyarlariDialog> {
       _menuKategorileri = menuKategorileri;
       _menuUrunleri = menuUrunleri;
       _hammaddeler = hammaddeler;
+      _urunReceteleri = urunReceteleri;
     });
   }
 
@@ -3597,6 +3674,32 @@ class _YonetimAyarlariDialogState extends State<_YonetimAyarlariDialog> {
     await _yenile();
   }
 
+  Future<void> _urunRecetesiniDuzenle(UrunVarligi urun) async {
+    final List<ReceteKalemiVarligi> baslangicRecetesi =
+        _urunReceteleri[urun.id] ?? const <ReceteKalemiVarligi>[];
+    final List<ReceteKalemiVarligi>? sonuc =
+        await showDialog<List<ReceteKalemiVarligi>>(
+          context: context,
+          builder: (BuildContext context) => _ReceteDuzenlemeDialog(
+            urun: urun,
+            hammaddeler: _hammaddeler,
+            baslangicRecetesi: baslangicRecetesi,
+          ),
+        );
+    if (sonuc == null) {
+      return;
+    }
+    await widget.servisKaydi.receteyiKaydetUseCase(urun.id, sonuc);
+    await _yenile();
+
+    if (!mounted) {
+      return;
+    }
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text('${urun.ad} recetesi guncellendi')));
+  }
+
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
@@ -3724,13 +3827,16 @@ class _YonetimAyarlariDialogState extends State<_YonetimAyarlariDialog> {
                             ..._menuUrunleri.map(
                               (UrunVarligi urun) => Padding(
                                 padding: const EdgeInsets.only(bottom: 12),
-                                child: _AdminUrunSatiri(
-                                  urun: urun,
-                                  kategoriAdi: _kategoriAdiBul(urun.kategoriId),
-                                  urunDuzenle: () => _urunEkle(urun),
-                                  urunSil: () => _urunSil(urun),
-                                ),
-                              ),
+                                 child: _AdminUrunSatiri(
+                                   urun: urun,
+                                   kategoriAdi: _kategoriAdiBul(urun.kategoriId),
+                                   receteOzeti: _receteOzetiniOlustur(urun.id),
+                                   urunDuzenle: () => _urunEkle(urun),
+                                   receteDuzenle: () =>
+                                       _urunRecetesiniDuzenle(urun),
+                                   urunSil: () => _urunSil(urun),
+                                 ),
+                               ),
                             ),
                           ],
                         ),
@@ -3776,6 +3882,28 @@ class _YonetimAyarlariDialogState extends State<_YonetimAyarlariDialog> {
       }
     }
     return 'Kategori yok';
+  }
+
+  String _receteOzetiniOlustur(String urunId) {
+    final List<ReceteKalemiVarligi> recete =
+        _urunReceteleri[urunId] ?? const <ReceteKalemiVarligi>[];
+    if (recete.isEmpty) {
+      return 'Recete tanimli degil';
+    }
+
+    final Map<String, HammaddeStokVarligi> hammaddeHaritasi =
+        <String, HammaddeStokVarligi>{
+          for (final HammaddeStokVarligi hammadde in _hammaddeler)
+            hammadde.id: hammadde,
+        };
+    final Iterable<String> etiketler = recete.map((ReceteKalemiVarligi kalem) {
+      final HammaddeStokVarligi? hammadde = hammaddeHaritasi[kalem.hammaddeId];
+      if (hammadde == null) {
+        return '${kalem.miktar.toStringAsFixed(1)} bilinmeyen';
+      }
+      return '${hammadde.ad} ${kalem.miktar.toStringAsFixed(1)} ${hammadde.birim}';
+    });
+    return etiketler.join(' • ');
   }
 }
 
@@ -3909,13 +4037,17 @@ class _AdminUrunSatiri extends StatelessWidget {
   const _AdminUrunSatiri({
     required this.urun,
     required this.kategoriAdi,
+    required this.receteOzeti,
     required this.urunDuzenle,
+    required this.receteDuzenle,
     required this.urunSil,
   });
 
   final UrunVarligi urun;
   final String kategoriAdi;
+  final String receteOzeti;
   final VoidCallback urunDuzenle;
+  final VoidCallback receteDuzenle;
   final VoidCallback urunSil;
 
   @override
@@ -3950,12 +4082,40 @@ class _AdminUrunSatiri extends StatelessWidget {
           ),
           const SizedBox(height: 6),
           Text(urun.aciklama, style: const TextStyle(color: Color(0xFF6D6079))),
+          const SizedBox(height: 8),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: const Color(0xFFF8F5FB),
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Recete baglantisi',
+                  style: TextStyle(fontWeight: FontWeight.w800),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  receteOzeti,
+                  style: const TextStyle(color: Color(0xFF6D6079), height: 1.4),
+                ),
+              ],
+            ),
+          ),
           const SizedBox(height: 10),
           Row(
             children: [
               FilledButton.tonal(
                 onPressed: urunDuzenle,
                 child: const Text('Duzenle'),
+              ),
+              const SizedBox(width: 8),
+              FilledButton.tonal(
+                onPressed: receteDuzenle,
+                child: const Text('Recete'),
               ),
               const SizedBox(width: 8),
               TextButton(onPressed: urunSil, child: const Text('Kaldir')),
@@ -4024,6 +4184,265 @@ class _AdminHammaddeSatiri extends StatelessWidget {
             icon: const Icon(Icons.edit_outlined),
             label: const Text('Duzenle'),
           ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ReceteSatiriGirdisi {
+  const _ReceteSatiriGirdisi({required this.hammaddeId, required this.miktar});
+
+  final String hammaddeId;
+  final double miktar;
+
+  _ReceteSatiriGirdisi copyWith({String? hammaddeId, double? miktar}) {
+    return _ReceteSatiriGirdisi(
+      hammaddeId: hammaddeId ?? this.hammaddeId,
+      miktar: miktar ?? this.miktar,
+    );
+  }
+}
+
+class _ReceteDuzenlemeDialog extends StatefulWidget {
+  const _ReceteDuzenlemeDialog({
+    required this.urun,
+    required this.hammaddeler,
+    required this.baslangicRecetesi,
+  });
+
+  final UrunVarligi urun;
+  final List<HammaddeStokVarligi> hammaddeler;
+  final List<ReceteKalemiVarligi> baslangicRecetesi;
+
+  @override
+  State<_ReceteDuzenlemeDialog> createState() => _ReceteDuzenlemeDialogState();
+}
+
+class _ReceteDuzenlemeDialogState extends State<_ReceteDuzenlemeDialog> {
+  late List<_ReceteSatiriGirdisi> _satirlar;
+
+  @override
+  void initState() {
+    super.initState();
+    _satirlar = widget.baslangicRecetesi
+        .map(
+          (ReceteKalemiVarligi kalem) => _ReceteSatiriGirdisi(
+            hammaddeId: kalem.hammaddeId,
+            miktar: kalem.miktar,
+          ),
+        )
+        .toList();
+    if (_satirlar.isEmpty && widget.hammaddeler.isNotEmpty) {
+      _satirEkle();
+    }
+  }
+
+  void _satirEkle() {
+    if (widget.hammaddeler.isEmpty) {
+      return;
+    }
+    final String varsayilanHammaddeId =
+        widget.hammaddeler.first.id;
+    setState(() {
+      _satirlar = <_ReceteSatiriGirdisi>[
+        ..._satirlar,
+        _ReceteSatiriGirdisi(hammaddeId: varsayilanHammaddeId, miktar: 1),
+      ];
+    });
+  }
+
+  void _satirSil(int index) {
+    setState(() {
+      _satirlar = <_ReceteSatiriGirdisi>[
+        ..._satirlar.where((_) => true),
+      ]..removeAt(index);
+    });
+  }
+
+  void _satirGuncelle(int index, _ReceteSatiriGirdisi satir) {
+    setState(() {
+      _satirlar = <_ReceteSatiriGirdisi>[
+        for (int i = 0; i < _satirlar.length; i++)
+          if (i == index) satir else _satirlar[i],
+      ];
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: Text('${widget.urun.ad} recetesi'),
+      content: SizedBox(
+        width: 540,
+        child: widget.hammaddeler.isEmpty
+            ? const Text('Once hammadde ekleyip tekrar dene.')
+            : SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Bu urun icin kullanilan hammaddeleri ve tuketim miktarlarini belirle.',
+                    ),
+                    const SizedBox(height: 16),
+                    ..._satirlar.asMap().entries.map(
+                      (entry) => Padding(
+                        padding: const EdgeInsets.only(bottom: 12),
+                        child: _ReceteSatiri(
+                          key: ValueKey('recete_satiri_${entry.key}'),
+                          satir: entry.value,
+                          hammaddeler: widget.hammaddeler,
+                          kaldir:
+                              _satirlar.length == 1
+                                  ? null
+                                  : () => _satirSil(entry.key),
+                          guncelle: (_ReceteSatiriGirdisi satir) =>
+                              _satirGuncelle(entry.key, satir),
+                        ),
+                      ),
+                    ),
+                    FilledButton.tonalIcon(
+                      onPressed: _satirEkle,
+                      icon: const Icon(Icons.add_rounded),
+                      label: const Text('Kalem ekle'),
+                    ),
+                  ],
+                ),
+              ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('Vazgec'),
+        ),
+        FilledButton(
+          onPressed: () {
+            final List<ReceteKalemiVarligi> recete =
+                _satirlar
+                    .where((satir) => satir.miktar > 0)
+                    .map(
+                      (satir) => ReceteKalemiVarligi(
+                        hammaddeId: satir.hammaddeId,
+                        miktar: satir.miktar,
+                      ),
+                    )
+                    .toList();
+            Navigator.of(context).pop(recete);
+          },
+          child: const Text('Kaydet'),
+        ),
+      ],
+    );
+  }
+}
+
+class _ReceteSatiri extends StatefulWidget {
+  const _ReceteSatiri({
+    super.key,
+    required this.satir,
+    required this.hammaddeler,
+    required this.guncelle,
+    this.kaldir,
+  });
+
+  final _ReceteSatiriGirdisi satir;
+  final List<HammaddeStokVarligi> hammaddeler;
+  final ValueChanged<_ReceteSatiriGirdisi> guncelle;
+  final VoidCallback? kaldir;
+
+  @override
+  State<_ReceteSatiri> createState() => _ReceteSatiriState();
+}
+
+class _ReceteSatiriState extends State<_ReceteSatiri> {
+  late final TextEditingController _miktarDenetleyici;
+
+  @override
+  void initState() {
+    super.initState();
+    _miktarDenetleyici = TextEditingController(
+      text: widget.satir.miktar.toStringAsFixed(1),
+    );
+  }
+
+  @override
+  void didUpdateWidget(covariant _ReceteSatiri oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.satir.miktar != widget.satir.miktar) {
+      _miktarDenetleyici.text = widget.satir.miktar.toStringAsFixed(1);
+    }
+  }
+
+  @override
+  void dispose() {
+    _miktarDenetleyici.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final HammaddeStokVarligi seciliHammadde = widget.hammaddeler.firstWhere(
+      (HammaddeStokVarligi hammadde) => hammadde.id == widget.satir.hammaddeId,
+      orElse: () => widget.hammaddeler.first,
+    );
+
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFE8E0F0)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(
+            flex: 6,
+            child: DropdownButtonFormField<String>(
+              initialValue: seciliHammadde.id,
+              decoration: const InputDecoration(labelText: 'Hammadde'),
+              items: widget.hammaddeler
+                  .map(
+                    (HammaddeStokVarligi hammadde) => DropdownMenuItem<String>(
+                      value: hammadde.id,
+                      child: Text('${hammadde.ad} (${hammadde.birim})'),
+                    ),
+                  )
+                  .toList(),
+              onChanged: (String? deger) {
+                if (deger == null) {
+                  return;
+                }
+                widget.guncelle(widget.satir.copyWith(hammaddeId: deger));
+              },
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            flex: 4,
+            child: TextField(
+              controller: _miktarDenetleyici,
+              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              decoration: InputDecoration(
+                labelText: 'Miktar',
+                helperText: seciliHammadde.birim,
+              ),
+              onChanged: (String deger) {
+                final double? miktar = double.tryParse(
+                  deger.trim().replaceAll(',', '.'),
+                );
+                widget.guncelle(widget.satir.copyWith(miktar: miktar ?? 0));
+              },
+            ),
+          ),
+          if (widget.kaldir != null) ...[
+            const SizedBox(width: 8),
+            IconButton(
+              onPressed: widget.kaldir,
+              icon: const Icon(Icons.delete_outline_rounded),
+            ),
+          ],
         ],
       ),
     );

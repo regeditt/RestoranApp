@@ -8,6 +8,7 @@ class UygulamaTema {
   static const Color _vurguRenk = Color(0xFFF3C969);
   static const Color _zeminRenk = Color(0xFFF5EFE6);
   static const Color _kartRenk = Color(0xFFFFFCF8);
+  static const Size _dokunmatikHedefBoyutu = Size(56, 56);
 
   static ThemeData get acikTema {
     final ColorScheme renkSemasi =
@@ -76,6 +77,7 @@ class UygulamaTema {
       useMaterial3: true,
       colorScheme: renkSemasi,
       scaffoldBackgroundColor: _zeminRenk,
+      materialTapTargetSize: MaterialTapTargetSize.padded,
       textTheme: temelYaziTemasi,
       appBarTheme: AppBarTheme(
         elevation: 0,
@@ -100,12 +102,13 @@ class UygulamaTema {
           side: const BorderSide(color: Color(0xFFE3D7C8)),
         ),
         labelStyle: temelYaziTemasi.labelLarge,
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
           backgroundColor: _yardimciRenk,
           foregroundColor: Colors.white,
+          minimumSize: _dokunmatikHedefBoyutu,
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
           textStyle: const TextStyle(
             fontWeight: FontWeight.w800,
@@ -116,6 +119,78 @@ class UygulamaTema {
             borderRadius: BorderRadius.circular(18),
           ),
         ),
+      ),
+      filledButtonTheme: FilledButtonThemeData(
+        style: FilledButton.styleFrom(
+          minimumSize: _dokunmatikHedefBoyutu,
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+          textStyle: const TextStyle(
+            fontWeight: FontWeight.w800,
+            fontSize: 15,
+            fontFamily: govdeYaziAilesi,
+          ),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(18),
+          ),
+        ),
+      ),
+      outlinedButtonTheme: OutlinedButtonThemeData(
+        style: OutlinedButton.styleFrom(
+          minimumSize: _dokunmatikHedefBoyutu,
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+          textStyle: const TextStyle(
+            fontWeight: FontWeight.w700,
+            fontSize: 15,
+            fontFamily: govdeYaziAilesi,
+          ),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(18),
+          ),
+        ),
+      ),
+      textButtonTheme: TextButtonThemeData(
+        style: TextButton.styleFrom(
+          minimumSize: _dokunmatikHedefBoyutu,
+          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+          textStyle: const TextStyle(
+            fontWeight: FontWeight.w700,
+            fontSize: 15,
+            fontFamily: govdeYaziAilesi,
+          ),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+        ),
+      ),
+      iconButtonTheme: IconButtonThemeData(
+        style: IconButton.styleFrom(
+          minimumSize: _dokunmatikHedefBoyutu,
+          padding: const EdgeInsets.all(14),
+        ),
+      ),
+      inputDecorationTheme: InputDecorationTheme(
+        filled: true,
+        fillColor: Colors.white.withValues(alpha: 0.94),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 18,
+        ),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(18),
+          borderSide: const BorderSide(color: Color(0xFFE3D7C8)),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(18),
+          borderSide: const BorderSide(color: Color(0xFFE3D7C8)),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(18),
+          borderSide: BorderSide(color: renkSemasi.primary, width: 1.4),
+        ),
+      ),
+      listTileTheme: const ListTileThemeData(
+        minTileHeight: 56,
+        contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 6),
       ),
     );
   }

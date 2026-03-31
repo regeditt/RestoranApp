@@ -28,12 +28,24 @@ class StokOzetiGetirUseCase {
         urun.id,
       );
       double receteMaliyeti = 0;
-      for (final ReceteKalemiVarligi kalem in recete) {
-        final HammaddeStokVarligi? hammadde =
-            hammaddeHaritasi[kalem.hammaddeId];
-        if (hammadde != null) {
-          receteMaliyeti += hammadde.birimMaliyet * kalem.miktar;
+      int uretilebilirAdet = 0;
+      if (recete.isNotEmpty) {
+        double? enDusukUretimSiniri;
+        for (final ReceteKalemiVarligi kalem in recete) {
+          final HammaddeStokVarligi? hammadde =
+              hammaddeHaritasi[kalem.hammaddeId];
+          if (hammadde != null) {
+            receteMaliyeti += hammadde.birimMaliyet * kalem.miktar;
+            final double uretimSiniri = kalem.miktar <= 0
+                ? 0
+                : hammadde.mevcutMiktar / kalem.miktar;
+            if (enDusukUretimSiniri == null ||
+                uretimSiniri < enDusukUretimSiniri) {
+              enDusukUretimSiniri = uretimSiniri;
+            }
+          }
         }
+        uretilebilirAdet = enDusukUretimSiniri?.floor() ?? 0;
       }
       final double karMarjiOrani = urun.fiyat <= 0
           ? 0
@@ -44,6 +56,7 @@ class StokOzetiGetirUseCase {
           satisFiyati: urun.fiyat,
           receteMaliyeti: receteMaliyeti,
           karMarjiOrani: karMarjiOrani,
+          uretilebilirAdet: uretilebilirAdet,
         ),
       );
     }
@@ -69,11 +82,31 @@ class StokOzetiGetirUseCase {
               ad: hammadde.ad,
               kalanMiktarMetni:
                   '${hammadde.mevcutMiktar.toStringAsFixed(0)} ${hammadde.birim}',
+              uyariEtiketi: _uyariEtiketiOlustur(hammadde),
+              aciliyetOrani: _aciliyetOraniOlustur(hammadde),
             ),
           )
           .toList(),
       menuMaliyetleri: maliyetler
         ..sort((a, b) => a.karMarjiOrani.compareTo(b.karMarjiOrani)),
     );
+  }
+
+  String _uyariEtiketiOlustur(HammaddeStokVarligi hammadde) {
+    final double oran = _aciliyetOraniOlustur(hammadde);
+    if (oran <= 0.5) {
+      return 'Acil';
+    }
+    if (oran <= 0.9) {
+      return 'Kritik';
+    }
+    return 'Izle';
+  }
+
+  double _aciliyetOraniOlustur(HammaddeStokVarligi hammadde) {
+    if (hammadde.kritikEsik <= 0) {
+      return 1;
+    }
+    return hammadde.mevcutMiktar / hammadde.kritikEsik;
   }
 }

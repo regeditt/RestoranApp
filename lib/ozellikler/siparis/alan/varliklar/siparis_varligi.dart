@@ -32,4 +32,32 @@ class SiparisVarligi {
 
   double get toplamTutar =>
       kalemler.fold<double>(0, (toplam, kalem) => toplam + kalem.araToplam);
+
+  SiparisVarligi copyWith({
+    String? id,
+    String? siparisNo,
+    SiparisSahibiVarligi? sahip,
+    TeslimatTipi? teslimatTipi,
+    SiparisDurumu? durum,
+    List<SiparisKalemiVarligi>? kalemler,
+    DateTime? olusturmaTarihi,
+    String? adresMetni,
+    String? masaNo,
+    String? bolumAdi,
+    String? kaynak,
+  }) {
+    return SiparisVarligi(
+      id: id ?? this.id,
+      siparisNo: siparisNo ?? this.siparisNo,
+      sahip: sahip ?? this.sahip,
+      teslimatTipi: teslimatTipi ?? this.teslimatTipi,
+      durum: durum ?? this.durum,
+      kalemler: kalemler ?? this.kalemler,
+      olusturmaTarihi: olusturmaTarihi ?? this.olusturmaTarihi,
+      adresMetni: adresMetni ?? this.adresMetni,
+      masaNo: masaNo ?? this.masaNo,
+      bolumAdi: bolumAdi ?? this.bolumAdi,
+      kaynak: kaynak ?? this.kaynak,
+    );
+  }
 }
