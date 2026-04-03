@@ -12,24 +12,28 @@ class GirisSecimSayfasi extends StatefulWidget {
 
 class _GirisSecimSayfasiState extends State<GirisSecimSayfasi> {
   final ServisKaydi _servisKaydi = ServisKaydi.ortak;
-  _GirisModu _seciliMod = _GirisModu.musteri;
-  final TextEditingController _adDenetleyici = TextEditingController();
-  final TextEditingController _telefonDenetleyici = TextEditingController();
-  final TextEditingController _adresDenetleyici = TextEditingController();
+  _PersonelGirisModu _seciliMod = _PersonelGirisModu.garson;
+  final TextEditingController _kullaniciAdiDenetleyici =
+      TextEditingController();
   final TextEditingController _sifreDenetleyici = TextEditingController();
   bool _islemde = false;
 
   @override
   void dispose() {
-    _adDenetleyici.dispose();
-    _telefonDenetleyici.dispose();
-    _adresDenetleyici.dispose();
+    _kullaniciAdiDenetleyici.dispose();
     _sifreDenetleyici.dispose();
     super.dispose();
   }
 
-  Future<void> _devamEt({_GirisHedefi hedef = _GirisHedefi.qrMenu}) async {
+  Future<void> _devamEt({_GirisHedefi hedef = _GirisHedefi.pos}) async {
     if (_islemde) {
+      return;
+    }
+
+    final String kullaniciAdi = _kullaniciAdiDenetleyici.text.trim();
+    final String sifre = _sifreDenetleyici.text.trim();
+    if (kullaniciAdi.isEmpty || sifre.isEmpty) {
+      _uyari('Kullanici adi ve sifre alanlarini doldur.');
       return;
     }
 
@@ -38,42 +42,10 @@ class _GirisSecimSayfasiState extends State<GirisSecimSayfasi> {
     });
 
     try {
-      if (_seciliMod == _GirisModu.musteri) {
-        final String ad = _adDenetleyici.text.trim();
-        final String telefon = _telefonDenetleyici.text.trim();
-        final String adres = _adresDenetleyici.text.trim();
-        if (ad.isEmpty || telefon.isEmpty || adres.isEmpty) {
-          _uyari('Musteri girisi icin ad, telefon ve adres gerekli.');
-          return;
-        }
-
-        await _servisKaydi.girisYapUseCase(
-          telefon: telefon,
-          sifre: 'musteri',
-          rol: KullaniciRolu.musteri,
-          adSoyad: ad,
-          adresMetni: adres,
-        );
-
-        if (!mounted) {
-          return;
-        }
-
-        Navigator.of(context).pushReplacementNamed(RotaYapisi.qrMenu);
-        return;
-      }
-
-      final String kullaniciAdi = _telefonDenetleyici.text.trim();
-      final String sifre = _sifreDenetleyici.text.trim();
-      if (kullaniciAdi.isEmpty || sifre.isEmpty) {
-        _uyari('Kullanici adi ve sifre alanlarini doldur.');
-        return;
-      }
-
       await _servisKaydi.girisYapUseCase(
         telefon: kullaniciAdi,
         sifre: sifre,
-        rol: _seciliMod == _GirisModu.garson
+        rol: _seciliMod == _PersonelGirisModu.garson
             ? KullaniciRolu.garson
             : KullaniciRolu.yonetici,
         adSoyad: kullaniciAdi,
@@ -83,14 +55,11 @@ class _GirisSecimSayfasiState extends State<GirisSecimSayfasi> {
         return;
       }
 
-      Navigator.of(context).pushReplacementNamed(
-        switch (hedef) {
-          _GirisHedefi.pos => RotaYapisi.pos,
-          _GirisHedefi.yonetim => RotaYapisi.yonetimPaneli,
-          _GirisHedefi.mutfak => RotaYapisi.mutfak,
-          _GirisHedefi.qrMenu => RotaYapisi.qrMenu,
-        },
-      );
+      Navigator.of(context).pushReplacementNamed(switch (hedef) {
+        _GirisHedefi.pos => RotaYapisi.pos,
+        _GirisHedefi.yonetim => RotaYapisi.yonetimPaneli,
+        _GirisHedefi.mutfak => RotaYapisi.mutfak,
+      });
     } finally {
       if (mounted) {
         setState(() {
@@ -106,6 +75,8 @@ class _GirisSecimSayfasiState extends State<GirisSecimSayfasi> {
 
   @override
   Widget build(BuildContext context) {
+    final bool mobil = MediaQuery.sizeOf(context).width < 760;
+
     return Scaffold(
       body: DecoratedBox(
         decoration: const BoxDecoration(
@@ -125,7 +96,7 @@ class _GirisSecimSayfasiState extends State<GirisSecimSayfasi> {
                   shrinkWrap: true,
                   children: [
                     const Text(
-                      'RestoranApp',
+                      'Personel girisi',
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         color: Colors.white,
@@ -135,19 +106,50 @@ class _GirisSecimSayfasiState extends State<GirisSecimSayfasi> {
                     ),
                     const SizedBox(height: 10),
                     const Text(
-                      'Ilk giriste rolunu sec ve uygun akisla devam et.',
+                      'Musteri akisi dogrudan QR menu ile acilir. Garson ve yonetici girisleri bu ekrandan yonetilir.',
                       textAlign: TextAlign.center,
                       style: TextStyle(color: Color(0xFFD9CEE5), fontSize: 16),
+                    ),
+                    const SizedBox(height: 18),
+                    Align(
+                      alignment: Alignment.center,
+                      child: Wrap(
+                        spacing: 10,
+                        runSpacing: 10,
+                        alignment: WrapAlignment.center,
+                        children: [
+                          OutlinedButton.icon(
+                            onPressed: () {
+                              Navigator.of(
+                                context,
+                              ).pushReplacementNamed(RotaYapisi.qrMenu);
+                            },
+                            style: OutlinedButton.styleFrom(
+                              foregroundColor: Colors.white,
+                              side: BorderSide(
+                                color: Colors.white.withValues(alpha: 0.2),
+                              ),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 14,
+                              ),
+                            ),
+                            icon: const Icon(Icons.qr_code_2_rounded, size: 18),
+                            label: const Text('QR menuye don'),
+                          ),
+                        ],
+                      ),
                     ),
                     const SizedBox(height: 28),
                     Wrap(
                       spacing: 14,
                       runSpacing: 14,
-                      children: _GirisModu.values
+                      children: _PersonelGirisModu.values
                           .map(
-                            (_GirisModu mod) => _RolKarti(
+                            (_PersonelGirisModu mod) => _RolKarti(
                               mod: mod,
                               seciliMi: _seciliMod == mod,
+                              genislik: mobil ? double.infinity : 452,
                               tiklandi: () {
                                 setState(() {
                                   _seciliMod = mod;
@@ -181,133 +183,66 @@ class _GirisSecimSayfasiState extends State<GirisSecimSayfasi> {
                             style: const TextStyle(color: Color(0xFF6D6079)),
                           ),
                           const SizedBox(height: 18),
-                          if (_seciliMod == _GirisModu.musteri) ...[
-                            TextField(
-                              controller: _adDenetleyici,
-                              decoration: const InputDecoration(
-                                labelText: 'Isim soyisim',
-                              ),
+                          TextField(
+                            controller: _kullaniciAdiDenetleyici,
+                            decoration: const InputDecoration(
+                              labelText: 'Kullanici adi',
                             ),
-                            const SizedBox(height: 12),
-                            TextField(
-                              controller: _telefonDenetleyici,
-                              decoration: const InputDecoration(
-                                labelText: 'Telefon numarasi',
-                              ),
+                          ),
+                          const SizedBox(height: 12),
+                          TextField(
+                            controller: _sifreDenetleyici,
+                            obscureText: true,
+                            decoration: const InputDecoration(
+                              labelText: 'Sifre',
                             ),
-                            const SizedBox(height: 12),
-                            TextField(
-                              controller: _adresDenetleyici,
-                              minLines: 2,
-                              maxLines: 3,
-                              decoration: const InputDecoration(
-                                labelText: 'Adres',
-                              ),
-                            ),
-                          ] else ...[
-                            TextField(
-                              controller: _telefonDenetleyici,
-                              decoration: const InputDecoration(
-                                labelText: 'Kullanici adi',
-                              ),
-                            ),
-                            const SizedBox(height: 12),
-                            TextField(
-                              controller: _sifreDenetleyici,
-                              obscureText: true,
-                              decoration: const InputDecoration(
-                                labelText: 'Sifre',
-                              ),
-                            ),
-                          ],
+                          ),
                           const SizedBox(height: 18),
-                          if (_seciliMod == _GirisModu.musteri)
-                            SizedBox(
-                              width: double.infinity,
-                              child: FilledButton(
-                                onPressed: _islemde ? null : _devamEt,
-                                style: FilledButton.styleFrom(
-                                  backgroundColor: const Color(0xFFFF5D8F),
-                                  foregroundColor: Colors.white,
-                                  padding: const EdgeInsets.symmetric(
-                                    vertical: 16,
-                                  ),
-                                ),
-                                child: Text(
-                                  _islemde
-                                      ? 'Hazirlaniyor...'
-                                      : _seciliMod.butonMetni,
+                          SizedBox(
+                            width: double.infinity,
+                            child: FilledButton(
+                              onPressed: _islemde
+                                  ? null
+                                  : () => _devamEt(hedef: _seciliMod.ilkHedef),
+                              style: FilledButton.styleFrom(
+                                backgroundColor: const Color(0xFFFF5D8F),
+                                foregroundColor: Colors.white,
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 16,
                                 ),
                               ),
-                            )
-                          else
-                            Column(
-                              children: [
-                                SizedBox(
-                                  width: double.infinity,
-                                  child: FilledButton(
-                                    onPressed: _islemde
-                                        ? null
-                                        : () =>
-                                              _devamEt(hedef: _GirisHedefi.pos),
-                                    style: FilledButton.styleFrom(
-                                      backgroundColor: const Color(0xFFFF5D8F),
-                                      foregroundColor: Colors.white,
-                                      padding: const EdgeInsets.symmetric(
-                                        vertical: 16,
-                                      ),
-                                    ),
-                                    child: Text(
-                                      _islemde
-                                          ? 'Hazirlaniyor...'
-                                          : 'POS ekranina gir',
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(height: 12),
-                                SizedBox(
-                                  width: double.infinity,
-                                  child: OutlinedButton(
-                                    onPressed: _islemde
-                                        ? null
-                                        : () => _devamEt(
-                                            hedef: _GirisHedefi.mutfak,
-                                          ),
-                                    style: OutlinedButton.styleFrom(
-                                      foregroundColor: const Color(0xFF241036),
-                                      side: const BorderSide(
-                                        color: Color(0xFF241036),
-                                      ),
-                                      padding: const EdgeInsets.symmetric(
-                                        vertical: 16,
-                                      ),
-                                    ),
-                                    child: const Text('Mutfak ekranina git'),
-                                  ),
-                                ),
-                                const SizedBox(height: 12),
-                                SizedBox(
-                                  width: double.infinity,
-                                  child: OutlinedButton(
-                                    onPressed: _islemde
-                                        ? null
-                                        : () => _devamEt(
-                                            hedef: _GirisHedefi.yonetim,
-                                          ),
-                                    style: OutlinedButton.styleFrom(
-                                      foregroundColor: const Color(0xFF241036),
-                                      side: const BorderSide(
-                                        color: Color(0xFF241036),
-                                      ),
-                                      padding: const EdgeInsets.symmetric(
-                                        vertical: 16,
-                                      ),
-                                    ),
-                                    child: const Text('Yonetim paneline git'),
-                                  ),
-                                ),
-                              ],
+                              child: Text(
+                                _islemde
+                                    ? 'Hazirlaniyor...'
+                                    : _seciliMod.butonMetni,
+                              ),
                             ),
+                          ),
+                          const SizedBox(height: 12),
+                          Wrap(
+                            spacing: 12,
+                            runSpacing: 12,
+                            children: [
+                              OutlinedButton.icon(
+                                onPressed: _islemde
+                                    ? null
+                                    : () =>
+                                          _devamEt(hedef: _GirisHedefi.mutfak),
+                                icon: const Icon(Icons.restaurant_rounded),
+                                label: const Text('Mutfak ekranina git'),
+                              ),
+                              if (_seciliMod == _PersonelGirisModu.yonetici)
+                                OutlinedButton.icon(
+                                  onPressed: _islemde
+                                      ? null
+                                      : () => _devamEt(
+                                          hedef: _GirisHedefi.yonetim,
+                                        ),
+                                  icon: const Icon(Icons.dashboard_rounded),
+                                  label: const Text('Yonetim paneline git'),
+                                ),
+                            ],
+                          ),
                         ],
                       ),
                     ),
@@ -322,42 +257,47 @@ class _GirisSecimSayfasiState extends State<GirisSecimSayfasi> {
   }
 }
 
-enum _GirisModu {
-  musteri(
-    'Musteri girisi',
-    'QR menu ve siparis akisina devam et.',
-    'Musteri olarak devam et',
-  ),
+enum _PersonelGirisModu {
   garson(
     'Garson girisi',
     'Servis operasyonu ve masa akisina gec.',
     'Garson olarak giris yap',
+    _GirisHedefi.pos,
   ),
   yonetici(
     'Yonetici girisi',
-    'Yonetim paneli ve ayarlari ac.',
+    'Yonetim paneli, mutfak ve operasyon ekranlarini ac.',
     'Yonetici olarak giris yap',
+    _GirisHedefi.yonetim,
   );
 
-  const _GirisModu(this.baslik, this.aciklama, this.butonMetni);
+  const _PersonelGirisModu(
+    this.baslik,
+    this.aciklama,
+    this.butonMetni,
+    this.ilkHedef,
+  );
 
   final String baslik;
   final String aciklama;
   final String butonMetni;
+  final _GirisHedefi ilkHedef;
 }
 
-enum _GirisHedefi { qrMenu, pos, yonetim, mutfak }
+enum _GirisHedefi { pos, yonetim, mutfak }
 
 class _RolKarti extends StatelessWidget {
   const _RolKarti({
     required this.mod,
     required this.seciliMi,
     required this.tiklandi,
+    required this.genislik,
   });
 
-  final _GirisModu mod;
+  final _PersonelGirisModu mod;
   final bool seciliMi;
   final VoidCallback tiklandi;
+  final double genislik;
 
   @override
   Widget build(BuildContext context) {
@@ -365,7 +305,7 @@ class _RolKarti extends StatelessWidget {
       onTap: tiklandi,
       borderRadius: BorderRadius.circular(22),
       child: Container(
-        width: 290,
+        width: genislik,
         padding: const EdgeInsets.all(18),
         decoration: BoxDecoration(
           color: seciliMi

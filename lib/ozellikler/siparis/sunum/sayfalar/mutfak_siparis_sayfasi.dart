@@ -452,7 +452,7 @@ class _MutfakNavigasyonSeridi extends StatelessWidget {
                 onPressed: () {
                   Navigator.of(
                     context,
-                  ).pushReplacementNamed(RotaYapisi.anaSayfa);
+                  ).pushReplacementNamed(RotaYapisi.personelGiris);
                 },
                 style: OutlinedButton.styleFrom(
                   foregroundColor: Colors.white,
@@ -463,7 +463,7 @@ class _MutfakNavigasyonSeridi extends StatelessWidget {
                   ),
                 ),
                 icon: const Icon(Icons.switch_account_rounded, size: 18),
-                label: const Text('Rol secimine don'),
+                label: const Text('Personel girisine don'),
               ),
             ],
           ),

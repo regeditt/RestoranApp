@@ -14,6 +14,7 @@ class RotaYapisi {
   const RotaYapisi._();
 
   static const String anaSayfa = '/';
+  static const String personelGiris = '/personel-giris';
   static const String vitrin = '/ana-sayfa';
   static const String hesabim = '/hesabim';
   static const String musteriMenusu = '/musteri-menusu';
@@ -26,6 +27,11 @@ class RotaYapisi {
   static Route<dynamic> rotaOlustur(RouteSettings ayarlar) {
     switch (ayarlar.name) {
       case anaSayfa:
+        return MaterialPageRoute<void>(
+          builder: (_) => const QrMenuSayfasi(),
+          settings: ayarlar,
+        );
+      case personelGiris:
         return MaterialPageRoute<void>(
           builder: (_) => const GirisSecimSayfasi(),
           settings: ayarlar,
@@ -87,7 +93,7 @@ class RotaYapisi {
         );
       default:
         return MaterialPageRoute<void>(
-          builder: (_) => const GirisSecimSayfasi(),
+          builder: (_) => const QrMenuSayfasi(),
           settings: ayarlar,
         );
     }

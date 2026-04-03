@@ -3,12 +3,12 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:restoran_app/bagimlilik_enjeksiyonu/servis_kaydi.dart';
 import 'package:restoran_app/ortak/responsive/ekran_boyutu.dart';
-import 'package:restoran_app/ortak/sabitler/uygulama_sabitleri.dart';
 import 'package:restoran_app/ortak/yonlendirme/rota_yapisi.dart';
 import 'package:restoran_app/ozellikler/menu/alan/varliklar/kategori_varligi.dart';
 import 'package:restoran_app/ozellikler/menu/alan/varliklar/qr_menu_baglami_varligi.dart';
 import 'package:restoran_app/ozellikler/menu/alan/varliklar/urun_secenegi_varligi.dart';
 import 'package:restoran_app/ozellikler/menu/alan/varliklar/urun_varligi.dart';
+import 'package:restoran_app/ozellikler/menu/sunum/bilesenler/musteri_menu_ust_cubugu.dart';
 import 'package:restoran_app/ozellikler/sepet/alan/varliklar/sepet_kalemi_varligi.dart';
 import 'package:restoran_app/ozellikler/sepet/alan/varliklar/sepet_varligi.dart';
 import 'package:restoran_app/ozellikler/siparis/alan/varliklar/siparis_ozeti_girdisi_varligi.dart';
@@ -362,7 +362,7 @@ class _MusteriMenuSayfasiState extends State<MusteriMenuSayfasi> {
                         child: masaustu
                             ? Column(
                                 children: [
-                                  _UstCubuk(
+                                  MusteriMenuUstCubugu(
                                     seciliKategoriAdi: _seciliKategoriAdi,
                                     qrModu: widget.qrModu,
                                     qrBaglami: widget.qrBaglami,
@@ -370,7 +370,7 @@ class _MusteriMenuSayfasiState extends State<MusteriMenuSayfasi> {
                                   if (widget.qrModu &&
                                       widget.qrBaglami != null) ...[
                                     const SizedBox(height: 12),
-                                    _QrBaglamDurumKarti(
+                                    QrBaglamDurumKarti(
                                       qrBaglami: widget.qrBaglami!,
                                     ),
                                   ],
@@ -432,7 +432,7 @@ class _MusteriMenuSayfasiState extends State<MusteriMenuSayfasi> {
                             : ListView(
                                 padding: const EdgeInsets.all(12),
                                 children: [
-                                  _UstCubuk(
+                                  MusteriMenuUstCubugu(
                                     seciliKategoriAdi: _seciliKategoriAdi,
                                     qrModu: widget.qrModu,
                                     qrBaglami: widget.qrBaglami,
@@ -440,7 +440,7 @@ class _MusteriMenuSayfasiState extends State<MusteriMenuSayfasi> {
                                   if (widget.qrModu &&
                                       widget.qrBaglami != null) ...[
                                     const SizedBox(height: 12),
-                                    _QrBaglamDurumKarti(
+                                    QrBaglamDurumKarti(
                                       qrBaglami: widget.qrBaglami!,
                                     ),
                                   ],
@@ -497,346 +497,6 @@ class _MusteriMenuSayfasiState extends State<MusteriMenuSayfasi> {
       }
     }
     return _kategoriler.isNotEmpty ? _kategoriler.first.ad : 'Menu';
-  }
-}
-
-class _UstCubuk extends StatelessWidget {
-  const _UstCubuk({
-    required this.seciliKategoriAdi,
-    required this.qrModu,
-    this.qrBaglami,
-  });
-
-  final String seciliKategoriAdi;
-  final bool qrModu;
-  final QrMenuBaglamiVarligi? qrBaglami;
-
-  @override
-  Widget build(BuildContext context) {
-    final bool mobil = EkranBoyutu.mobil(context);
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFFE53D6F), Color(0xFF6C2FD2), Color(0xFF32185A)],
-        ),
-        borderRadius: BorderRadius.circular(22),
-      ),
-      child: mobil
-          ? Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _solKisim(context, mobil),
-                if (!qrModu) ...[
-                  const SizedBox(height: 10),
-                  _modulGecisleri(context, mobil: true),
-                ],
-                if (qrModu && qrBaglami?.rozetler.isNotEmpty == true) ...[
-                  const SizedBox(height: 10),
-                  _QrRozetleri(rozetler: qrBaglami!.rozetler),
-                ],
-                const SizedBox(height: 12),
-                _aramaKutusu(true),
-              ],
-            )
-          : Row(
-              children: [
-                Expanded(child: _solKisim(context, mobil)),
-                const SizedBox(width: 12),
-                _DurumRozeti(
-                  ikon: qrModu ? Icons.qr_code_2 : Icons.wifi,
-                  etiket: qrModu ? 'QR menu' : 'Internet',
-                ),
-                const SizedBox(width: 10),
-                const _DurumRozeti(ikon: Icons.dns, etiket: 'Server'),
-                if (qrModu && qrBaglami?.rozetler.isNotEmpty == true) ...[
-                  const SizedBox(width: 10),
-                  _QrRozetleri(rozetler: qrBaglami!.rozetler),
-                ],
-                if (!qrModu) ...[
-                  const SizedBox(width: 10),
-                  _modulGecisleri(context),
-                ],
-                const SizedBox(width: 12),
-                _aramaKutusu(false),
-              ],
-            ),
-    );
-  }
-
-  Widget _solKisim(BuildContext context, bool mobil) {
-    return Wrap(
-      spacing: 16,
-      runSpacing: 12,
-      crossAxisAlignment: WrapCrossAlignment.center,
-      children: [
-        Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 36,
-              height: 36,
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.16),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: IconButton(
-                onPressed: () => Navigator.of(context).maybePop(),
-                icon: const Icon(
-                  Icons.chevron_left_rounded,
-                  color: Colors.white,
-                ),
-                splashRadius: 20,
-              ),
-            ),
-            const SizedBox(width: 12),
-            Text.rich(
-              TextSpan(
-                children: [
-                  TextSpan(
-                    text: '${UygulamaSabitleri.restoranAdi} ',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 20,
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: 1.2,
-                    ),
-                  ),
-                  TextSpan(
-                    text: UygulamaSabitleri.markaEtiketi,
-                    style: TextStyle(
-                      color: Color(0xFFFFC8D9),
-                      fontSize: 18,
-                      fontWeight: FontWeight.w700,
-                      fontStyle: FontStyle.italic,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-        if (!mobil)
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.12),
-              borderRadius: BorderRadius.circular(999),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  qrModu ? Icons.qr_code_2_rounded : Icons.receipt_long,
-                  color: Colors.white,
-                  size: 16,
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  qrModu ? 'QR MENU' : 'SIPARIS',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        if (!mobil)
-          Text(
-            '${qrModu ? 'QR Menu' : UygulamaSabitleri.menuKirintiKoku}  /  $seciliKategoriAdi',
-            style: TextStyle(
-              color: Colors.white.withValues(alpha: 0.84),
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-      ],
-    );
-  }
-
-  Widget _aramaKutusu(bool mobil) {
-    return Container(
-      width: mobil ? double.infinity : 180,
-      height: 40,
-      padding: const EdgeInsets.symmetric(horizontal: 12),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.14),
-        borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
-      ),
-      child: Row(
-        children: [
-          const Icon(Icons.search, size: 18, color: Colors.white70),
-          const SizedBox(width: 8),
-          Text(
-            'Ara',
-            style: TextStyle(
-              color: Colors.white.withValues(alpha: 0.74),
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _modulGecisleri(BuildContext context, {bool mobil = false}) {
-    return Wrap(
-      spacing: 8,
-      runSpacing: 8,
-      children: [
-        FilledButton.tonalIcon(
-          onPressed: () {
-            Navigator.of(
-              context,
-            ).pushReplacementNamed(RotaYapisi.yonetimPaneli);
-          },
-          style: FilledButton.styleFrom(
-            foregroundColor: Colors.white,
-            backgroundColor: Colors.white.withValues(alpha: 0.14),
-            padding: EdgeInsets.symmetric(
-              horizontal: mobil ? 12 : 14,
-              vertical: 12,
-            ),
-          ),
-          icon: const Icon(Icons.dashboard_customize_rounded, size: 18),
-          label: const Text('Yonetim paneli'),
-        ),
-        OutlinedButton.icon(
-          onPressed: () {
-            Navigator.of(context).pushReplacementNamed(RotaYapisi.anaSayfa);
-          },
-          style: OutlinedButton.styleFrom(
-            foregroundColor: Colors.white,
-            side: BorderSide(color: Colors.white.withValues(alpha: 0.2)),
-            padding: EdgeInsets.symmetric(
-              horizontal: mobil ? 12 : 14,
-              vertical: 12,
-            ),
-          ),
-          icon: const Icon(Icons.switch_account_rounded, size: 18),
-          label: const Text('Rol secimine don'),
-        ),
-      ],
-    );
-  }
-}
-
-class _DurumRozeti extends StatelessWidget {
-  const _DurumRozeti({required this.ikon, required this.etiket});
-
-  final IconData ikon;
-  final String etiket;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(999),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(ikon, size: 14, color: const Color(0xFF6BF3A7)),
-          const SizedBox(width: 6),
-          Text(
-            etiket,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _QrRozetleri extends StatelessWidget {
-  const _QrRozetleri({required this.rozetler});
-
-  final List<String> rozetler;
-
-  @override
-  Widget build(BuildContext context) {
-    return Wrap(
-      spacing: 8,
-      runSpacing: 8,
-      children: rozetler
-          .map(
-            (rozet) =>
-                _DurumRozeti(ikon: Icons.local_offer_outlined, etiket: rozet),
-          )
-          .toList(),
-    );
-  }
-}
-
-class _QrBaglamDurumKarti extends StatelessWidget {
-  const _QrBaglamDurumKarti({required this.qrBaglami});
-
-  final QrMenuBaglamiVarligi qrBaglami;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.10)),
-      ),
-      child: Wrap(
-        spacing: 14,
-        runSpacing: 14,
-        crossAxisAlignment: WrapCrossAlignment.center,
-        children: [
-          Container(
-            width: 46,
-            height: 46,
-            decoration: BoxDecoration(
-              color: const Color(0xFFFFE1EC),
-              borderRadius: BorderRadius.circular(14),
-            ),
-            child: const Icon(
-              Icons.qr_code_2_rounded,
-              color: Color(0xFFB23A68),
-            ),
-          ),
-          ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 520),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  qrBaglami.acilisBasligi,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w900,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  qrBaglami.acilisAciklamasi,
-                  style: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.78),
-                    fontWeight: FontWeight.w600,
-                    height: 1.35,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          _QrRozetleri(rozetler: qrBaglami.rozetler),
-        ],
-      ),
-    );
   }
 }
 
@@ -1538,6 +1198,7 @@ class _UrunKarti extends StatelessWidget {
   Widget build(BuildContext context) {
     final List<Color> renkler = _urunRenkleri(urun.id);
     final bool etkilesimeAcik = urun.stoktaMi && !islemedeMi;
+    final bool kompaktKart = MediaQuery.sizeOf(context).width < 480;
 
     return Material(
       color: urun.stoktaMi ? Colors.white : const Color(0xFFF2ECF5),
@@ -1551,7 +1212,7 @@ class _UrunKarti extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Container(
-                height: 96,
+                height: kompaktKart ? 64 : 96,
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     begin: Alignment.topLeft,
@@ -1604,7 +1265,7 @@ class _UrunKarti extends StatelessWidget {
                   ],
                 ),
               ),
-              const SizedBox(height: 10),
+              SizedBox(height: kompaktKart ? 6 : 10),
               Text(
                 urun.ad,
                 maxLines: 1,
@@ -1616,11 +1277,12 @@ class _UrunKarti extends StatelessWidget {
                   fontWeight: FontWeight.w800,
                 ),
               ),
-              const SizedBox(height: 6),
-              Expanded(
+              SizedBox(height: kompaktKart ? 4 : 6),
+              Flexible(
+                fit: FlexFit.loose,
                 child: Text(
                   urun.aciklama,
-                  maxLines: 2,
+                  maxLines: kompaktKart ? 1 : 2,
                   overflow: TextOverflow.ellipsis,
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
                     color: urun.stoktaMi
@@ -1630,7 +1292,7 @@ class _UrunKarti extends StatelessWidget {
                   ),
                 ),
               ),
-              const SizedBox(height: 8),
+              SizedBox(height: kompaktKart ? 4 : 8),
               Row(
                 children: [
                   Expanded(
