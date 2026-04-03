@@ -5,7 +5,7 @@ import 'package:restoran_app/uygulama_kabugu/uygulama_kabugu.dart';
 
 void main() {
   if (kIsWeb) {
-    setUrlStrategy(HashUrlStrategy());
+    usePathUrlStrategy();
   }
   runApp(const UygulamaKabugu());
 }

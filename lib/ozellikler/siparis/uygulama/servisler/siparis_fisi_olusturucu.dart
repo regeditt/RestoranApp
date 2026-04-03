@@ -1,3 +1,4 @@
+import 'package:restoran_app/ozellikler/siparis/alan/enumlar/paket_teslimat_durumu.dart';
 import 'package:restoran_app/ozellikler/siparis/alan/enumlar/teslimat_tipi.dart';
 import 'package:restoran_app/ozellikler/siparis/alan/varliklar/siparis_varligi.dart';
 import 'package:restoran_app/ozellikler/yonetim/alan/varliklar/yazici_durumu_varligi.dart';
@@ -27,6 +28,20 @@ class SiparisFisiOlusturucu {
     }
     if (siparis.sahip.misafirBilgisi?.adSoyad != null) {
       tampon.writeln(_satir('Musteri', siparis.sahip.misafirBilgisi!.adSoyad));
+    }
+    if (siparis.adresMetni != null && siparis.adresMetni!.isNotEmpty) {
+      tampon.writeln(_satir('Adres', siparis.adresMetni!));
+    }
+    if (siparis.kuryeAdi != null && siparis.kuryeAdi!.isNotEmpty) {
+      tampon.writeln(_satir('Kurye', siparis.kuryeAdi!));
+    }
+    if (siparis.paketTeslimatDurumu != null) {
+      tampon.writeln(
+        _satir('Dagitim', _paketTeslimatEtiketi(siparis.paketTeslimatDurumu!)),
+      );
+    }
+    if (siparis.teslimatNotu != null && siparis.teslimatNotu!.isNotEmpty) {
+      tampon.writeln(_satir('Not', siparis.teslimatNotu!));
     }
 
     tampon.writeln(_cizgi());
@@ -101,6 +116,19 @@ class SiparisFisiOlusturucu {
         return 'Gel al';
       case TeslimatTipi.paketServis:
         return 'Paket servis';
+    }
+  }
+
+  static String _paketTeslimatEtiketi(PaketTeslimatDurumu durum) {
+    switch (durum) {
+      case PaketTeslimatDurumu.adresDogrulandi:
+        return 'Adres dogrulandi';
+      case PaketTeslimatDurumu.kuryeBekliyor:
+        return 'Kurye bekliyor';
+      case PaketTeslimatDurumu.kuryeYolda:
+        return 'Kurye yolda';
+      case PaketTeslimatDurumu.teslimEdildi:
+        return 'Teslim edildi';
     }
   }
 

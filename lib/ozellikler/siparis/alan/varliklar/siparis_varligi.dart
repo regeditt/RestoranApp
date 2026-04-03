@@ -1,3 +1,4 @@
+import 'package:restoran_app/ozellikler/siparis/alan/enumlar/paket_teslimat_durumu.dart';
 import 'package:restoran_app/ozellikler/siparis/alan/enumlar/siparis_durumu.dart';
 import 'package:restoran_app/ozellikler/siparis/alan/enumlar/teslimat_tipi.dart';
 import 'package:restoran_app/ozellikler/siparis/alan/varliklar/siparis_kalemi_varligi.dart';
@@ -13,6 +14,9 @@ class SiparisVarligi {
     required this.kalemler,
     required this.olusturmaTarihi,
     this.adresMetni,
+    this.teslimatNotu,
+    this.kuryeAdi,
+    this.paketTeslimatDurumu,
     this.masaNo,
     this.bolumAdi,
     this.kaynak,
@@ -26,6 +30,9 @@ class SiparisVarligi {
   final List<SiparisKalemiVarligi> kalemler;
   final DateTime olusturmaTarihi;
   final String? adresMetni;
+  final String? teslimatNotu;
+  final String? kuryeAdi;
+  final PaketTeslimatDurumu? paketTeslimatDurumu;
   final String? masaNo;
   final String? bolumAdi;
   final String? kaynak;
@@ -42,6 +49,9 @@ class SiparisVarligi {
     List<SiparisKalemiVarligi>? kalemler,
     DateTime? olusturmaTarihi,
     String? adresMetni,
+    String? teslimatNotu,
+    String? kuryeAdi,
+    PaketTeslimatDurumu? paketTeslimatDurumu,
     String? masaNo,
     String? bolumAdi,
     String? kaynak,
@@ -55,6 +65,9 @@ class SiparisVarligi {
       kalemler: kalemler ?? this.kalemler,
       olusturmaTarihi: olusturmaTarihi ?? this.olusturmaTarihi,
       adresMetni: adresMetni ?? this.adresMetni,
+      teslimatNotu: teslimatNotu ?? this.teslimatNotu,
+      kuryeAdi: kuryeAdi ?? this.kuryeAdi,
+      paketTeslimatDurumu: paketTeslimatDurumu ?? this.paketTeslimatDurumu,
       masaNo: masaNo ?? this.masaNo,
       bolumAdi: bolumAdi ?? this.bolumAdi,
       kaynak: kaynak ?? this.kaynak,

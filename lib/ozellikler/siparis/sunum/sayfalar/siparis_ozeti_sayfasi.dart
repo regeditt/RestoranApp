@@ -5,6 +5,7 @@ import 'package:restoran_app/ozellikler/kimlik/alan/varliklar/misafir_bilgisi_va
 import 'package:restoran_app/ozellikler/menu/alan/varliklar/qr_menu_baglami_varligi.dart';
 import 'package:restoran_app/ozellikler/sepet/alan/varliklar/sepet_kalemi_varligi.dart';
 import 'package:restoran_app/ozellikler/sepet/alan/varliklar/sepet_varligi.dart';
+import 'package:restoran_app/ozellikler/siparis/alan/enumlar/paket_teslimat_durumu.dart';
 import 'package:restoran_app/ozellikler/siparis/alan/enumlar/siparis_durumu.dart';
 import 'package:restoran_app/ozellikler/siparis/alan/enumlar/teslimat_tipi.dart';
 import 'package:restoran_app/ozellikler/siparis/alan/varliklar/siparis_kalemi_varligi.dart';
@@ -24,9 +25,51 @@ class SiparisOzetiSayfasi extends StatefulWidget {
 
 class _SiparisOzetiSayfasiState extends State<SiparisOzetiSayfasi> {
   final ServisKaydi _servisKaydi = ServisKaydi.ortak;
+  final TextEditingController _adresDenetleyici = TextEditingController();
+  final TextEditingController _teslimatNotuDenetleyici =
+      TextEditingController();
   bool _kaydediliyor = false;
+  bool _varsayilanBilgilerYuklendi = false;
+  late TeslimatTipi _seciliTeslimatTipi;
+
+  @override
+  void initState() {
+    super.initState();
+    _seciliTeslimatTipi = widget.qrBaglami?.masaNo != null
+        ? TeslimatTipi.restorandaYe
+        : TeslimatTipi.gelAl;
+    _varsayilanBilgileriYukle();
+  }
+
+  @override
+  void dispose() {
+    _adresDenetleyici.dispose();
+    _teslimatNotuDenetleyici.dispose();
+    super.dispose();
+  }
+
+  Future<void> _varsayilanBilgileriYukle() async {
+    final aktifKullanici = await _servisKaydi.aktifKullaniciGetirUseCase();
+    if (!mounted || _varsayilanBilgilerYuklendi) {
+      return;
+    }
+
+    setState(() {
+      _adresDenetleyici.text = aktifKullanici?.adresMetni ?? '';
+      _varsayilanBilgilerYuklendi = true;
+    });
+  }
 
   Future<void> _siparisiOnayla() async {
+    if (_paketServisSeciliMi && _adresDenetleyici.text.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Paket sipariste teslimat adresi gerekli'),
+        ),
+      );
+      return;
+    }
+
     setState(() {
       _kaydediliyor = true;
     });
@@ -46,7 +89,7 @@ class _SiparisOzetiSayfasiState extends State<SiparisOzetiSayfasi> {
         id: 'sip_${simdi.microsecondsSinceEpoch}',
         siparisNo: 'R-${simdi.millisecondsSinceEpoch.toString().substring(7)}',
         sahip: SiparisSahibiVarligi.misafir(misafir),
-        teslimatTipi: _teslimatTipi,
+        teslimatTipi: _seciliTeslimatTipi,
         durum: SiparisDurumu.alindi,
         kalemler: widget.sepet.kalemler
             .map(
@@ -62,6 +105,15 @@ class _SiparisOzetiSayfasiState extends State<SiparisOzetiSayfasi> {
             )
             .toList(),
         olusturmaTarihi: simdi,
+        adresMetni: _paketServisSeciliMi
+            ? _adresDenetleyici.text.trim()
+            : aktifKullanici?.adresMetni,
+        teslimatNotu: _teslimatNotuDenetleyici.text.trim().isEmpty
+            ? null
+            : _teslimatNotuDenetleyici.text.trim(),
+        paketTeslimatDurumu: _paketServisSeciliMi
+            ? PaketTeslimatDurumu.adresDogrulandi
+            : null,
         masaNo: widget.qrBaglami?.masaNo,
         bolumAdi: widget.qrBaglami?.bolumAdi,
         kaynak: widget.qrBaglami?.kaynak,
@@ -190,6 +242,7 @@ class _SiparisOzetiSayfasiState extends State<SiparisOzetiSayfasi> {
                 children: [
                   _ozetRakam('Ara toplam', _paraYaz(widget.sepet.araToplam)),
                   _ozetRakam('Teslimat', _teslimatEtiketi),
+                  if (_paketServisSeciliMi) _ozetRakam('Adres', _adresKisaOzet),
                   if (widget.qrBaglami?.masaNo != null)
                     _ozetRakam('Masa', widget.qrBaglami!.masaNo!),
                   if (widget.qrBaglami?.bolumAdi != null)
@@ -225,12 +278,49 @@ class _SiparisOzetiSayfasiState extends State<SiparisOzetiSayfasi> {
                   Text(
                     widget.qrBaglami?.masaNo != null
                         ? 'QR ile acilan masa baglami bulundu. Siparis varsayilan misafir kaydi ile dogrudan olusturulur ve masa bilgisi siparise eklenir.'
-                        : 'Musteri bilgileri bolumu kaldirildi. Siparis varsayilan misafir kaydi ile dogrudan olusturulur.',
+                        : 'Misafir siparisi icin gel al veya paket servis sec. Paket servis secilirse adres ve teslimat notu siparise eklenir.',
                     style: TextStyle(
                       color: Colors.white.withValues(alpha: 0.72),
                       height: 1.45,
                     ),
                   ),
+                  if (widget.qrBaglami?.masaNo == null) ...[
+                    const SizedBox(height: 18),
+                    Wrap(
+                      spacing: 10,
+                      runSpacing: 10,
+                      children: [
+                        _teslimatSecimCipi(
+                          etiket: 'Gel al',
+                          teslimatTipi: TeslimatTipi.gelAl,
+                        ),
+                        _teslimatSecimCipi(
+                          etiket: 'Paket servis',
+                          teslimatTipi: TeslimatTipi.paketServis,
+                        ),
+                      ],
+                    ),
+                  ],
+                  if (_paketServisSeciliMi) ...[
+                    const SizedBox(height: 18),
+                    TextField(
+                      controller: _adresDenetleyici,
+                      maxLines: 2,
+                      decoration: const InputDecoration(
+                        labelText: 'Teslimat adresi',
+                        hintText: 'Mahalle, sokak, bina, kat ve daire bilgisi',
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    TextField(
+                      controller: _teslimatNotuDenetleyici,
+                      maxLines: 2,
+                      decoration: const InputDecoration(
+                        labelText: 'Teslimat notu',
+                        hintText: 'Site girisi, zil bilgisi, kurye notu',
+                      ),
+                    ),
+                  ],
                   const SizedBox(height: 18),
                   SizedBox(
                     width: double.infinity,
@@ -361,23 +451,62 @@ class _SiparisOzetiSayfasiState extends State<SiparisOzetiSayfasi> {
     );
   }
 
-  TeslimatTipi get _teslimatTipi {
-    return widget.qrBaglami?.masaNo != null
-        ? TeslimatTipi.restorandaYe
-        : TeslimatTipi.gelAl;
+  Widget _teslimatSecimCipi({
+    required String etiket,
+    required TeslimatTipi teslimatTipi,
+  }) {
+    final bool secili = _seciliTeslimatTipi == teslimatTipi;
+    return ChoiceChip(
+      selected: secili,
+      label: Text(etiket),
+      onSelected: (_) {
+        setState(() {
+          _seciliTeslimatTipi = teslimatTipi;
+        });
+      },
+      labelStyle: TextStyle(
+        color: secili ? const Color(0xFF140B20) : Colors.white,
+        fontWeight: FontWeight.w800,
+      ),
+      selectedColor: const Color(0xFFFFB6CB),
+      backgroundColor: Colors.white.withValues(alpha: 0.08),
+      side: BorderSide(color: Colors.white.withValues(alpha: 0.12)),
+    );
   }
 
   String get _teslimatEtiketi {
-    return _teslimatTipi == TeslimatTipi.restorandaYe
-        ? 'Restoranda ye'
-        : 'Gel al';
+    switch (_seciliTeslimatTipi) {
+      case TeslimatTipi.restorandaYe:
+        return 'Restoranda ye';
+      case TeslimatTipi.gelAl:
+        return 'Gel al';
+      case TeslimatTipi.paketServis:
+        return 'Paket servis';
+    }
   }
 
   String _siparisBilgisi(SiparisVarligi siparis) {
     if (siparis.masaNo != null && siparis.masaNo!.isNotEmpty) {
       return 'Masa ${siparis.masaNo} icin kaydedildi';
     }
+    if (siparis.teslimatTipi == TeslimatTipi.paketServis) {
+      return 'Paket siparis ${siparis.adresMetni ?? 'adrese'} yonlendirildi';
+    }
     return 'Siparis kaydedildi';
+  }
+
+  bool get _paketServisSeciliMi =>
+      _seciliTeslimatTipi == TeslimatTipi.paketServis;
+
+  String get _adresKisaOzet {
+    final String adres = _adresDenetleyici.text.trim();
+    if (adres.isEmpty) {
+      return 'Adres bekleniyor';
+    }
+    if (adres.length <= 26) {
+      return adres;
+    }
+    return '${adres.substring(0, 26)}...';
   }
 }
 

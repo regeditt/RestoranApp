@@ -12,4 +12,5 @@ class UygulamaSabitleri {
   static const String operasyonBasligi = 'Operasyon merkezi';
   static const String uygulamaAciklamasi =
       'Cok platformlu restoran yonetim ve siparis uygulamasi';
+  static const String varsayilanQrTabanUrl = 'https://restoranapp.local';
 }

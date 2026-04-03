@@ -18,4 +18,24 @@ class QrMenuBaglamiVarligi {
     }
     return degerler;
   }
+
+  String get acilisBasligi {
+    if (masaNo != null && masaNo!.trim().isNotEmpty) {
+      return 'Masa $masaNo icin QR menu';
+    }
+    if (bolumAdi != null && bolumAdi!.trim().isNotEmpty) {
+      return '$bolumAdi bolumu icin QR menu';
+    }
+    return 'QR menu baglami aktif';
+  }
+
+  String get acilisAciklamasi {
+    if (masaNo != null && masaNo!.trim().isNotEmpty) {
+      return 'Siparisin ilgili masa baglami ile olusmasi icin bu ekran QR akisi ile acildi.';
+    }
+    if (bolumAdi != null && bolumAdi!.trim().isNotEmpty) {
+      return 'Bolume ozel hizli menu acilisi aktif. Siparis akisi bu baglamla ilerleyecek.';
+    }
+    return 'Bu menu ozel QR baglami ile acildi.';
+  }
 }

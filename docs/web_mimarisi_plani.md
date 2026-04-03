@@ -98,11 +98,19 @@ Yayinlama kosullari:
 
 ## Yaklasan Web Isleri
 
-1. `QR menu` icin query param okuma altyapisi ekle
+1. yonetim panelinde masa bazli gercek `QR URL` uretimi ekle
 2. `masa` bilgisini siparis olusturma akisina bagla
 3. web icin ayri giris/yetki korumasi tanimla
 4. `flutter build web` alip tarayicida akisi dogrula
 5. hosting fallback kurallarini dokumante et
+
+## Mevcut QR Durumu
+
+- `QR menu` sayfasi query parametrelerinden `masa`, `bolum` ve `kaynak` bilgisini okuyacak sekilde merkezilestirildi
+- Web URL stratejisi temiz rota mantigina cekildi
+- Referans URL kalibi:
+  - `/qr-menu?masa=12&bolum=teras&kaynak=qr`
+- QR kodun gorsel bitmap olarak uretimi sonraki adimda yonetim paneline eklenecek
 
 ## MVP Web Kapsami
 

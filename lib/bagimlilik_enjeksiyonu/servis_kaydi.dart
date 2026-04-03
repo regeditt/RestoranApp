@@ -17,6 +17,8 @@ import 'package:restoran_app/ozellikler/menu/uygulama/use_case/urunleri_getir_us
 import 'package:restoran_app/ozellikler/menu/veri/depolar/menu_deposu_mock.dart';
 import 'package:restoran_app/ozellikler/sepet/alan/depolar/sepet_deposu.dart';
 import 'package:restoran_app/ozellikler/sepet/uygulama/use_case/sepete_urun_ekle_use_case.dart';
+import 'package:restoran_app/ozellikler/sepet/uygulama/use_case/sepet_kalemi_guncelle_use_case.dart';
+import 'package:restoran_app/ozellikler/sepet/uygulama/use_case/sepet_kalemi_sil_use_case.dart';
 import 'package:restoran_app/ozellikler/sepet/uygulama/use_case/sepeti_getir_use_case.dart';
 import 'package:restoran_app/ozellikler/sepet/uygulama/use_case/sepeti_temizle_use_case.dart';
 import 'package:restoran_app/ozellikler/sepet/veri/depolar/sepet_deposu_mock.dart';
@@ -84,6 +86,8 @@ class ServisKaydi {
     urunSilUseCase = UrunSilUseCase(_menuDeposu);
     sepetiGetirUseCase = SepetiGetirUseCase(_sepetDeposu);
     sepeteUrunEkleUseCase = SepeteUrunEkleUseCase(_sepetDeposu);
+    sepetKalemiGuncelleUseCase = SepetKalemiGuncelleUseCase(_sepetDeposu);
+    sepetKalemiSilUseCase = SepetKalemiSilUseCase(_sepetDeposu);
     sepetiTemizleUseCase = SepetiTemizleUseCase(_sepetDeposu);
     siparisOlusturUseCase = SiparisOlusturUseCase(_siparisDeposu);
     siparisDurumuGuncelleUseCase = SiparisDurumuGuncelleUseCase(_siparisDeposu);
@@ -140,6 +144,8 @@ class ServisKaydi {
   late final UrunSilUseCase urunSilUseCase;
   late final SepetiGetirUseCase sepetiGetirUseCase;
   late final SepeteUrunEkleUseCase sepeteUrunEkleUseCase;
+  late final SepetKalemiGuncelleUseCase sepetKalemiGuncelleUseCase;
+  late final SepetKalemiSilUseCase sepetKalemiSilUseCase;
   late final SepetiTemizleUseCase sepetiTemizleUseCase;
   late final SiparisOlusturUseCase siparisOlusturUseCase;
   late final SiparisDurumuGuncelleUseCase siparisDurumuGuncelleUseCase;

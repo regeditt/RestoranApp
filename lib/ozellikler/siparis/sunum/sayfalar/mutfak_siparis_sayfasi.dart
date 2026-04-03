@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:restoran_app/bagimlilik_enjeksiyonu/servis_kaydi.dart';
 import 'package:restoran_app/ortak/responsive/ekran_boyutu.dart';
 import 'package:restoran_app/ortak/yonlendirme/rota_yapisi.dart';
+import 'package:restoran_app/ozellikler/siparis/alan/enumlar/paket_teslimat_durumu.dart';
 import 'package:restoran_app/ozellikler/siparis/alan/enumlar/siparis_durumu.dart';
 import 'package:restoran_app/ozellikler/siparis/alan/enumlar/teslimat_tipi.dart';
 import 'package:restoran_app/ozellikler/siparis/alan/varliklar/siparis_kalemi_varligi.dart';
@@ -75,6 +76,26 @@ class _MutfakSiparisSayfasiState extends State<MutfakSiparisSayfasi> {
     );
   }
 
+  Future<void> _siparisiIptalEt(SiparisVarligi siparis) async {
+    await _servisKaydi.siparisDurumuGuncelleUseCase(
+      siparis.id,
+      SiparisDurumu.iptalEdildi,
+    );
+    await _yukle();
+
+    if (!mounted) {
+      return;
+    }
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          '${siparis.siparisNo} iptal edildi ve operasyon listesinden dusuruldu.',
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final bool masaustu = EkranBoyutu.masaustu(context);
@@ -97,6 +118,13 @@ class _MutfakSiparisSayfasiState extends State<MutfakSiparisSayfasi> {
     );
     final List<YaziciIsKuyruguVarligi> yaziciKuyrugu =
         YaziciIsKuyruguHesaplayici.kuyruguHazirla(_siparisler);
+    final List<SiparisVarligi> aktifSiparisler = filtrelenmisSiparisler
+        .where(
+          (SiparisVarligi siparis) =>
+              siparis.durum != SiparisDurumu.teslimEdildi &&
+              siparis.durum != SiparisDurumu.iptalEdildi,
+        )
+        .toList();
 
     return Scaffold(
       backgroundColor: const Color(0xFF130F1D),
@@ -112,32 +140,38 @@ class _MutfakSiparisSayfasiState extends State<MutfakSiparisSayfasi> {
       body: _yukleniyor
           ? const Center(child: CircularProgressIndicator())
           : SafeArea(
-              child: Padding(
-                padding: EdgeInsets.all(masaustu ? 20 : 14),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _MutfakNavigasyonSeridi(mobil: !masaustu),
-                    const SizedBox(height: 16),
-                    _MutfakYaziciSeridi(
-                      yazicilar: _yazicilar,
-                      kuyruk: yaziciKuyrugu,
-                    ),
-                    const SizedBox(height: 16),
-                    _MutfakOzetSeridi(siparisler: filtrelenmisSiparisler),
-                    const SizedBox(height: 16),
-                    _TeslimatFiltreSeridi(
-                      seciliFiltre: _seciliFiltre,
-                      filtreDegistir: (_TeslimatFiltresi filtre) {
-                        setState(() {
-                          _seciliFiltre = filtre;
-                        });
-                      },
-                    ),
-                    const SizedBox(height: 16),
-                    Expanded(
-                      child: masaustu
-                          ? Scrollbar(
+              child: masaustu
+                  ? Padding(
+                      padding: const EdgeInsets.all(20),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          _MutfakNavigasyonSeridi(mobil: false),
+                          const SizedBox(height: 16),
+                          _MutfakYaziciSeridi(
+                            yazicilar: _yazicilar,
+                            kuyruk: yaziciKuyrugu,
+                          ),
+                          const SizedBox(height: 16),
+                          _MutfakOzetSeridi(siparisler: filtrelenmisSiparisler),
+                          const SizedBox(height: 16),
+                          _MutfakOncelikSeridi(siparisler: aktifSiparisler),
+                          const SizedBox(height: 16),
+                          _MutfakKanalDagilimSeridi(
+                            siparisler: aktifSiparisler,
+                          ),
+                          const SizedBox(height: 16),
+                          _TeslimatFiltreSeridi(
+                            seciliFiltre: _seciliFiltre,
+                            filtreDegistir: (_TeslimatFiltresi filtre) {
+                              setState(() {
+                                _seciliFiltre = filtre;
+                              });
+                            },
+                          ),
+                          const SizedBox(height: 16),
+                          Expanded(
+                            child: Scrollbar(
                               thumbVisibility: true,
                               controller: _yatayKaydirmaDenetleyicisi,
                               child: SingleChildScrollView(
@@ -154,6 +188,7 @@ class _MutfakSiparisSayfasiState extends State<MutfakSiparisSayfasi> {
                                       vurguRengi: const Color(0xFFFF8A5B),
                                       siparisler: yeniSiparisler,
                                       aksiyonCalistir: _durumIlerle,
+                                      iptalCalistir: _siparisiIptalEt,
                                     ),
                                     const SizedBox(width: 14),
                                     _DurumKolonu(
@@ -164,6 +199,7 @@ class _MutfakSiparisSayfasiState extends State<MutfakSiparisSayfasi> {
                                       vurguRengi: const Color(0xFFFFC857),
                                       siparisler: hazirlananlar,
                                       aksiyonCalistir: _durumIlerle,
+                                      iptalCalistir: _siparisiIptalEt,
                                     ),
                                     const SizedBox(width: 14),
                                     _DurumKolonu(
@@ -175,6 +211,7 @@ class _MutfakSiparisSayfasiState extends State<MutfakSiparisSayfasi> {
                                       vurguRengi: const Color(0xFF30C48D),
                                       siparisler: hazirlar,
                                       aksiyonCalistir: _durumIlerle,
+                                      iptalCalistir: _siparisiIptalEt,
                                     ),
                                     const SizedBox(width: 14),
                                     _DurumKolonu(
@@ -185,59 +222,86 @@ class _MutfakSiparisSayfasiState extends State<MutfakSiparisSayfasi> {
                                       vurguRengi: const Color(0xFF7BA7FF),
                                       siparisler: kapanisAkisi,
                                       aksiyonCalistir: _durumIlerle,
+                                      iptalCalistir: _siparisiIptalEt,
                                     ),
                                   ],
                                 ),
                               ),
-                            )
-                          : ListView(
-                              children: [
-                                _DurumKolonu(
-                                  baslik: 'Yeni',
-                                  aciklama: 'Mutfaga yeni dusen siparisler',
-                                  bosDurumMetni: 'Bu filtrede yeni siparis yok',
-                                  vurguRengi: const Color(0xFFFF8A5B),
-                                  siparisler: yeniSiparisler,
-                                  aksiyonCalistir: _durumIlerle,
-                                  yukseklik: 380,
-                                ),
-                                const SizedBox(height: 14),
-                                _DurumKolonu(
-                                  baslik: 'Hazirlaniyor',
-                                  aciklama: 'Aktif mutfak operasyonu',
-                                  bosDurumMetni:
-                                      'Su an mutfakta aktif siparis yok',
-                                  vurguRengi: const Color(0xFFFFC857),
-                                  siparisler: hazirlananlar,
-                                  aksiyonCalistir: _durumIlerle,
-                                  yukseklik: 380,
-                                ),
-                                const SizedBox(height: 14),
-                                _DurumKolonu(
-                                  baslik: 'Hazir',
-                                  aciklama: 'Servis veya teslim bekleyenler',
-                                  bosDurumMetni: 'Bekleyen hazir siparis yok',
-                                  vurguRengi: const Color(0xFF30C48D),
-                                  siparisler: hazirlar,
-                                  aksiyonCalistir: _durumIlerle,
-                                  yukseklik: 380,
-                                ),
-                                const SizedBox(height: 14),
-                                _DurumKolonu(
-                                  baslik: 'Kapanis',
-                                  aciklama: 'Dagitim ve teslim kapanisi',
-                                  bosDurumMetni: 'Kapanis akisinda siparis yok',
-                                  vurguRengi: const Color(0xFF7BA7FF),
-                                  siparisler: kapanisAkisi,
-                                  aksiyonCalistir: _durumIlerle,
-                                  yukseklik: 340,
-                                ),
-                              ],
                             ),
+                          ),
+                        ],
+                      ),
+                    )
+                  : ListView(
+                      padding: const EdgeInsets.all(14),
+                      children: [
+                        _MutfakNavigasyonSeridi(mobil: true),
+                        const SizedBox(height: 16),
+                        _MutfakYaziciSeridi(
+                          yazicilar: _yazicilar,
+                          kuyruk: yaziciKuyrugu,
+                        ),
+                        const SizedBox(height: 16),
+                        _MutfakOzetSeridi(siparisler: filtrelenmisSiparisler),
+                        const SizedBox(height: 16),
+                        _MutfakOncelikSeridi(siparisler: aktifSiparisler),
+                        const SizedBox(height: 16),
+                        _MutfakKanalDagilimSeridi(siparisler: aktifSiparisler),
+                        const SizedBox(height: 16),
+                        _TeslimatFiltreSeridi(
+                          seciliFiltre: _seciliFiltre,
+                          filtreDegistir: (_TeslimatFiltresi filtre) {
+                            setState(() {
+                              _seciliFiltre = filtre;
+                            });
+                          },
+                        ),
+                        const SizedBox(height: 16),
+                        _DurumKolonu(
+                          baslik: 'Yeni',
+                          aciklama: 'Mutfaga yeni dusen siparisler',
+                          bosDurumMetni: 'Bu filtrede yeni siparis yok',
+                          vurguRengi: const Color(0xFFFF8A5B),
+                          siparisler: yeniSiparisler,
+                          aksiyonCalistir: _durumIlerle,
+                          iptalCalistir: _siparisiIptalEt,
+                          yukseklik: 380,
+                        ),
+                        const SizedBox(height: 14),
+                        _DurumKolonu(
+                          baslik: 'Hazirlaniyor',
+                          aciklama: 'Aktif mutfak operasyonu',
+                          bosDurumMetni: 'Su an mutfakta aktif siparis yok',
+                          vurguRengi: const Color(0xFFFFC857),
+                          siparisler: hazirlananlar,
+                          aksiyonCalistir: _durumIlerle,
+                          iptalCalistir: _siparisiIptalEt,
+                          yukseklik: 380,
+                        ),
+                        const SizedBox(height: 14),
+                        _DurumKolonu(
+                          baslik: 'Hazir',
+                          aciklama: 'Servis veya teslim bekleyenler',
+                          bosDurumMetni: 'Bekleyen hazir siparis yok',
+                          vurguRengi: const Color(0xFF30C48D),
+                          siparisler: hazirlar,
+                          aksiyonCalistir: _durumIlerle,
+                          iptalCalistir: _siparisiIptalEt,
+                          yukseklik: 380,
+                        ),
+                        const SizedBox(height: 14),
+                        _DurumKolonu(
+                          baslik: 'Kapanis',
+                          aciklama: 'Dagitim ve teslim kapanisi',
+                          bosDurumMetni: 'Kapanis akisinda siparis yok',
+                          vurguRengi: const Color(0xFF7BA7FF),
+                          siparisler: kapanisAkisi,
+                          aksiyonCalistir: _durumIlerle,
+                          iptalCalistir: _siparisiIptalEt,
+                          yukseklik: 340,
+                        ),
+                      ],
                     ),
-                  ],
-                ),
-              ),
             ),
     );
   }
@@ -297,7 +361,7 @@ class _MutfakSiparisSayfasiState extends State<MutfakSiparisSayfasi> {
       case SiparisDurumu.hazir:
         return '$hat hattina hazir bildirimi yansidi';
       case SiparisDurumu.yolda:
-        return 'Kasa ve paket hattina teslim cikisi aktarıldi';
+        return 'Kasa ve paket hattina teslim cikisi aktarildi';
       case SiparisDurumu.teslimEdildi:
         return 'Yazici kuyrugunda siparis kapanisa alindi';
       case SiparisDurumu.alindi:
@@ -308,7 +372,7 @@ class _MutfakSiparisSayfasiState extends State<MutfakSiparisSayfasi> {
 }
 
 enum _TeslimatFiltresi {
-  tumu('Tum kanallar', null),
+  tumu('Tum', null),
   salon('Salon', TeslimatTipi.restorandaYe),
   gelAl('Gel al', TeslimatTipi.gelAl),
   paket('Paket', TeslimatTipi.paketServis);
@@ -631,6 +695,206 @@ class _MutfakOzetSeridi extends StatelessWidget {
   }
 }
 
+class _MutfakOncelikSeridi extends StatelessWidget {
+  const _MutfakOncelikSeridi({required this.siparisler});
+
+  final List<SiparisVarligi> siparisler;
+
+  @override
+  Widget build(BuildContext context) {
+    final DateTime simdi = DateTime.now();
+    final List<SiparisVarligi> sirali = List<SiparisVarligi>.from(siparisler)
+      ..sort(
+        (SiparisVarligi a, SiparisVarligi b) => _mutfakOnceligiSkoru(
+          b,
+          simdi,
+        ).compareTo(_mutfakOnceligiSkoru(a, simdi)),
+      );
+    final SiparisVarligi? enKritik = sirali.isEmpty ? null : sirali.first;
+    final SiparisVarligi? siradaki = sirali.length > 1 ? sirali[1] : null;
+
+    return Wrap(
+      spacing: 12,
+      runSpacing: 12,
+      children: [
+        SizedBox(
+          width: 360,
+          child: _OncelikKarti(
+            baslik: 'Kritik siparis',
+            aciklama: enKritik == null
+                ? 'Su an kritik esigi gecen aktif siparis yok.'
+                : '${enKritik.siparisNo} once ele alinmali. ${_siparisKisaDurumMetni(enKritik, simdi)}',
+            vurguRengi: const Color(0xFFFF8A5B),
+          ),
+        ),
+        SizedBox(
+          width: 360,
+          child: _OncelikKarti(
+            baslik: 'Siradaki hazirlik',
+            aciklama: siradaki == null
+                ? 'Yedek operasyon sirasi bos.'
+                : '${siradaki.siparisNo} ikinci sirada. ${_siparisKisaDurumMetni(siradaki, simdi)}',
+            vurguRengi: const Color(0xFF7BA7FF),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _OncelikKarti extends StatelessWidget {
+  const _OncelikKarti({
+    required this.baslik,
+    required this.aciklama,
+    required this.vurguRengi,
+  });
+
+  final String baslik;
+  final String aciklama;
+  final Color vurguRengi;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: const Color(0xFF231A31),
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            baslik,
+            style: TextStyle(
+              color: vurguRengi,
+              fontWeight: FontWeight.w800,
+              fontSize: 16,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            aciklama,
+            style: TextStyle(
+              color: Colors.white.withValues(alpha: 0.82),
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _MutfakKanalDagilimSeridi extends StatelessWidget {
+  const _MutfakKanalDagilimSeridi({required this.siparisler});
+
+  final List<SiparisVarligi> siparisler;
+
+  @override
+  Widget build(BuildContext context) {
+    final int salonSayisi = siparisler
+        .where(
+          (SiparisVarligi siparis) =>
+              siparis.teslimatTipi == TeslimatTipi.restorandaYe,
+        )
+        .length;
+    final int gelAlSayisi = siparisler
+        .where(
+          (SiparisVarligi siparis) =>
+              siparis.teslimatTipi == TeslimatTipi.gelAl,
+        )
+        .length;
+    final int paketSayisi = siparisler
+        .where(
+          (SiparisVarligi siparis) =>
+              siparis.teslimatTipi == TeslimatTipi.paketServis,
+        )
+        .length;
+
+    return Wrap(
+      spacing: 12,
+      runSpacing: 12,
+      children: [
+        _KanalKarti(
+          baslik: 'Salon',
+          adet: salonSayisi,
+          aciklama: 'Servis bekleyen masa operasyonu',
+          vurguRengi: const Color(0xFFFFD36E),
+        ),
+        _KanalKarti(
+          baslik: 'Gel al',
+          adet: gelAlSayisi,
+          aciklama: 'Tezgahtan teslim alinacak siparis',
+          vurguRengi: const Color(0xFF7BA7FF),
+        ),
+        _KanalKarti(
+          baslik: 'Paket',
+          adet: paketSayisi,
+          aciklama: 'Kurye veya paket cikari bekleyen siparis',
+          vurguRengi: const Color(0xFF30C48D),
+        ),
+      ],
+    );
+  }
+}
+
+class _KanalKarti extends StatelessWidget {
+  const _KanalKarti({
+    required this.baslik,
+    required this.adet,
+    required this.aciklama,
+    required this.vurguRengi,
+  });
+
+  final String baslik;
+  final int adet;
+  final String aciklama;
+  final Color vurguRengi;
+
+  @override
+  Widget build(BuildContext context) {
+    return ConstrainedBox(
+      constraints: const BoxConstraints(minWidth: 220, maxWidth: 280),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: const Color(0xFF231A31),
+          borderRadius: BorderRadius.circular(22),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              baslik,
+              style: TextStyle(color: vurguRengi, fontWeight: FontWeight.w800),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              '$adet',
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 26,
+                fontWeight: FontWeight.w900,
+              ),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              aciklama,
+              style: TextStyle(
+                color: Colors.white.withValues(alpha: 0.68),
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 class _OzetKarti extends StatelessWidget {
   const _OzetKarti({
     required this.baslik,
@@ -701,30 +965,47 @@ class _TeslimatFiltreSeridi extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      child: Row(
-        children: _TeslimatFiltresi.values.map((_TeslimatFiltresi filtre) {
-          final bool seciliMi = seciliFiltre == filtre;
-          return Padding(
-            padding: const EdgeInsets.only(right: 10),
-            child: FilterChip(
-              selected: seciliMi,
-              label: Text(filtre.etiket),
-              onSelected: (_) => filtreDegistir(filtre),
-              labelStyle: TextStyle(
-                color: seciliMi ? const Color(0xFF130F1D) : Colors.white,
-                fontWeight: FontWeight.w800,
-              ),
-              side: BorderSide(color: Colors.white.withValues(alpha: 0.14)),
-              backgroundColor: Colors.white.withValues(alpha: 0.06),
-              selectedColor: const Color(0xFFFFD36E),
-              showCheckmark: false,
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
-            ),
-          );
-        }).toList(),
-      ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Tum kanallar',
+          style: TextStyle(
+            color: Colors.white.withValues(alpha: 0.82),
+            fontWeight: FontWeight.w800,
+            fontSize: 16,
+          ),
+        ),
+        const SizedBox(height: 10),
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Row(
+            children: _TeslimatFiltresi.values.map((_TeslimatFiltresi filtre) {
+              final bool seciliMi = seciliFiltre == filtre;
+              return Padding(
+                padding: const EdgeInsets.only(right: 10),
+                child: FilterChip(
+                  selected: seciliMi,
+                  label: Text(filtre.etiket),
+                  onSelected: (_) => filtreDegistir(filtre),
+                  labelStyle: TextStyle(
+                    color: seciliMi ? const Color(0xFF130F1D) : Colors.white,
+                    fontWeight: FontWeight.w800,
+                  ),
+                  side: BorderSide(color: Colors.white.withValues(alpha: 0.14)),
+                  backgroundColor: Colors.white.withValues(alpha: 0.06),
+                  selectedColor: const Color(0xFFFFD36E),
+                  showCheckmark: false,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 14,
+                  ),
+                ),
+              );
+            }).toList(),
+          ),
+        ),
+      ],
     );
   }
 }
@@ -737,6 +1018,7 @@ class _DurumKolonu extends StatelessWidget {
     required this.vurguRengi,
     required this.siparisler,
     required this.aksiyonCalistir,
+    required this.iptalCalistir,
     this.yukseklik,
   });
 
@@ -746,6 +1028,7 @@ class _DurumKolonu extends StatelessWidget {
   final Color vurguRengi;
   final List<SiparisVarligi> siparisler;
   final ValueChanged<SiparisVarligi> aksiyonCalistir;
+  final ValueChanged<SiparisVarligi> iptalCalistir;
   final double? yukseklik;
 
   @override
@@ -770,6 +1053,7 @@ class _DurumKolonu extends StatelessWidget {
                 siparis: siparis,
                 vurguRengi: vurguRengi,
                 aksiyonCalistir: () => aksiyonCalistir(siparis),
+                iptalCalistir: () => iptalCalistir(siparis),
               );
             },
           );
@@ -827,11 +1111,13 @@ class _MutfakSiparisKarti extends StatelessWidget {
     required this.siparis,
     required this.vurguRengi,
     required this.aksiyonCalistir,
+    required this.iptalCalistir,
   });
 
   final SiparisVarligi siparis;
   final Color vurguRengi;
   final VoidCallback aksiyonCalistir;
+  final VoidCallback iptalCalistir;
 
   @override
   Widget build(BuildContext context) {
@@ -866,7 +1152,7 @@ class _MutfakSiparisKarti extends StatelessWidget {
                     ),
                     const SizedBox(height: 6),
                     Text(
-                      _konumEtiketi(siparis),
+                      '${_siparisSahibiEtiketi(siparis)} - ${_konumEtiketi(siparis)}',
                       style: TextStyle(
                         color: Colors.white.withValues(alpha: 0.72),
                         fontWeight: FontWeight.w600,
@@ -919,6 +1205,36 @@ class _MutfakSiparisKarti extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 12),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              _BilgiRozeti(
+                ikon: Icons.flag_rounded,
+                metin: _oncelikEtiketi(beklemeDakikasi),
+                renk: sureRengi,
+              ),
+              _BilgiRozeti(
+                ikon: Icons.receipt_long_rounded,
+                metin: '${siparis.kalemler.length} kalem',
+                renk: const Color(0xFFFFD36E),
+              ),
+              _BilgiRozeti(
+                ikon: Icons.payments_rounded,
+                metin: _paraYaz(siparis.toplamTutar),
+                renk: const Color(0xFF7BA7FF),
+              ),
+              if (siparis.paketTeslimatDurumu != null)
+                _BilgiRozeti(
+                  ikon: Icons.local_shipping_rounded,
+                  metin: _paketTeslimatDurumuEtiketi(
+                    siparis.paketTeslimatDurumu!,
+                  ),
+                  renk: const Color(0xFFFF8A5B),
+                ),
+            ],
+          ),
+          const SizedBox(height: 12),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
             decoration: BoxDecoration(
@@ -941,6 +1257,37 @@ class _MutfakSiparisKarti extends StatelessWidget {
               ],
             ),
           ),
+          if (siparis.kaynak != null && siparis.kaynak!.isNotEmpty) ...[
+            const SizedBox(height: 12),
+            Text(
+              'Kaynak: ${siparis.kaynak}',
+              style: TextStyle(
+                color: Colors.white.withValues(alpha: 0.68),
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+          if (siparis.kuryeAdi != null && siparis.kuryeAdi!.isNotEmpty) ...[
+            const SizedBox(height: 12),
+            Text(
+              'Kurye: ${siparis.kuryeAdi}',
+              style: TextStyle(
+                color: Colors.white.withValues(alpha: 0.68),
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+          if (siparis.teslimatNotu != null &&
+              siparis.teslimatNotu!.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            Text(
+              'Teslimat notu: ${siparis.teslimatNotu}',
+              style: TextStyle(
+                color: Colors.white.withValues(alpha: 0.68),
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
           const SizedBox(height: 12),
           ...siparis.kalemler.map(
             (SiparisKalemiVarligi kalem) => Padding(
@@ -956,16 +1303,32 @@ class _MutfakSiparisKarti extends StatelessWidget {
           ),
           if (aksiyonEtiketi != null) ...[
             const SizedBox(height: 10),
-            SizedBox(
-              width: double.infinity,
-              child: FilledButton(
-                onPressed: aksiyonCalistir,
-                style: FilledButton.styleFrom(
-                  backgroundColor: vurguRengi,
-                  foregroundColor: const Color(0xFF1A1322),
+            Row(
+              children: [
+                Expanded(
+                  child: FilledButton(
+                    onPressed: aksiyonCalistir,
+                    style: FilledButton.styleFrom(
+                      backgroundColor: vurguRengi,
+                      foregroundColor: const Color(0xFF1A1322),
+                    ),
+                    child: Text(aksiyonEtiketi),
+                  ),
                 ),
-                child: Text(aksiyonEtiketi),
-              ),
+                const SizedBox(width: 10),
+                OutlinedButton(
+                  onPressed: siparis.durum == SiparisDurumu.yolda
+                      ? null
+                      : iptalCalistir,
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: Colors.white,
+                    side: BorderSide(
+                      color: Colors.white.withValues(alpha: 0.18),
+                    ),
+                  ),
+                  child: const Text('Iptal'),
+                ),
+              ],
             ),
           ],
         ],
@@ -974,8 +1337,65 @@ class _MutfakSiparisKarti extends StatelessWidget {
   }
 }
 
+class _BilgiRozeti extends StatelessWidget {
+  const _BilgiRozeti({
+    required this.ikon,
+    required this.metin,
+    required this.renk,
+  });
+
+  final IconData ikon;
+  final String metin;
+  final Color renk;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      decoration: BoxDecoration(
+        color: renk.withValues(alpha: 0.14),
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(ikon, size: 16, color: renk),
+          const SizedBox(width: 6),
+          Text(
+            metin,
+            style: TextStyle(color: renk, fontWeight: FontWeight.w800),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 int _beklemeDakikasi(SiparisVarligi siparis, DateTime simdi) {
   return simdi.difference(siparis.olusturmaTarihi).inMinutes.clamp(0, 9999);
+}
+
+int _mutfakOnceligiSkoru(SiparisVarligi siparis, DateTime simdi) {
+  final int beklemeDakikasi = _beklemeDakikasi(siparis, simdi);
+  final int durumPuani = switch (siparis.durum) {
+    SiparisDurumu.alindi => 35,
+    SiparisDurumu.hazirlaniyor => 50,
+    SiparisDurumu.hazir => 40,
+    SiparisDurumu.yolda => 15,
+    SiparisDurumu.teslimEdildi => 0,
+    SiparisDurumu.iptalEdildi => -20,
+  };
+  final int kanalPuani = switch (siparis.teslimatTipi) {
+    TeslimatTipi.restorandaYe => 8,
+    TeslimatTipi.gelAl => 5,
+    TeslimatTipi.paketServis => 10,
+  };
+  return durumPuani + kanalPuani + beklemeDakikasi;
+}
+
+String _siparisKisaDurumMetni(SiparisVarligi siparis, DateTime simdi) {
+  final int dakika = _beklemeDakikasi(siparis, simdi);
+  return '${_siparisSahibiEtiketi(siparis)} - ${_teslimatEtiketi(siparis.teslimatTipi)} - $dakika dk bekliyor';
 }
 
 String? _aksiyonEtiketi(SiparisVarligi siparis) {
@@ -1006,6 +1426,16 @@ Color _sureVurguRengi(int dakika) {
   return const Color(0xFF30C48D);
 }
 
+String _oncelikEtiketi(int dakika) {
+  if (dakika >= 20) {
+    return 'Kritik';
+  }
+  if (dakika >= 12) {
+    return 'Takipte';
+  }
+  return 'Normal';
+}
+
 String _sureAciklamasi(int dakika) {
   if (dakika >= 20) {
     return 'Mudahale gerekli, siparis gecikiyor';
@@ -1024,6 +1454,19 @@ String _teslimatEtiketi(TeslimatTipi teslimatTipi) {
       return 'Gel al';
     case TeslimatTipi.paketServis:
       return 'Paket';
+  }
+}
+
+String _paketTeslimatDurumuEtiketi(PaketTeslimatDurumu durum) {
+  switch (durum) {
+    case PaketTeslimatDurumu.adresDogrulandi:
+      return 'Adres dogrulandi';
+    case PaketTeslimatDurumu.kuryeBekliyor:
+      return 'Kurye bekliyor';
+    case PaketTeslimatDurumu.kuryeYolda:
+      return 'Kurye yolda';
+    case PaketTeslimatDurumu.teslimEdildi:
+      return 'Teslim edildi';
   }
 }
 
@@ -1063,4 +1506,16 @@ String _konumEtiketi(SiparisVarligi siparis) {
     return siparis.adresMetni!;
   }
   return 'Operasyon sirasi bekliyor';
+}
+
+String _siparisSahibiEtiketi(SiparisVarligi siparis) {
+  final String? adSoyad = siparis.sahip.misafirBilgisi?.adSoyad;
+  if (adSoyad != null && adSoyad.isNotEmpty) {
+    return adSoyad;
+  }
+  return 'Misafir';
+}
+
+String _paraYaz(double tutar) {
+  return '${tutar.toStringAsFixed(2).replaceAll('.', ',')} TL';
 }

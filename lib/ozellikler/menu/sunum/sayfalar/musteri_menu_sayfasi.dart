@@ -166,6 +166,46 @@ class _MusteriMenuSayfasiState extends State<MusteriMenuSayfasi> {
     }
   }
 
+  Future<void> _kalemAdediniGuncelle({
+    required SepetKalemiVarligi kalem,
+    required int yeniAdet,
+  }) async {
+    setState(() {
+      _yukleniyor = true;
+    });
+
+    try {
+      final SepetVarligi sepet = yeniAdet <= 0
+          ? await _servisKaydi.sepetKalemiSilUseCase(kalem.id)
+          : await _servisKaydi.sepetKalemiGuncelleUseCase(
+              kalemId: kalem.id,
+              adet: yeniAdet,
+            );
+
+      if (!mounted) {
+        return;
+      }
+
+      setState(() {
+        _sepet = sepet;
+        _yukleniyor = false;
+      });
+    } catch (_) {
+      if (!mounted) {
+        return;
+      }
+
+      setState(() {
+        _yukleniyor = false;
+      });
+      _hataBildir('Adisyon guncellenemedi');
+    }
+  }
+
+  Future<void> _kalemiSil(SepetKalemiVarligi kalem) async {
+    await _kalemAdediniGuncelle(kalem: kalem, yeniAdet: 0);
+  }
+
   Future<void> _urunDetayiniAc(UrunVarligi urun) async {
     final _SepeteEkleTalebi? talep =
         await showModalBottomSheet<_SepeteEkleTalebi>(
@@ -327,6 +367,13 @@ class _MusteriMenuSayfasiState extends State<MusteriMenuSayfasi> {
                                     qrModu: widget.qrModu,
                                     qrBaglami: widget.qrBaglami,
                                   ),
+                                  if (widget.qrModu &&
+                                      widget.qrBaglami != null) ...[
+                                    const SizedBox(height: 12),
+                                    _QrBaglamDurumKarti(
+                                      qrBaglami: widget.qrBaglami!,
+                                    ),
+                                  ],
                                   Expanded(
                                     child: Padding(
                                       padding: const EdgeInsets.all(14),
@@ -348,6 +395,9 @@ class _MusteriMenuSayfasiState extends State<MusteriMenuSayfasi> {
                                               sepet: _sepet,
                                               islemedeMi: _yukleniyor,
                                               siparisiHazirla: _siparisiHazirla,
+                                              kalemAdediniGuncelle:
+                                                  _kalemAdediniGuncelle,
+                                              kalemiSil: _kalemiSil,
                                             ),
                                           ),
                                           const SizedBox(width: 14),
@@ -387,6 +437,13 @@ class _MusteriMenuSayfasiState extends State<MusteriMenuSayfasi> {
                                     qrModu: widget.qrModu,
                                     qrBaglami: widget.qrBaglami,
                                   ),
+                                  if (widget.qrModu &&
+                                      widget.qrBaglami != null) ...[
+                                    const SizedBox(height: 12),
+                                    _QrBaglamDurumKarti(
+                                      qrBaglami: widget.qrBaglami!,
+                                    ),
+                                  ],
                                   const SizedBox(height: 12),
                                   _HizliIslemSeridi(
                                     siparisAdedi: _sepet.toplamUrunAdedi,
@@ -417,6 +474,9 @@ class _MusteriMenuSayfasiState extends State<MusteriMenuSayfasi> {
                                       sepet: _sepet,
                                       islemedeMi: _yukleniyor,
                                       siparisiHazirla: _siparisiHazirla,
+                                      kalemAdediniGuncelle:
+                                          _kalemAdediniGuncelle,
+                                      kalemiSil: _kalemiSil,
                                     ),
                                   ),
                                 ],
@@ -716,6 +776,70 @@ class _QrRozetleri extends StatelessWidget {
   }
 }
 
+class _QrBaglamDurumKarti extends StatelessWidget {
+  const _QrBaglamDurumKarti({required this.qrBaglami});
+
+  final QrMenuBaglamiVarligi qrBaglami;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.10)),
+      ),
+      child: Wrap(
+        spacing: 14,
+        runSpacing: 14,
+        crossAxisAlignment: WrapCrossAlignment.center,
+        children: [
+          Container(
+            width: 46,
+            height: 46,
+            decoration: BoxDecoration(
+              color: const Color(0xFFFFE1EC),
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: const Icon(
+              Icons.qr_code_2_rounded,
+              color: Color(0xFFB23A68),
+            ),
+          ),
+          ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 520),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  qrBaglami.acilisBasligi,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  qrBaglami.acilisAciklamasi,
+                  style: TextStyle(
+                    color: Colors.white.withValues(alpha: 0.78),
+                    fontWeight: FontWeight.w600,
+                    height: 1.35,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          _QrRozetleri(rozetler: qrBaglami.rozetler),
+        ],
+      ),
+    );
+  }
+}
+
 class _HizliIslemSeridi extends StatelessWidget {
   const _HizliIslemSeridi({required this.siparisAdedi, this.yatay = false});
 
@@ -862,11 +986,19 @@ class _AdisyonPaneli extends StatelessWidget {
     required this.sepet,
     required this.islemedeMi,
     required this.siparisiHazirla,
+    required this.kalemAdediniGuncelle,
+    required this.kalemiSil,
   });
 
   final SepetVarligi sepet;
   final bool islemedeMi;
   final VoidCallback siparisiHazirla;
+  final Future<void> Function({
+    required SepetKalemiVarligi kalem,
+    required int yeniAdet,
+  })
+  kalemAdediniGuncelle;
+  final Future<void> Function(SepetKalemiVarligi kalem) kalemiSil;
 
   @override
   Widget build(BuildContext context) {
@@ -915,13 +1047,35 @@ class _AdisyonPaneli extends StatelessWidget {
               padding: const EdgeInsets.all(14),
               child: sepet.kalemler.isEmpty
                   ? const _BosAdisyonDurumu()
-                  : ListView.separated(
-                      itemCount: sepet.kalemler.length,
-                      separatorBuilder: (_, _) => const SizedBox(height: 10),
-                      itemBuilder: (BuildContext context, int index) {
-                        final SepetKalemiVarligi kalem = sepet.kalemler[index];
-                        return _AdisyonSatiri(kalem: kalem);
-                      },
+                  : Column(
+                      children: [
+                        _AdisyonOzetSeridi(sepet: sepet),
+                        const SizedBox(height: 12),
+                        Expanded(
+                          child: ListView.separated(
+                            itemCount: sepet.kalemler.length,
+                            separatorBuilder: (_, _) =>
+                                const SizedBox(height: 10),
+                            itemBuilder: (BuildContext context, int index) {
+                              final SepetKalemiVarligi kalem =
+                                  sepet.kalemler[index];
+                              return _AdisyonSatiri(
+                                kalem: kalem,
+                                islemedeMi: islemedeMi,
+                                adetAzalt: () => kalemAdediniGuncelle(
+                                  kalem: kalem,
+                                  yeniAdet: kalem.adet - 1,
+                                ),
+                                adetArtir: () => kalemAdediniGuncelle(
+                                  kalem: kalem,
+                                  yeniAdet: kalem.adet + 1,
+                                ),
+                                sil: () => kalemiSil(kalem),
+                              );
+                            },
+                          ),
+                        ),
+                      ],
                     ),
             ),
           ),
@@ -968,6 +1122,82 @@ class _AdisyonPaneli extends StatelessWidget {
                   ),
                 ),
               ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _AdisyonOzetSeridi extends StatelessWidget {
+  const _AdisyonOzetSeridi({required this.sepet});
+
+  final SepetVarligi sepet;
+
+  @override
+  Widget build(BuildContext context) {
+    return Wrap(
+      spacing: 10,
+      runSpacing: 10,
+      children: [
+        _AdisyonOzetKutusu(
+          baslik: 'Kalem',
+          deger: '${sepet.kalemler.length}',
+          vurguRengi: const Color(0xFFE04374),
+        ),
+        _AdisyonOzetKutusu(
+          baslik: 'Urun',
+          deger: '${sepet.toplamUrunAdedi}',
+          vurguRengi: const Color(0xFF8C5BA8),
+        ),
+        _AdisyonOzetKutusu(
+          baslik: 'Toplam',
+          deger: _paraYaz(sepet.araToplam),
+          vurguRengi: const Color(0xFF2AB36D),
+        ),
+      ],
+    );
+  }
+}
+
+class _AdisyonOzetKutusu extends StatelessWidget {
+  const _AdisyonOzetKutusu({
+    required this.baslik,
+    required this.deger,
+    required this.vurguRengi,
+  });
+
+  final String baslik;
+  final String deger;
+  final Color vurguRengi;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      constraints: const BoxConstraints(minWidth: 86),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: vurguRengi.withValues(alpha: 0.10),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            baslik,
+            style: TextStyle(
+              color: vurguRengi,
+              fontWeight: FontWeight.w700,
+              fontSize: 12,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            deger,
+            style: const TextStyle(
+              color: Color(0xFF4A295F),
+              fontWeight: FontWeight.w900,
             ),
           ),
         ],
@@ -1025,9 +1255,19 @@ class _BosAdisyonDurumu extends StatelessWidget {
 }
 
 class _AdisyonSatiri extends StatelessWidget {
-  const _AdisyonSatiri({required this.kalem});
+  const _AdisyonSatiri({
+    required this.kalem,
+    required this.islemedeMi,
+    required this.adetAzalt,
+    required this.adetArtir,
+    required this.sil,
+  });
 
   final SepetKalemiVarligi kalem;
+  final bool islemedeMi;
+  final VoidCallback adetAzalt;
+  final VoidCallback adetArtir;
+  final VoidCallback sil;
 
   @override
   Widget build(BuildContext context) {
@@ -1038,56 +1278,125 @@ class _AdisyonSatiri extends StatelessWidget {
         borderRadius: BorderRadius.circular(18),
         border: Border.all(color: const Color(0xFFEDE4F2)),
       ),
-      child: Row(
+      child: Column(
         children: [
-          Text(
-            '${kalem.adet}x',
-            style: const TextStyle(
-              color: Color(0xFFE04374),
-              fontWeight: FontWeight.w900,
-            ),
+          Row(
+            children: [
+              Text(
+                '${kalem.adet}x',
+                style: const TextStyle(
+                  color: Color(0xFFE04374),
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      kalem.urun.ad,
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        color: const Color(0xFF4A295F),
+                      ),
+                    ),
+                    if ((kalem.secenekAdi ?? '').isNotEmpty) ...[
+                      const SizedBox(height: 4),
+                      Text(
+                        kalem.secenekAdi!,
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: const Color(0xFFE04374),
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ],
+                    if ((kalem.notMetni ?? '').isNotEmpty) ...[
+                      const SizedBox(height: 4),
+                      Text(
+                        kalem.notMetni!,
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: const Color(0xFF8D7A9D),
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+              Text(
+                _paraYaz(kalem.araToplam),
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  color: const Color(0xFF4A295F),
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ],
           ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  kalem.urun.ad,
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    color: const Color(0xFF4A295F),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              _AdisyonAksiyonButonu(
+                ikon: Icons.remove_rounded,
+                etkinMi: !islemedeMi,
+                tikla: adetAzalt,
+              ),
+              Container(
+                width: 56,
+                alignment: Alignment.center,
+                child: Text(
+                  '${kalem.adet}',
+                  style: const TextStyle(
+                    color: Color(0xFF4A295F),
+                    fontWeight: FontWeight.w900,
+                    fontSize: 18,
                   ),
                 ),
-                if ((kalem.secenekAdi ?? '').isNotEmpty) ...[
-                  const SizedBox(height: 4),
-                  Text(
-                    kalem.secenekAdi!,
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: const Color(0xFFE04374),
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                ],
-                if ((kalem.notMetni ?? '').isNotEmpty) ...[
-                  const SizedBox(height: 4),
-                  Text(
-                    kalem.notMetni!,
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: const Color(0xFF8D7A9D),
-                    ),
-                  ),
-                ],
-              ],
-            ),
-          ),
-          Text(
-            _paraYaz(kalem.araToplam),
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-              color: const Color(0xFF4A295F),
-              fontWeight: FontWeight.w800,
-            ),
+              ),
+              _AdisyonAksiyonButonu(
+                ikon: Icons.add_rounded,
+                etkinMi: !islemedeMi,
+                tikla: adetArtir,
+              ),
+              const Spacer(),
+              TextButton.icon(
+                onPressed: islemedeMi ? null : sil,
+                icon: const Icon(Icons.delete_outline_rounded),
+                label: const Text('Sil'),
+              ),
+            ],
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _AdisyonAksiyonButonu extends StatelessWidget {
+  const _AdisyonAksiyonButonu({
+    required this.ikon,
+    required this.etkinMi,
+    required this.tikla,
+  });
+
+  final IconData ikon;
+  final bool etkinMi;
+  final VoidCallback tikla;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: etkinMi ? tikla : null,
+      borderRadius: BorderRadius.circular(14),
+      child: Container(
+        width: 42,
+        height: 42,
+        decoration: BoxDecoration(
+          color: etkinMi ? const Color(0xFFF7D9E4) : const Color(0xFFF0EAF5),
+          borderRadius: BorderRadius.circular(14),
+        ),
+        child: Icon(
+          ikon,
+          color: etkinMi ? const Color(0xFFE04374) : const Color(0xFFAD9DBA),
+        ),
       ),
     );
   }
@@ -1614,16 +1923,16 @@ class _UrunDetayAltSayfasiState extends State<_UrunDetayAltSayfasi> {
                   child: FilledButton(
                     onPressed: widget.urun.stoktaMi
                         ? () {
-                      Navigator.of(context).pop(
-                        _SepeteEkleTalebi(
-                          adet: _adet,
-                          secenekId: _seciliServis?.id,
-                          notMetni: _notMetniniHazirla(
-                            ekNot: _notDenetleyici.text,
-                          ),
-                        ),
-                      );
-                    }
+                            Navigator.of(context).pop(
+                              _SepeteEkleTalebi(
+                                adet: _adet,
+                                secenekId: _seciliServis?.id,
+                                notMetni: _notMetniniHazirla(
+                                  ekNot: _notDenetleyici.text,
+                                ),
+                              ),
+                            );
+                          }
                         : null,
                     style: FilledButton.styleFrom(
                       backgroundColor: const Color(0xFFFF5D8F),

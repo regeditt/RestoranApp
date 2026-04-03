@@ -1,11 +1,16 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:qr_flutter/qr_flutter.dart';
 import 'package:restoran_app/bagimlilik_enjeksiyonu/servis_kaydi.dart';
 import 'package:restoran_app/ortak/responsive/ekran_boyutu.dart';
 import 'package:restoran_app/ortak/sabitler/uygulama_sabitleri.dart';
 import 'package:restoran_app/ortak/yonlendirme/rota_yapisi.dart';
 import 'package:restoran_app/ozellikler/menu/alan/varliklar/kategori_varligi.dart';
+import 'package:restoran_app/ozellikler/menu/alan/varliklar/qr_menu_karti_varligi.dart';
 import 'package:restoran_app/ozellikler/menu/alan/varliklar/urun_varligi.dart';
+import 'package:restoran_app/ozellikler/menu/uygulama/servisler/qr_menu_baglami_cozumleyici.dart';
+import 'package:restoran_app/ozellikler/menu/uygulama/servisler/qr_menu_pdf_servisi.dart';
 import 'package:restoran_app/ozellikler/siparis/alan/enumlar/siparis_durumu.dart';
 import 'package:restoran_app/ozellikler/siparis/alan/enumlar/teslimat_tipi.dart';
 import 'package:restoran_app/ozellikler/siparis/alan/varliklar/siparis_varligi.dart';
@@ -22,6 +27,7 @@ import 'package:restoran_app/ozellikler/yonetim/alan/varliklar/yazici_durumu_var
 import 'package:restoran_app/ozellikler/yonetim/alan/varliklar/yonetim_paneli_ozeti_varligi.dart';
 import 'package:restoran_app/ozellikler/yonetim/uygulama/servisler/yonetim_raporu_hesaplayici.dart';
 import 'package:restoran_app/ozellikler/yonetim/uygulama/servisler/yazici_is_kuyrugu_hesaplayici.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class YonetimPaneliSayfasi extends StatefulWidget {
   const YonetimPaneliSayfasi({super.key});
@@ -260,39 +266,72 @@ class _YonetimPaneliSayfasiState extends State<YonetimPaneliSayfasi> {
                         child: ListView(
                           controller: _sayfaKaydirmaDenetleyicisi,
                           children: [
-                          _KompaktUstAlan(
-                            ozet: ozet,
-                            seciliFiltre: _seciliFiltre,
-                            filtreSec: (_PanelFiltre filtre) {
-                              setState(() {
-                                _seciliFiltre = filtre;
-                              });
-                            },
-                            seciliZamanFiltresi: _seciliZamanFiltresi,
-                            zamanFiltresiSec: (_ZamanFiltresi filtre) {
-                              setState(() {
-                                _seciliZamanFiltresi = filtre;
-                              });
-                            },
-                            seciliSiralama: _seciliSiralama,
-                            siralamaSec: (_SiparisSirasi siralama) {
-                              setState(() {
-                                _seciliSiralama = siralama;
-                              });
-                            },
-                            yaziciYonetimiAc: _yaziciYonetiminiAc,
-                            salonYonetimiAc: () => _yonetimAyarlariniAc(0),
-                            menuYonetimiAc: () => _yonetimAyarlariniAc(1),
-                            stokYonetimiAc: () => _yonetimAyarlariniAc(2),
-                          ),
-                          const SizedBox(height: 18),
-                          masaustu
-                              ? Row(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Expanded(
-                                      flex: 7,
-                                      child: _SiparisAkisi(
+                            _KompaktUstAlan(
+                              ozet: ozet,
+                              seciliFiltre: _seciliFiltre,
+                              filtreSec: (_PanelFiltre filtre) {
+                                setState(() {
+                                  _seciliFiltre = filtre;
+                                });
+                              },
+                              seciliZamanFiltresi: _seciliZamanFiltresi,
+                              zamanFiltresiSec: (_ZamanFiltresi filtre) {
+                                setState(() {
+                                  _seciliZamanFiltresi = filtre;
+                                });
+                              },
+                              seciliSiralama: _seciliSiralama,
+                              siralamaSec: (_SiparisSirasi siralama) {
+                                setState(() {
+                                  _seciliSiralama = siralama;
+                                });
+                              },
+                              yaziciYonetimiAc: _yaziciYonetiminiAc,
+                              salonYonetimiAc: () => _yonetimAyarlariniAc(0),
+                              menuYonetimiAc: () => _yonetimAyarlariniAc(1),
+                              stokYonetimiAc: () => _yonetimAyarlariniAc(2),
+                            ),
+                            const SizedBox(height: 18),
+                            masaustu
+                                ? Row(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Expanded(
+                                        flex: 7,
+                                        child: _SiparisAkisi(
+                                          siparisler: filtreliSiparisler,
+                                          aramaMetni: _aramaMetni,
+                                          aramaDenetleyici: _aramaDenetleyici,
+                                          aramaDegisti: (String deger) {
+                                            setState(() {
+                                              _aramaMetni = deger;
+                                            });
+                                          },
+                                        ),
+                                      ),
+                                      const SizedBox(width: 18),
+                                      Expanded(
+                                        flex: 5,
+                                        child: _YanPanel(
+                                          ozet: ozet,
+                                          saatlikVeriler: saatlikVeriler,
+                                          siparisler: filtreliSiparisler,
+                                          salonBolumleri: _salonBolumleri,
+                                          stokOzeti: _stokOzeti,
+                                          yazicilar: _yazicilar,
+                                          sistemYazicilari: _sistemYazicilari,
+                                          yaziciEkle: _yaziciEkle,
+                                          yaziciSil: _yaziciSil,
+                                          yaziciGuncelle: _yaziciGuncelle,
+                                          personeller: _personeller,
+                                        ),
+                                      ),
+                                    ],
+                                  )
+                                : Column(
+                                    children: [
+                                      _SiparisAkisi(
                                         siparisler: filtreliSiparisler,
                                         aramaMetni: _aramaMetni,
                                         aramaDenetleyici: _aramaDenetleyici,
@@ -302,11 +341,8 @@ class _YonetimPaneliSayfasiState extends State<YonetimPaneliSayfasi> {
                                           });
                                         },
                                       ),
-                                    ),
-                                    const SizedBox(width: 18),
-                                    Expanded(
-                                      flex: 5,
-                                      child: _YanPanel(
+                                      const SizedBox(height: 18),
+                                      _YanPanel(
                                         ozet: ozet,
                                         saatlikVeriler: saatlikVeriler,
                                         siparisler: filtreliSiparisler,
@@ -319,37 +355,8 @@ class _YonetimPaneliSayfasiState extends State<YonetimPaneliSayfasi> {
                                         yaziciGuncelle: _yaziciGuncelle,
                                         personeller: _personeller,
                                       ),
-                                    ),
-                                  ],
-                                )
-                              : Column(
-                                  children: [
-                                    _SiparisAkisi(
-                                      siparisler: filtreliSiparisler,
-                                      aramaMetni: _aramaMetni,
-                                      aramaDenetleyici: _aramaDenetleyici,
-                                      aramaDegisti: (String deger) {
-                                        setState(() {
-                                          _aramaMetni = deger;
-                                        });
-                                      },
-                                    ),
-                                    const SizedBox(height: 18),
-                                    _YanPanel(
-                                      ozet: ozet,
-                                      saatlikVeriler: saatlikVeriler,
-                                      siparisler: filtreliSiparisler,
-                                      salonBolumleri: _salonBolumleri,
-                                      stokOzeti: _stokOzeti,
-                                      yazicilar: _yazicilar,
-                                      sistemYazicilari: _sistemYazicilari,
-                                      yaziciEkle: _yaziciEkle,
-                                      yaziciSil: _yaziciSil,
-                                      yaziciGuncelle: _yaziciGuncelle,
-                                      personeller: _personeller,
-                                    ),
-                                  ],
-                                ),
+                                    ],
+                                  ),
                           ],
                         ),
                       ),
@@ -1114,7 +1121,10 @@ class _YanPanel extends StatelessWidget {
           spacing: 18,
           runSpacing: 18,
           children: [
-            SizedBox(width: yariGenislik, child: _KanalDagilimiKarti(ozet: ozet)),
+            SizedBox(
+              width: yariGenislik,
+              child: _KanalDagilimiKarti(ozet: ozet),
+            ),
             SizedBox(
               width: yariGenislik,
               child: _SaatlikTrendKarti(veriler: saatlikVeriler),
@@ -1168,9 +1178,9 @@ class _KanalDagilimiKarti extends StatelessWidget {
         children: [
           Text(
             'Kanal dagilimi',
-            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-              color: const Color(0xFF25192E),
-            ),
+            style: Theme.of(
+              context,
+            ).textTheme.titleLarge?.copyWith(color: const Color(0xFF25192E)),
           ),
           const SizedBox(height: 6),
           const Text(
@@ -1222,9 +1232,9 @@ class _SaatlikTrendKarti extends StatelessWidget {
         children: [
           Text(
             'Saatlik siparis trendi',
-            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-              color: const Color(0xFF25192E),
-            ),
+            style: Theme.of(
+              context,
+            ).textTheme.titleLarge?.copyWith(color: const Color(0xFF25192E)),
           ),
           const SizedBox(height: 6),
           const Text(
@@ -1494,7 +1504,9 @@ class _StokUyariSatiri extends StatelessWidget {
             child: Text(
               malzeme.kalanMiktarMetni,
               style: TextStyle(
-                color: acilMi ? const Color(0xFFFFF0EB) : const Color(0xFFDDF4EA),
+                color: acilMi
+                    ? const Color(0xFFFFF0EB)
+                    : const Color(0xFFDDF4EA),
                 fontWeight: FontWeight.w800,
               ),
             ),
@@ -2461,10 +2473,7 @@ class _MasaPlaniKutusu extends StatelessWidget {
           Align(
             alignment: Alignment.centerLeft,
             child: Container(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 10,
-                vertical: 6,
-              ),
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
               decoration: BoxDecoration(
                 color: Colors.white.withValues(alpha: 0.80),
                 borderRadius: BorderRadius.circular(999),
@@ -3547,6 +3556,355 @@ class _YonetimAyarlariDialogState extends State<_YonetimAyarlariDialog> {
     await _yenile();
   }
 
+  Future<void> _masaQrBaglamiAc(
+    SalonBolumuVarligi bolum,
+    MasaTanimiVarligi masa,
+  ) async {
+    final String qrUrl = _masaQrUrliniOlustur(bolum, masa);
+    final QrMenuKartiVarligi qrKarti = QrMenuKartiVarligi(
+      baslik: 'Masa ${masa.ad}',
+      altBaslik: bolum.ad,
+      url: qrUrl,
+    );
+
+    await showDialog<void>(
+      context: context,
+      builder: (BuildContext dialogContext) {
+        return AlertDialog(
+          title: Text('Masa ${masa.ad} QR baglami'),
+          content: SizedBox(
+            width: 520,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '${bolum.ad} bolumu icin gercek QR menu adresi hazir.',
+                  style: const TextStyle(color: Color(0xFF6D6079)),
+                ),
+                const SizedBox(height: 16),
+                Center(
+                  child: Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [Color(0xFFFDF7FB), Color(0xFFFFFFFF)],
+                      ),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: const Color(0xFFE4D8EE)),
+                      boxShadow: const [
+                        BoxShadow(
+                          color: Color(0x11000000),
+                          blurRadius: 18,
+                          offset: Offset(0, 8),
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 6,
+                          ),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFFCE3EC),
+                            borderRadius: BorderRadius.circular(999),
+                          ),
+                          child: Text(
+                            UygulamaSabitleri.tamMarkaAdi,
+                            style: const TextStyle(
+                              fontWeight: FontWeight.w900,
+                              fontSize: 12,
+                              color: Color(0xFFA13A63),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        QrImageView(
+                          data: qrUrl,
+                          version: QrVersions.auto,
+                          size: 220,
+                          backgroundColor: Colors.white,
+                          eyeStyle: const QrEyeStyle(
+                            eyeShape: QrEyeShape.square,
+                            color: Color(0xFF221530),
+                          ),
+                          dataModuleStyle: const QrDataModuleStyle(
+                            dataModuleShape: QrDataModuleShape.square,
+                            color: Color(0xFF221530),
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        Text(
+                          'Masa ${masa.ad}',
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w900,
+                            fontSize: 18,
+                            color: Color(0xFF2D2140),
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          bolum.ad,
+                          style: const TextStyle(
+                            color: Color(0xFF6D6079),
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'Tarat ve masaya ozel menuye ulas',
+                          style: TextStyle(
+                            color: const Color(
+                              0xFF6D6079,
+                            ).withValues(alpha: 0.9),
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(14),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF4EEF8),
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: SelectableText(
+                    qrUrl,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w700,
+                      color: Color(0xFF2D2140),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [
+                    Chip(label: Text('Masa ${masa.ad}')),
+                    Chip(label: Text('Bolum ${bolum.ad}')),
+                    const Chip(label: Text('Kaynak qr')),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(),
+              child: const Text('Kapat'),
+            ),
+            FilledButton.tonalIcon(
+              onPressed: () async {
+                final NavigatorState gezgin = Navigator.of(dialogContext);
+                final bool acildi = await _qrLinkiniAc(qrUrl);
+                if (!mounted) {
+                  return;
+                }
+                if (!acildi) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('QR menu adresi acilamadi')),
+                  );
+                  return;
+                }
+                gezgin.pop();
+              },
+              icon: const Icon(Icons.open_in_new_rounded),
+              label: const Text('Ac'),
+            ),
+            FilledButton.tonalIcon(
+              onPressed: () async {
+                await QrMenuPdfServisi.kartlariYazdir(
+                  belgeBasligi: 'Masa ${masa.ad} QR Karti',
+                  kartlar: <QrMenuKartiVarligi>[qrKarti],
+                );
+              },
+              icon: const Icon(Icons.print_rounded),
+              label: const Text('Yazdir / PDF'),
+            ),
+            FilledButton.icon(
+              onPressed: () async {
+                final NavigatorState gezgin = Navigator.of(dialogContext);
+                await Clipboard.setData(ClipboardData(text: qrUrl));
+                if (!mounted) {
+                  return;
+                }
+                gezgin.pop();
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(
+                      'Masa ${masa.ad} icin QR linki panoya kopyalandi',
+                    ),
+                  ),
+                );
+              },
+              icon: const Icon(Icons.copy_rounded),
+              label: const Text('Linki kopyala'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<void> _topluQrSayfasiniAc() async {
+    final List<QrMenuKartiVarligi> kartlar = _tumMasaQrKartlari;
+    if (kartlar.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Toplu QR icin masa bulunamadi')),
+      );
+      return;
+    }
+
+    await showDialog<void>(
+      context: context,
+      builder: (BuildContext dialogContext) {
+        return Dialog(
+          insetPadding: const EdgeInsets.all(24),
+          child: SizedBox(
+            width: 980,
+            height: 720,
+            child: Padding(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      const Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Toplu QR sayfasi',
+                              style: TextStyle(
+                                fontSize: 22,
+                                fontWeight: FontWeight.w900,
+                              ),
+                            ),
+                            SizedBox(height: 6),
+                            Text(
+                              'Tum masalarin taranabilir QR kartlari tek yerde gorunur.',
+                              style: TextStyle(color: Color(0xFF6D6079)),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      FilledButton.tonalIcon(
+                        onPressed: () async {
+                          await QrMenuPdfServisi.kartlariYazdir(
+                            belgeBasligi: 'Toplu Masa QR Kartlari',
+                            kartlar: kartlar,
+                          );
+                        },
+                        icon: const Icon(Icons.print_rounded),
+                        label: const Text('Toplu yazdir'),
+                      ),
+                      const SizedBox(width: 8),
+                      FilledButton.tonalIcon(
+                        onPressed: () async {
+                          await Clipboard.setData(
+                            ClipboardData(text: _topluQrMetniOlustur(kartlar)),
+                          );
+                          if (!mounted) {
+                            return;
+                          }
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text(
+                                'Tum masa QR linkleri panoya kopyalandi',
+                              ),
+                            ),
+                          );
+                        },
+                        icon: const Icon(Icons.copy_all_rounded),
+                        label: const Text('Tum linkleri kopyala'),
+                      ),
+                      const SizedBox(width: 8),
+                      TextButton(
+                        onPressed: () => Navigator.of(dialogContext).pop(),
+                        child: const Text('Kapat'),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+                  Expanded(
+                    child: SingleChildScrollView(
+                      child: Wrap(
+                        spacing: 16,
+                        runSpacing: 16,
+                        children: kartlar.map((QrMenuKartiVarligi kart) {
+                          return _TopluQrKarti(kart: kart);
+                        }).toList(),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  String _masaQrUrliniOlustur(
+    SalonBolumuVarligi bolum,
+    MasaTanimiVarligi masa,
+  ) {
+    final Uri tabanUri = Uri.base;
+    final String tabanUrl = tabanUri.hasScheme && tabanUri.host.isNotEmpty
+        ? '${tabanUri.scheme}://${tabanUri.authority}'
+        : UygulamaSabitleri.varsayilanQrTabanUrl;
+
+    return QrMenuBaglamiCozumleyici.qrUrlOlustur(
+      tabanUrl: tabanUrl,
+      masaNo: masa.ad,
+      bolumAdi: bolum.ad.toLowerCase().replaceAll(' ', '_'),
+      kaynak: 'qr',
+    );
+  }
+
+  Future<bool> _qrLinkiniAc(String qrUrl) async {
+    final Uri uri = Uri.parse(qrUrl);
+    return launchUrl(uri, mode: LaunchMode.externalApplication);
+  }
+
+  List<QrMenuKartiVarligi> get _tumMasaQrKartlari {
+    final List<QrMenuKartiVarligi> kartlar = <QrMenuKartiVarligi>[];
+    for (final SalonBolumuVarligi bolum in _salonBolumleri) {
+      for (final MasaTanimiVarligi masa in bolum.masalar) {
+        kartlar.add(
+          QrMenuKartiVarligi(
+            baslik: 'Masa ${masa.ad}',
+            altBaslik: bolum.ad,
+            url: _masaQrUrliniOlustur(bolum, masa),
+          ),
+        );
+      }
+    }
+    return kartlar;
+  }
+
+  String _topluQrMetniOlustur(List<QrMenuKartiVarligi> kartlar) {
+    return kartlar
+        .map(
+          (QrMenuKartiVarligi kart) =>
+              '${kart.baslik} | ${kart.altBaslik}\n${kart.url}',
+        )
+        .join('\n\n');
+  }
+
   Future<void> _kategoriEkle() async {
     final _KategoriFormSonucu? sonuc = await showDialog<_KategoriFormSonucu>(
       context: context,
@@ -3762,10 +4120,21 @@ class _YonetimAyarlariDialogState extends State<_YonetimAyarlariDialog> {
                         baslik: 'Salon ve masa yonetimi',
                         aciklama:
                             'Bolum ekle, masa kapasitesini tanimla ve gerekmeyen masalari kaldir.',
-                        eylem: FilledButton.icon(
-                          onPressed: _bolumEkle,
-                          icon: const Icon(Icons.add_business_rounded),
-                          label: const Text('Bolum ekle'),
+                        eylem: Wrap(
+                          spacing: 8,
+                          runSpacing: 8,
+                          children: [
+                            FilledButton.icon(
+                              onPressed: _bolumEkle,
+                              icon: const Icon(Icons.add_business_rounded),
+                              label: const Text('Bolum ekle'),
+                            ),
+                            FilledButton.tonalIcon(
+                              onPressed: _topluQrSayfasiniAc,
+                              icon: const Icon(Icons.qr_code_2_rounded),
+                              label: const Text('Toplu QR sayfasi'),
+                            ),
+                          ],
                         ),
                         child: ListView(
                           children: _salonBolumleri
@@ -3777,6 +4146,8 @@ class _YonetimAyarlariDialogState extends State<_YonetimAyarlariDialog> {
                                     masaEkle: () => _masaEkle(bolum),
                                     bolumDuzenle: () => _bolumDuzenle(bolum),
                                     bolumSil: () => _bolumSil(bolum),
+                                    qrBaglamiAc: (MasaTanimiVarligi masa) =>
+                                        _masaQrBaglamiAc(bolum, masa),
                                     masaDuzenle: (MasaTanimiVarligi masa) =>
                                         _masaDuzenle(bolum, masa),
                                     masaSil: (MasaTanimiVarligi masa) =>
@@ -3827,16 +4198,16 @@ class _YonetimAyarlariDialogState extends State<_YonetimAyarlariDialog> {
                             ..._menuUrunleri.map(
                               (UrunVarligi urun) => Padding(
                                 padding: const EdgeInsets.only(bottom: 12),
-                                 child: _AdminUrunSatiri(
-                                   urun: urun,
-                                   kategoriAdi: _kategoriAdiBul(urun.kategoriId),
-                                   receteOzeti: _receteOzetiniOlustur(urun.id),
-                                   urunDuzenle: () => _urunEkle(urun),
-                                   receteDuzenle: () =>
-                                       _urunRecetesiniDuzenle(urun),
-                                   urunSil: () => _urunSil(urun),
-                                 ),
-                               ),
+                                child: _AdminUrunSatiri(
+                                  urun: urun,
+                                  kategoriAdi: _kategoriAdiBul(urun.kategoriId),
+                                  receteOzeti: _receteOzetiniOlustur(urun.id),
+                                  urunDuzenle: () => _urunEkle(urun),
+                                  receteDuzenle: () =>
+                                      _urunRecetesiniDuzenle(urun),
+                                  urunSil: () => _urunSil(urun),
+                                ),
+                              ),
                             ),
                           ],
                         ),
@@ -3953,6 +4324,7 @@ class _AdminBolumKarti extends StatelessWidget {
     required this.masaEkle,
     required this.bolumDuzenle,
     required this.bolumSil,
+    required this.qrBaglamiAc,
     required this.masaDuzenle,
     required this.masaSil,
   });
@@ -3961,6 +4333,7 @@ class _AdminBolumKarti extends StatelessWidget {
   final VoidCallback masaEkle;
   final VoidCallback bolumDuzenle;
   final VoidCallback bolumSil;
+  final ValueChanged<MasaTanimiVarligi> qrBaglamiAc;
   final ValueChanged<MasaTanimiVarligi> masaDuzenle;
   final ValueChanged<MasaTanimiVarligi> masaSil;
 
@@ -4009,15 +4382,37 @@ class _AdminBolumKarti extends StatelessWidget {
             runSpacing: 8,
             children: [
               ...bolum.masalar.map(
-                (MasaTanimiVarligi masa) => Chip(
-                  label: Text('Masa ${masa.ad} · ${masa.kapasite} kisilik'),
-                  avatar: IconButton(
-                    onPressed: () => masaDuzenle(masa),
-                    icon: const Icon(Icons.edit_outlined, size: 16),
+                (MasaTanimiVarligi masa) => InputChip(
+                  label: Text('Masa ${masa.ad} - ${masa.kapasite} kisilik'),
+                  avatar: PopupMenuButton<String>(
+                    tooltip: 'Masa islemleri',
+                    onSelected: (String islem) {
+                      switch (islem) {
+                        case 'qr':
+                          qrBaglamiAc(masa);
+                          break;
+                        case 'duzenle':
+                          masaDuzenle(masa);
+                          break;
+                      }
+                    },
+                    itemBuilder: (BuildContext context) => const [
+                      PopupMenuItem<String>(
+                        value: 'qr',
+                        child: Text('QR baglamini ac'),
+                      ),
+                      PopupMenuItem<String>(
+                        value: 'duzenle',
+                        child: Text('Masayi duzenle'),
+                      ),
+                    ],
+                    icon: const Icon(Icons.more_horiz_rounded, size: 18),
                     padding: EdgeInsets.zero,
                     constraints: const BoxConstraints(),
                   ),
+                  onPressed: () => qrBaglamiAc(masa),
                   onDeleted: () => masaSil(masa),
+                  deleteIcon: const Icon(Icons.delete_outline_rounded),
                 ),
               ),
               ActionChip(
@@ -4242,8 +4637,7 @@ class _ReceteDuzenlemeDialogState extends State<_ReceteDuzenlemeDialog> {
     if (widget.hammaddeler.isEmpty) {
       return;
     }
-    final String varsayilanHammaddeId =
-        widget.hammaddeler.first.id;
+    final String varsayilanHammaddeId = widget.hammaddeler.first.id;
     setState(() {
       _satirlar = <_ReceteSatiriGirdisi>[
         ..._satirlar,
@@ -4254,9 +4648,8 @@ class _ReceteDuzenlemeDialogState extends State<_ReceteDuzenlemeDialog> {
 
   void _satirSil(int index) {
     setState(() {
-      _satirlar = <_ReceteSatiriGirdisi>[
-        ..._satirlar.where((_) => true),
-      ]..removeAt(index);
+      _satirlar = <_ReceteSatiriGirdisi>[..._satirlar.where((_) => true)]
+        ..removeAt(index);
     });
   }
 
@@ -4293,10 +4686,9 @@ class _ReceteDuzenlemeDialogState extends State<_ReceteDuzenlemeDialog> {
                           key: ValueKey('recete_satiri_${entry.key}'),
                           satir: entry.value,
                           hammaddeler: widget.hammaddeler,
-                          kaldir:
-                              _satirlar.length == 1
-                                  ? null
-                                  : () => _satirSil(entry.key),
+                          kaldir: _satirlar.length == 1
+                              ? null
+                              : () => _satirSil(entry.key),
                           guncelle: (_ReceteSatiriGirdisi satir) =>
                               _satirGuncelle(entry.key, satir),
                         ),
@@ -4318,16 +4710,15 @@ class _ReceteDuzenlemeDialogState extends State<_ReceteDuzenlemeDialog> {
         ),
         FilledButton(
           onPressed: () {
-            final List<ReceteKalemiVarligi> recete =
-                _satirlar
-                    .where((satir) => satir.miktar > 0)
-                    .map(
-                      (satir) => ReceteKalemiVarligi(
-                        hammaddeId: satir.hammaddeId,
-                        miktar: satir.miktar,
-                      ),
-                    )
-                    .toList();
+            final List<ReceteKalemiVarligi> recete = _satirlar
+                .where((satir) => satir.miktar > 0)
+                .map(
+                  (satir) => ReceteKalemiVarligi(
+                    hammaddeId: satir.hammaddeId,
+                    miktar: satir.miktar,
+                  ),
+                )
+                .toList();
             Navigator.of(context).pop(recete);
           },
           child: const Text('Kaydet'),
@@ -4423,7 +4814,9 @@ class _ReceteSatiriState extends State<_ReceteSatiri> {
             flex: 4,
             child: TextField(
               controller: _miktarDenetleyici,
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              keyboardType: const TextInputType.numberWithOptions(
+                decimal: true,
+              ),
               decoration: InputDecoration(
                 labelText: 'Miktar',
                 helperText: seciliHammadde.birim,
@@ -4443,6 +4836,81 @@ class _ReceteSatiriState extends State<_ReceteSatiri> {
               icon: const Icon(Icons.delete_outline_rounded),
             ),
           ],
+        ],
+      ),
+    );
+  }
+}
+
+class _TopluQrKarti extends StatelessWidget {
+  const _TopluQrKarti({required this.kart});
+
+  final QrMenuKartiVarligi kart;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 220,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [Color(0xFFFDF7FB), Color(0xFFFFFFFF)],
+        ),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: const Color(0xFFE4D8EE)),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+            decoration: BoxDecoration(
+              color: const Color(0xFFFCE3EC),
+              borderRadius: BorderRadius.circular(999),
+            ),
+            child: Text(
+              UygulamaSabitleri.tamMarkaAdi,
+              style: const TextStyle(
+                color: Color(0xFFA13A63),
+                fontWeight: FontWeight.w900,
+                fontSize: 11,
+              ),
+            ),
+          ),
+          const SizedBox(height: 10),
+          QrImageView(
+            data: kart.url,
+            version: QrVersions.auto,
+            size: 150,
+            backgroundColor: Colors.white,
+          ),
+          const SizedBox(height: 12),
+          Text(
+            kart.baslik,
+            textAlign: TextAlign.center,
+            style: const TextStyle(fontWeight: FontWeight.w900),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            kart.altBaslik,
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              color: Color(0xFF6D6079),
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: 8),
+          const Text(
+            'Tarat ve menuye ulas',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: Color(0xFF6D6079),
+              fontWeight: FontWeight.w600,
+              fontSize: 12,
+            ),
+          ),
         ],
       ),
     );
