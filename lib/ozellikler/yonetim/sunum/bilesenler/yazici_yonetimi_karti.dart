@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:restoran_app/ortak/bilesenler/suruklenebilir_dialog_kapsayici.dart';
 import 'package:restoran_app/ozellikler/siparis/alan/varliklar/siparis_varligi.dart';
 import 'package:restoran_app/ozellikler/yonetim/alan/varliklar/yazici_is_kuyrugu_varligi.dart';
 import 'package:restoran_app/ozellikler/yonetim/alan/varliklar/yazici_durumu_varligi.dart';
@@ -70,14 +71,17 @@ class YaziciYonetimiKarti extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 12),
-              FilledButton.icon(
-                onPressed: yaziciEkle,
-                style: FilledButton.styleFrom(
-                  backgroundColor: Colors.white.withValues(alpha: 0.12),
-                  foregroundColor: Colors.white,
+              Padding(
+                padding: const EdgeInsets.only(right: 18),
+                child: FilledButton.icon(
+                  onPressed: yaziciEkle,
+                  style: FilledButton.styleFrom(
+                    backgroundColor: Colors.white.withValues(alpha: 0.12),
+                    foregroundColor: Colors.white,
+                  ),
+                  icon: const Icon(Icons.add),
+                  label: const Text('Yazici ekle'),
                 ),
-                icon: const Icon(Icons.add),
-                label: const Text('Yazici ekle'),
               ),
             ],
           ),
@@ -95,7 +99,7 @@ class YaziciYonetimiKarti extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const Text(
-                    'Canli yazici kuyrugu',
+                    'Canli Yazici kuyrugu',
                     style: TextStyle(
                       color: Colors.white,
                       fontSize: 16,
@@ -153,12 +157,16 @@ class YaziciYonetimiDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Dialog(
-      insetPadding: const EdgeInsets.all(24),
-      backgroundColor: Colors.transparent,
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 860, maxHeight: 760),
+    final MediaQueryData medya = MediaQuery.of(context);
+    return SuruklenebilirPopupSablonu(
+      maxGenislik: 860,
+      maxYukseklik: 760,
+      materialKullan: false,
+      tutamacRenk: const Color(0x80E8DDF0),
+      child: MediaQuery(
+        data: medya.copyWith(textScaler: const TextScaler.linear(1)),
         child: Stack(
+          clipBehavior: Clip.none,
           children: [
             SingleChildScrollView(
               child: YaziciYonetimiKarti(
@@ -170,8 +178,8 @@ class YaziciYonetimiDialog extends StatelessWidget {
               ),
             ),
             Positioned(
-              right: 12,
-              top: 12,
+              right: -10,
+              top: -10,
               child: IconButton.filled(
                 onPressed: () => Navigator.of(context).pop(),
                 style: IconButton.styleFrom(

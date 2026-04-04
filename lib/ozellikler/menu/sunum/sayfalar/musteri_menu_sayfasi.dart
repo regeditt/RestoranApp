@@ -2,6 +2,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:restoran_app/bagimlilik_enjeksiyonu/servis_kaydi.dart';
+import 'package:restoran_app/ortak/bagimlilik/servis_saglayici.dart';
 import 'package:restoran_app/ortak/responsive/ekran_boyutu.dart';
 import 'package:restoran_app/ortak/yonlendirme/rota_yapisi.dart';
 import 'package:restoran_app/ozellikler/menu/alan/varliklar/kategori_varligi.dart';
@@ -24,7 +25,8 @@ class MusteriMenuSayfasi extends StatefulWidget {
 }
 
 class _MusteriMenuSayfasiState extends State<MusteriMenuSayfasi> {
-  final ServisKaydi _servisKaydi = ServisKaydi.ortak;
+  late final ServisKaydi _servisKaydi;
+  bool _servisHazir = false;
 
   bool _yukleniyor = true;
   List<KategoriVarligi> _kategoriler = const <KategoriVarligi>[];
@@ -34,8 +36,13 @@ class _MusteriMenuSayfasiState extends State<MusteriMenuSayfasi> {
   int _kategoriIstekSayaci = 0;
 
   @override
-  void initState() {
-    super.initState();
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_servisHazir) {
+      return;
+    }
+    _servisKaydi = ServisSaglayici.of(context);
+    _servisHazir = true;
     _verileriYukle();
   }
 

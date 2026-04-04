@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:restoran_app/ortak/bilesenler/suruklenebilir_dialog_kapsayici.dart';
 import 'package:restoran_app/ozellikler/siparis/alan/enumlar/siparis_durumu.dart';
 import 'package:restoran_app/ozellikler/siparis/alan/enumlar/teslimat_tipi.dart';
 import 'package:restoran_app/ozellikler/siparis/alan/varliklar/siparis_varligi.dart';
@@ -197,97 +198,96 @@ class _PaketServisDetayDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Dialog(
-      insetPadding: const EdgeInsets.all(24),
-      backgroundColor: Colors.transparent,
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 860, maxHeight: 760),
-        child: Container(
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            gradient: const LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [Color(0xFF181224), Color(0xFF241A39)],
-            ),
-            borderRadius: BorderRadius.circular(28),
+    return SuruklenebilirPopupSablonu(
+      tutamacUstOfset: -2,
+      maxGenislik: 860,
+      maxYukseklik: 760,
+      materialKullan: false,
+      child: Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [Color(0xFF181224), Color(0xFF241A39)],
           ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  const Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Paket hat detayi',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 22,
-                            fontWeight: FontWeight.w900,
-                          ),
+          borderRadius: BorderRadius.circular(28),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                const Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Paket hat detayi',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 22,
+                          fontWeight: FontWeight.w900,
                         ),
-                        SizedBox(height: 6),
-                        Text(
-                          'Adres, kurye ve teslim notlari ile aktif paket akisini izleyin.',
-                          style: TextStyle(color: Color(0xFFE3E8FF)),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  IconButton.filled(
-                    onPressed: () => Navigator.of(context).pop(),
-                    style: IconButton.styleFrom(
-                      backgroundColor: Colors.white.withValues(alpha: 0.10),
-                      foregroundColor: Colors.white,
-                    ),
-                    icon: const Icon(Icons.close_rounded),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              Wrap(
-                spacing: 10,
-                runSpacing: 10,
-                children: [
-                  _PaketDurumRozeti(
-                    etiket: 'Toplam paket',
-                    deger: '${siparisler.length}',
-                  ),
-                  _PaketDurumRozeti(
-                    etiket: 'Aktif',
-                    deger: '${aktifSiparisler.length}',
-                  ),
-                  _PaketDurumRozeti(
-                    etiket: 'Teslim edilen',
-                    deger:
-                        '${siparisler.where((SiparisVarligi siparis) => siparis.durum == SiparisDurumu.teslimEdildi).length}',
-                  ),
-                ],
-              ),
-              const SizedBox(height: 18),
-              Expanded(
-                child: siparisler.isEmpty
-                    ? const Center(
-                        child: Text(
-                          'Paket siparisi bulunamadi',
-                          style: TextStyle(color: Colors.white70),
-                        ),
-                      )
-                    : ListView.separated(
-                        itemCount: siparisler.length,
-                        separatorBuilder: (_, _) => const SizedBox(height: 12),
-                        itemBuilder: (BuildContext context, int index) {
-                          final SiparisVarligi siparis = siparisler[index];
-                          return _PaketSiparisDetaySatiri(siparis: siparis);
-                        },
                       ),
-              ),
-            ],
-          ),
+                      SizedBox(height: 6),
+                      Text(
+                        'Adres, kurye ve teslim notlari ile aktif paket akisini izleyin.',
+                        style: TextStyle(color: Color(0xFFE3E8FF)),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 12),
+                IconButton.filled(
+                  onPressed: () => Navigator.of(context).pop(),
+                  style: IconButton.styleFrom(
+                    backgroundColor: Colors.white.withValues(alpha: 0.10),
+                    foregroundColor: Colors.white,
+                  ),
+                  icon: const Icon(Icons.close_rounded),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            Wrap(
+              spacing: 10,
+              runSpacing: 10,
+              children: [
+                _PaketDurumRozeti(
+                  etiket: 'Toplam paket',
+                  deger: '${siparisler.length}',
+                ),
+                _PaketDurumRozeti(
+                  etiket: 'Aktif',
+                  deger: '${aktifSiparisler.length}',
+                ),
+                _PaketDurumRozeti(
+                  etiket: 'Teslim edilen',
+                  deger:
+                      '${siparisler.where((SiparisVarligi siparis) => siparis.durum == SiparisDurumu.teslimEdildi).length}',
+                ),
+              ],
+            ),
+            const SizedBox(height: 18),
+            Expanded(
+              child: siparisler.isEmpty
+                  ? const Center(
+                      child: Text(
+                        'Paket siparisi bulunamadi',
+                        style: TextStyle(color: Colors.white70),
+                      ),
+                    )
+                  : ListView.separated(
+                      itemCount: siparisler.length,
+                      separatorBuilder: (_, _) => const SizedBox(height: 12),
+                      itemBuilder: (BuildContext context, int index) {
+                        final SiparisVarligi siparis = siparisler[index];
+                        return _PaketSiparisDetaySatiri(siparis: siparis);
+                      },
+                    ),
+            ),
+          ],
         ),
       ),
     );

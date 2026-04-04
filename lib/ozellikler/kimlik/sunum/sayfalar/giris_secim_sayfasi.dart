@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:restoran_app/bagimlilik_enjeksiyonu/servis_kaydi.dart';
+import 'package:restoran_app/ortak/bagimlilik/servis_saglayici.dart';
 import 'package:restoran_app/ozellikler/kimlik/alan/roller/kullanici_rolu.dart';
 import 'package:restoran_app/ortak/yonlendirme/rota_yapisi.dart';
 
@@ -11,12 +12,23 @@ class GirisSecimSayfasi extends StatefulWidget {
 }
 
 class _GirisSecimSayfasiState extends State<GirisSecimSayfasi> {
-  final ServisKaydi _servisKaydi = ServisKaydi.ortak;
+  late final ServisKaydi _servisKaydi;
+  bool _servisHazir = false;
   _PersonelGirisModu _seciliMod = _PersonelGirisModu.garson;
   final TextEditingController _kullaniciAdiDenetleyici =
       TextEditingController();
   final TextEditingController _sifreDenetleyici = TextEditingController();
   bool _islemde = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_servisHazir) {
+      return;
+    }
+    _servisKaydi = ServisSaglayici.of(context);
+    _servisHazir = true;
+  }
 
   @override
   void dispose() {

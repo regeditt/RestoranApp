@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:restoran_app/bagimlilik_enjeksiyonu/servis_kaydi.dart';
+import 'package:restoran_app/ortak/bagimlilik/servis_saglayici.dart';
 import 'package:restoran_app/ortak/responsive/ekran_boyutu.dart';
 import 'package:restoran_app/ortak/sabitler/uygulama_sabitleri.dart';
 import 'package:restoran_app/ozellikler/kimlik/alan/roller/kullanici_rolu.dart';
@@ -13,7 +14,8 @@ class HesabimSayfasi extends StatefulWidget {
 }
 
 class _HesabimSayfasiState extends State<HesabimSayfasi> {
-  final ServisKaydi _servisKaydi = ServisKaydi.ortak;
+  late final ServisKaydi _servisKaydi;
+  bool _servisHazir = false;
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   final TextEditingController _telefonDenetleyici = TextEditingController();
   final TextEditingController _sifreDenetleyici = TextEditingController();
@@ -42,8 +44,13 @@ class _HesabimSayfasiState extends State<HesabimSayfasi> {
   ];
 
   @override
-  void initState() {
-    super.initState();
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_servisHazir) {
+      return;
+    }
+    _servisKaydi = ServisSaglayici.of(context);
+    _servisHazir = true;
     _kullaniciYukle();
   }
 

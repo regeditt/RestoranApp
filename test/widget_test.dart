@@ -20,13 +20,17 @@ import 'package:restoran_app/ozellikler/yonetim/sunum/bilesenler/masa_plani_kart
 import 'package:restoran_app/ozellikler/yonetim/sunum/bilesenler/paket_servis_operasyon_karti.dart';
 import 'package:restoran_app/ozellikler/yonetim/sunum/bilesenler/personel_yonetimi_karti.dart';
 import 'package:restoran_app/ozellikler/yonetim/sunum/bilesenler/yonetim_analiz_kartlari.dart';
+import 'package:restoran_app/ortak/veri/veri_kaynagi_tipi.dart';
 import 'package:restoran_app/uygulama_kabugu/uygulama_kabugu.dart';
+import 'test_destegi.dart';
 
 void main() {
   testWidgets('RestoranApp acilista qr menu ekranini gosterir', (
     WidgetTester tester,
   ) async {
-    await tester.pumpWidget(const UygulamaKabugu());
+    await tester.pumpWidget(
+      const UygulamaKabugu(veriKaynagi: VeriKaynagiTipi.mock),
+    );
     await tester.pumpAndSettle();
 
     expect(find.text('Personel girisi'), findsWidgets);
@@ -38,7 +42,9 @@ void main() {
   testWidgets('Personel girisi ekrani ayri olarak gosterilir', (
     WidgetTester tester,
   ) async {
-    await tester.pumpWidget(const MaterialApp(home: GirisSecimSayfasi()));
+    await tester.pumpWidget(
+      testUygulamasi(child: const GirisSecimSayfasi()),
+    );
     await tester.pumpAndSettle();
 
     expect(find.text('Personel girisi'), findsOneWidget);
@@ -50,7 +56,9 @@ void main() {
   testWidgets('Acilistan personel girisine gidilebilir', (
     WidgetTester tester,
   ) async {
-    await tester.pumpWidget(const UygulamaKabugu());
+    await tester.pumpWidget(
+      const UygulamaKabugu(veriKaynagi: VeriKaynagiTipi.mock),
+    );
     await tester.pumpAndSettle();
 
     await tester.tap(find.text('Personel girisi').first);
@@ -66,7 +74,9 @@ void main() {
   testWidgets('Acilis qr menu ekraninda personel girisi tek kez gorunur', (
     WidgetTester tester,
   ) async {
-    await tester.pumpWidget(const UygulamaKabugu());
+    await tester.pumpWidget(
+      const UygulamaKabugu(veriKaynagi: VeriKaynagiTipi.mock),
+    );
     await tester.pumpAndSettle();
 
     expect(find.text('Personel girisi'), findsOneWidget);
@@ -81,7 +91,9 @@ void main() {
     });
 
     await tester.binding.setSurfaceSize(const Size(700, 1180));
-    await tester.pumpWidget(const UygulamaKabugu());
+    await tester.pumpWidget(
+      const UygulamaKabugu(veriKaynagi: VeriKaynagiTipi.mock),
+    );
     await tester.pumpAndSettle();
 
     expect(find.text('Personel girisi'), findsWidgets);
@@ -96,7 +108,9 @@ void main() {
     });
 
     await tester.binding.setSurfaceSize(const Size(1400, 900));
-    await tester.pumpWidget(const MaterialApp(home: MutfakSiparisSayfasi()));
+    await tester.pumpWidget(
+      testUygulamasi(child: const MutfakSiparisSayfasi()),
+    );
     await tester.pumpAndSettle();
 
     expect(find.text('Mutfak Siparis Yonetimi'), findsOneWidget);
@@ -131,7 +145,7 @@ void main() {
     );
 
     await tester.pumpWidget(
-      MaterialApp(home: SiparisOzetiSayfasi(sepet: sepet)),
+      testUygulamasi(child: SiparisOzetiSayfasi(sepet: sepet)),
     );
     await tester.pumpAndSettle();
 

@@ -1,9 +1,9 @@
+import 'package:restoran_app/bagimlilik_enjeksiyonu/servis_bagimlilikleri.dart';
 import 'package:restoran_app/ozellikler/kimlik/alan/depolar/kimlik_deposu.dart';
 import 'package:restoran_app/ozellikler/kimlik/uygulama/use_case/aktif_kullanici_getir_use_case.dart';
 import 'package:restoran_app/ozellikler/kimlik/uygulama/use_case/cikis_yap_use_case.dart';
 import 'package:restoran_app/ozellikler/kimlik/uygulama/use_case/giris_yap_use_case.dart';
 import 'package:restoran_app/ozellikler/kimlik/uygulama/use_case/misafir_olustur_use_case.dart';
-import 'package:restoran_app/ozellikler/kimlik/veri/depolar/kimlik_deposu_mock.dart';
 import 'package:restoran_app/ozellikler/menu/alan/depolar/menu_deposu.dart';
 import 'package:restoran_app/ozellikler/menu/uygulama/use_case/kategori_ekle_use_case.dart';
 import 'package:restoran_app/ozellikler/menu/uygulama/use_case/kategori_guncelle_use_case.dart';
@@ -14,20 +14,18 @@ import 'package:restoran_app/ozellikler/menu/uygulama/use_case/urun_ekle_use_cas
 import 'package:restoran_app/ozellikler/menu/uygulama/use_case/urun_guncelle_use_case.dart';
 import 'package:restoran_app/ozellikler/menu/uygulama/use_case/urun_sil_use_case.dart';
 import 'package:restoran_app/ozellikler/menu/uygulama/use_case/urunleri_getir_use_case.dart';
-import 'package:restoran_app/ozellikler/menu/veri/depolar/menu_deposu_mock.dart';
 import 'package:restoran_app/ozellikler/sepet/alan/depolar/sepet_deposu.dart';
 import 'package:restoran_app/ozellikler/sepet/uygulama/use_case/sepete_urun_ekle_use_case.dart';
 import 'package:restoran_app/ozellikler/sepet/uygulama/use_case/sepet_kalemi_guncelle_use_case.dart';
 import 'package:restoran_app/ozellikler/sepet/uygulama/use_case/sepet_kalemi_sil_use_case.dart';
 import 'package:restoran_app/ozellikler/sepet/uygulama/use_case/sepeti_getir_use_case.dart';
 import 'package:restoran_app/ozellikler/sepet/uygulama/use_case/sepeti_temizle_use_case.dart';
-import 'package:restoran_app/ozellikler/sepet/veri/depolar/sepet_deposu_mock.dart';
 import 'package:restoran_app/ozellikler/siparis/alan/depolar/siparis_deposu.dart';
 import 'package:restoran_app/ozellikler/siparis/uygulama/use_case/siparis_olustur_use_case.dart';
 import 'package:restoran_app/ozellikler/siparis/uygulama/use_case/siparis_durumu_guncelle_use_case.dart';
 import 'package:restoran_app/ozellikler/siparis/uygulama/use_case/siparisi_yazdir_use_case.dart';
 import 'package:restoran_app/ozellikler/siparis/uygulama/use_case/siparisleri_getir_use_case.dart';
-import 'package:restoran_app/ozellikler/siparis/veri/depolar/siparis_deposu_mock.dart';
+import 'package:restoran_app/ozellikler/siparis/uygulama/servisler/yazici_hedefleri_belirleyici.dart';
 import 'package:restoran_app/ozellikler/stok/alan/depolar/stok_deposu.dart';
 import 'package:restoran_app/ozellikler/stok/uygulama/use_case/hammadde_ekle_use_case.dart';
 import 'package:restoran_app/ozellikler/stok/uygulama/use_case/hammadde_guncelle_use_case.dart';
@@ -36,7 +34,6 @@ import 'package:restoran_app/ozellikler/stok/uygulama/use_case/receteyi_getir_us
 import 'package:restoran_app/ozellikler/stok/uygulama/use_case/receteyi_kaydet_use_case.dart';
 import 'package:restoran_app/ozellikler/stok/uygulama/use_case/siparise_gore_stok_dus_use_case.dart';
 import 'package:restoran_app/ozellikler/stok/uygulama/use_case/stok_ozeti_getir_use_case.dart';
-import 'package:restoran_app/ozellikler/stok/veri/depolar/stok_deposu_mock.dart';
 import 'package:restoran_app/ozellikler/yonetim/alan/depolar/personel_deposu.dart';
 import 'package:restoran_app/ozellikler/yonetim/alan/depolar/salon_plani_deposu.dart';
 import 'package:restoran_app/ozellikler/yonetim/alan/depolar/yazici_deposu.dart';
@@ -53,20 +50,19 @@ import 'package:restoran_app/ozellikler/yonetim/uygulama/use_case/yazici_ekle_us
 import 'package:restoran_app/ozellikler/yonetim/uygulama/use_case/yazici_guncelle_use_case.dart';
 import 'package:restoran_app/ozellikler/yonetim/uygulama/use_case/yazici_sil_use_case.dart';
 import 'package:restoran_app/ozellikler/yonetim/uygulama/use_case/yazicilari_getir_use_case.dart';
-import 'package:restoran_app/ozellikler/yonetim/veri/depolar/personel_deposu_mock.dart';
-import 'package:restoran_app/ozellikler/yonetim/veri/depolar/salon_plani_deposu_mock.dart';
-import 'package:restoran_app/ozellikler/yonetim/veri/depolar/yazici_deposu_mock.dart';
+import 'package:restoran_app/ortak/platform/yazici_cikti_platformu.dart';
+import 'package:restoran_app/ortak/veri/veri_kaynagi_tipi.dart';
 
 class ServisKaydi {
-  ServisKaydi._() {
-    _menuDeposu = MenuDeposuMock();
-    _kimlikDeposu = KimlikDeposuMock();
-    _sepetDeposu = SepetDeposuMock(_menuDeposu);
-    _siparisDeposu = SiparisDeposuMock();
-    _yaziciDeposu = YaziciDeposuMock();
-    _personelDeposu = PersonelDeposuMock();
-    _salonPlaniDeposu = SalonPlaniDeposuMock();
-    _stokDeposu = StokDeposuMock();
+  ServisKaydi._(ServisBagimlilikleri bagimlilikler) {
+    _menuDeposu = bagimlilikler.menuDeposu;
+    _kimlikDeposu = bagimlilikler.kimlikDeposu;
+    _sepetDeposu = bagimlilikler.sepetDeposu;
+    _siparisDeposu = bagimlilikler.siparisDeposu;
+    _yaziciDeposu = bagimlilikler.yaziciDeposu;
+    _personelDeposu = bagimlilikler.personelDeposu;
+    _salonPlaniDeposu = bagimlilikler.salonPlaniDeposu;
+    _stokDeposu = bagimlilikler.stokDeposu;
 
     aktifKullaniciGetirUseCase = AktifKullaniciGetirUseCase(_kimlikDeposu);
     girisYapUseCase = GirisYapUseCase(_kimlikDeposu);
@@ -89,9 +85,16 @@ class ServisKaydi {
     sepetKalemiGuncelleUseCase = SepetKalemiGuncelleUseCase(_sepetDeposu);
     sepetKalemiSilUseCase = SepetKalemiSilUseCase(_sepetDeposu);
     sepetiTemizleUseCase = SepetiTemizleUseCase(_sepetDeposu);
-    siparisOlusturUseCase = SiparisOlusturUseCase(_siparisDeposu);
+    siparisOlusturUseCase = SiparisOlusturUseCase(
+      _siparisDeposu,
+      stokDusUseCase: SipariseGoreStokDusUseCase(_stokDeposu),
+    );
     siparisDurumuGuncelleUseCase = SiparisDurumuGuncelleUseCase(_siparisDeposu);
-    siparisiYazdirUseCase = SiparisiYazdirUseCase(_yaziciDeposu);
+    siparisiYazdirUseCase = SiparisiYazdirUseCase(
+      _yaziciDeposu,
+      yaziciCiktiPlatformu,
+      const VarsayilanYaziciHedefleriBelirleyici(),
+    );
     siparisleriGetirUseCase = SiparisleriGetirUseCase(_siparisDeposu);
     yazicilariGetirUseCase = YazicilariGetirUseCase(_yaziciDeposu);
     yaziciEkleUseCase = YaziciEkleUseCase(_yaziciDeposu);
@@ -117,7 +120,28 @@ class ServisKaydi {
     sipariseGoreStokDusUseCase = SipariseGoreStokDusUseCase(_stokDeposu);
   }
 
-  static final ServisKaydi ortak = ServisKaydi._();
+  static final ServisKaydi ortak =
+      ServisKaydi._(ServisBagimlilikleri.gercek());
+
+  factory ServisKaydi.mock() {
+    return ServisKaydi._(ServisBagimlilikleri.mock());
+  }
+
+  factory ServisKaydi.gercek() {
+    return ortak;
+  }
+
+  factory ServisKaydi.sqlite() {
+    return ServisKaydi._(ServisBagimlilikleri.sqlite());
+  }
+
+  factory ServisKaydi.api() {
+    return ServisKaydi._(ServisBagimlilikleri.api());
+  }
+
+  factory ServisKaydi.olustur(VeriKaynagiTipi tip) {
+    return ServisKaydi._(ServisBagimlilikleri.olustur(tip));
+  }
 
   late final KimlikDeposu _kimlikDeposu;
   late final MenuDeposu _menuDeposu;

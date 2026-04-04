@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:restoran_app/bagimlilik_enjeksiyonu/servis_kaydi.dart';
+import 'package:restoran_app/ortak/bagimlilik/servis_saglayici.dart';
 import 'package:restoran_app/ortak/responsive/ekran_boyutu.dart';
 import 'package:restoran_app/ortak/yonlendirme/rota_yapisi.dart';
 import 'package:restoran_app/ozellikler/siparis/alan/enumlar/paket_teslimat_durumu.dart';
@@ -19,7 +20,8 @@ class MutfakSiparisSayfasi extends StatefulWidget {
 }
 
 class _MutfakSiparisSayfasiState extends State<MutfakSiparisSayfasi> {
-  final ServisKaydi _servisKaydi = ServisKaydi.ortak;
+  late final ServisKaydi _servisKaydi;
+  bool _servisHazir = false;
   final ScrollController _yatayKaydirmaDenetleyicisi = ScrollController();
 
   bool _yukleniyor = true;
@@ -28,8 +30,13 @@ class _MutfakSiparisSayfasiState extends State<MutfakSiparisSayfasi> {
   _TeslimatFiltresi _seciliFiltre = _TeslimatFiltresi.tumu;
 
   @override
-  void initState() {
-    super.initState();
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_servisHazir) {
+      return;
+    }
+    _servisKaydi = ServisSaglayici.of(context);
+    _servisHazir = true;
     _yukle();
   }
 

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:restoran_app/bagimlilik_enjeksiyonu/servis_kaydi.dart';
+import 'package:restoran_app/ortak/bagimlilik/servis_saglayici.dart';
+import 'package:restoran_app/ortak/bilesenler/suruklenebilir_dialog_kapsayici.dart';
 import 'package:restoran_app/ortak/responsive/ekran_boyutu.dart';
 import 'package:restoran_app/ozellikler/kimlik/alan/varliklar/misafir_bilgisi_varligi.dart';
 import 'package:restoran_app/ozellikler/menu/alan/varliklar/qr_menu_baglami_varligi.dart';
@@ -24,7 +26,8 @@ class SiparisOzetiSayfasi extends StatefulWidget {
 }
 
 class _SiparisOzetiSayfasiState extends State<SiparisOzetiSayfasi> {
-  final ServisKaydi _servisKaydi = ServisKaydi.ortak;
+  late final ServisKaydi _servisKaydi;
+  bool _servisHazir = false;
   final TextEditingController _adresDenetleyici = TextEditingController();
   final TextEditingController _teslimatNotuDenetleyici =
       TextEditingController();
@@ -38,6 +41,16 @@ class _SiparisOzetiSayfasiState extends State<SiparisOzetiSayfasi> {
     _seciliTeslimatTipi = widget.qrBaglami?.masaNo != null
         ? TeslimatTipi.restorandaYe
         : TeslimatTipi.gelAl;
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_servisHazir) {
+      return;
+    }
+    _servisKaydi = ServisSaglayici.of(context);
+    _servisHazir = true;
     _varsayilanBilgileriYukle();
   }
 
@@ -133,20 +146,23 @@ class _SiparisOzetiSayfasiState extends State<SiparisOzetiSayfasi> {
       await showDialog<void>(
         context: context,
         builder: (BuildContext context) {
-          return AlertDialog(
-            title: const Text('Siparis alindi'),
-            content: Text(
-              '${kaydedilenSiparis.siparisNo} numarali siparis kaydedildi. '
-              '${_siparisBilgisi(kaydedilenSiparis)}. '
-              '${yazdirmaSonucu.ozetMetni}. '
-              'Toplam ${kaydedilenSiparis.toplamTutar.toStringAsFixed(0)} TL.',
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(),
-                child: const Text('Tamam'),
+          return SuruklenebilirPopupSablonu(
+            materialKullan: false,
+            child: AlertDialog(
+              title: const Text('Siparis alindi'),
+              content: Text(
+                '${kaydedilenSiparis.siparisNo} numarali siparis kaydedildi. '
+                '${_siparisBilgisi(kaydedilenSiparis)}. '
+                '${yazdirmaSonucu.ozetMetni}. '
+                'Toplam ${kaydedilenSiparis.toplamTutar.toStringAsFixed(0)} TL.',
               ),
-            ],
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: const Text('Tamam'),
+                ),
+              ],
+            ),
           );
         },
       );

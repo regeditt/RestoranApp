@@ -2,17 +2,9 @@
 
 Bu dosya, proje boyunca uyulacak temel kurallari icerir. Tum gelistirme adimlari bu dosyaya bakilarak yapilacaktir.
 
-## Genel Kurallar
-
-- Proje adi gorunen ad olarak `RestoranApp` olacak.
-- Kod tarafinda teknik isimlendirme gerektiginde paket ve dosya adlari `restoran_app` biciminde olacak.
-- Proje `Flutter` ile gelistirilecek.
-- Proje hem `Desktop`hem`mobil` hem `web` ortaminda calisacak.
-- Tek kod tabani ile cok platform destegi saglanacak.
-
 ## Mimari Kurallar
 
-- Proje `SOLID` prensiplerine uygun olacak.
+- Proje `SOLID` prensiplerine uygun olacak, kesinlikle bağlı kalınacak.
 - Proje `N katmanli mimari` ile gelistirilecek.
 - Mimari `feature bazli + katmanli` duzende kurgulanacak.
 - Her feature icinde temel katmanlar:
@@ -23,6 +15,15 @@ Bu dosya, proje boyunca uyulacak temel kurallari icerir. Tum gelistirme adimlari
 - UI katmani dogrudan veri kaynagina baglanmayacak.
 - Is kurallari `alan` ve `uygulama` katmanlarinda toplanacak.
 - Platforma bagimli detaylar `veri` veya altyapi katmaninda izole edilecek.
+
+## Genel Kurallar
+
+- Proje adi gorunen ad olarak `RestoranApp` olacak.
+- Kod tarafinda teknik isimlendirme gerektiginde paket ve dosya adlari `restoran_app` biciminde olacak.
+- Proje `Flutter` ile gelistirilecek.
+- Proje hem `Desktop`hem`mobil` hem `web` ortaminda calisacak.
+- Tek kod tabani ile cok platform destegi saglanacak.
+
 
 ## Isimlendirme Kurallari
 
@@ -81,6 +82,19 @@ Bu dosya, proje boyunca uyulacak temel kurallari icerir. Tum gelistirme adimlari
 - Web musterisi icin esas URL `QR menu` girisi olacak.
 - Web tarafi ayri bir teknoloji yerine mevcut `Flutter Web` ciktilari ile ilerleyecek.
 - Web mimarisi plani `docs/web_mimarisi_plani.md` dosyasinda yasatilacak.
+
+## Tema ve Tasarim Kurallari
+
+- Projenin varsayilan tema dili `Gece Moru + Sicak Bej` olacak.
+- Tema mimarisi `SOLID` bagli olacak:
+  - `TemaTokenlari` soyutlamasi uzerinden karar verilecek.
+  - Somut tema implementasyonlari bu soyutlamayi implemente edecek.
+  - `ThemeData` olusturma sorumlulugu ayri bir olusturucu sinifta olacak.
+- Renk, yazi ailesi, yaricap, dokunmatik hedef ve popup tutamac stili gibi tasarim kararlarinin tek kaynagi `lib/ortak/tema` olacak.
+- Sunum dosyalarinda dogrudan `Color(0x...)` ve rastgele `Colors.*` kullanimi yeni kod icin yasak; tema tokeni/ThemeExtension kullanimi zorunlu.
+- Tum popup pencereleri ortak surukleme davranisi icin `SuruklenebilirPopupSablonu` uzerinden acilacak.
+- Popup tutamac tasarimi (8 nokta, yatay duzen, merkez hizasi) ortak bilesen uzerinden yonetilecek; ekranda tek tek elle cizilmeyecek.
+- Yeni tasarim kararlarinda once tema tokenlari guncellenecek, sonra ekranlar bu tokenlardan beslenecek.
 
 ## Gelistirme Disiplini
 
@@ -208,6 +222,52 @@ Siradaki gelistirmeler bagimlilik ve operasyon onceligine gore asagidaki gibi il
 1. offline senaryolari icin siparis kuyrugu stratejisi tanimlanacak
 2. widget testleri ve alan/use-case testleri artirilacak
 3. yazici, siparis ve salon akislari icin hata durumlari guclendirilecek
+
+## Rekabet ve Fark Yaratma Plani
+
+Bu plan, sektordeki benzer urunlerle rekabette ayrisma alanlarini netlestirir.
+
+### MVP (0-6 hafta)
+
+1. Offline/low-connectivity davranisi, siparis kuyruklama ve otomatik retry.
+2. Garson/mutfak/kurye ekranlarinda hizli aksiyon kisayollari.
+3. Yonetim panelinde gunluk/haftalik ciro, urun performansi, saatlik yogunluk kartlari.
+
+### V2 (6-12 hafta)
+
+1. Kurye atama, teslimat suresi analizi ve paket servis detayli takip.
+2. Entegrasyonlarin ilk dalgasi: Yemeksepeti, Getir, Trendyol.
+3. Cihaz ve yazici uyumlulugu icin resmi test matrisi.
+
+### V3 (12+ hafta)
+
+1. E-Adisyon ve OKC entegrasyonlari.
+2. Online magaza / e-ticaret kanali.
+
+## Entegrasyon Teknik Yol Haritasi
+
+### Mimari Temel
+
+1. integration_gateway katmani ile standart entegrasyon arayuzu.
+2. menu, urun, varyant ve fiyat esleme tablolari.
+3. event kuyruğu ve offline senkronizasyon stratejisi.
+
+### Dalga 1 Entegrasyonlar
+
+1. Yemeksepeti: siparis cekme, durum guncelleme, iptal akisleri.
+2. Getir: siparis ve teslimat tipleri, kurye bilgisi eslemesi.
+3. Trendyol: kategori esleme ve kampanya uyumu.
+
+### Yasal ve Cihaz Entegrasyonlari
+
+1. E-Adisyon modulu ile GIB sureclerine uyum.
+2. OKC POS entegrasyonu ile odeme-adisyon senkronu.
+3. Yazici uyumu icin Windows/Android/iOS testleri.
+
+### UX ve Operasyon
+
+1. Entegrasyon durumu sayfasi: aktif entegrasyon, hata durumu, son senkron zamani.
+2. Siparis kaynagi bazli filtreler: mutfak ve yonetim ekranlari.
 
 ## Kisa Donem Uygulama Plani
 
