@@ -17,15 +17,19 @@ import 'package:restoran_app/ozellikler/siparis/veri/depolar/siparis_deposu_sqli
 import 'package:restoran_app/ozellikler/stok/alan/depolar/stok_deposu.dart';
 import 'package:restoran_app/ozellikler/stok/veri/depolar/stok_deposu_gercek.dart';
 import 'package:restoran_app/ozellikler/stok/veri/depolar/stok_deposu_mock.dart';
+import 'package:restoran_app/ozellikler/stok/veri/depolar/stok_deposu_sqlite.dart';
 import 'package:restoran_app/ozellikler/yonetim/alan/depolar/personel_deposu.dart';
 import 'package:restoran_app/ozellikler/yonetim/alan/depolar/salon_plani_deposu.dart';
 import 'package:restoran_app/ozellikler/yonetim/alan/depolar/yazici_deposu.dart';
 import 'package:restoran_app/ozellikler/yonetim/veri/depolar/personel_deposu_gercek.dart';
 import 'package:restoran_app/ozellikler/yonetim/veri/depolar/personel_deposu_mock.dart';
+import 'package:restoran_app/ozellikler/yonetim/veri/depolar/personel_deposu_sqlite.dart';
 import 'package:restoran_app/ozellikler/yonetim/veri/depolar/salon_plani_deposu_gercek.dart';
 import 'package:restoran_app/ozellikler/yonetim/veri/depolar/salon_plani_deposu_mock.dart';
+import 'package:restoran_app/ozellikler/yonetim/veri/depolar/salon_plani_deposu_sqlite.dart';
 import 'package:restoran_app/ozellikler/yonetim/veri/depolar/yazici_deposu_gercek.dart';
 import 'package:restoran_app/ozellikler/yonetim/veri/depolar/yazici_deposu_mock.dart';
+import 'package:restoran_app/ozellikler/yonetim/veri/depolar/yazici_deposu_sqlite.dart';
 import 'package:restoran_app/ortak/veri/veri_kaynagi_tipi.dart';
 import 'package:restoran_app/ortak/veri/veritabani.dart';
 
@@ -87,10 +91,10 @@ class ServisBagimlilikleri {
       menuDeposu: menuDeposu,
       sepetDeposu: SepetDeposuSqlite(_sqliteVeritabani, menuDeposu),
       siparisDeposu: SiparisDeposuSqlite(_sqliteVeritabani),
-      yaziciDeposu: YaziciDeposuGercek(),
-      personelDeposu: PersonelDeposuGercek(),
-      salonPlaniDeposu: SalonPlaniDeposuGercek(),
-      stokDeposu: StokDeposuGercek(),
+      yaziciDeposu: YaziciDeposuSqlite(_sqliteVeritabani),
+      personelDeposu: PersonelDeposuSqlite(_sqliteVeritabani),
+      salonPlaniDeposu: SalonPlaniDeposuSqlite(_sqliteVeritabani),
+      stokDeposu: StokDeposuSqlite(_sqliteVeritabani),
     );
   }
 
