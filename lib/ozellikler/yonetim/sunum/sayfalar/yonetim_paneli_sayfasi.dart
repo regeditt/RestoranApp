@@ -1,11 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:restoran_app/bagimlilik_enjeksiyonu/servis_kaydi.dart';
-import 'package:restoran_app/ortak/bagimlilik/servis_saglayici.dart';
 import 'package:restoran_app/ortak/responsive/ekran_boyutu.dart';
 import 'package:restoran_app/ortak/sabitler/uygulama_sabitleri.dart';
 import 'package:restoran_app/ortak/yonlendirme/rota_yapisi.dart';
-import 'package:restoran_app/ozellikler/menu/alan/varliklar/kategori_varligi.dart';
-import 'package:restoran_app/ozellikler/menu/alan/varliklar/urun_varligi.dart';
 import 'package:restoran_app/ozellikler/siparis/alan/enumlar/siparis_durumu.dart';
 import 'package:restoran_app/ozellikler/siparis/alan/enumlar/teslimat_tipi.dart';
 import 'package:restoran_app/ozellikler/siparis/alan/varliklar/siparis_varligi.dart';
@@ -13,7 +10,6 @@ import 'package:restoran_app/ozellikler/stok/alan/varliklar/stok_ozeti_varligi.d
 import 'package:restoran_app/ozellikler/yonetim/alan/varliklar/personel_durumu_varligi.dart';
 import 'package:restoran_app/ozellikler/yonetim/alan/varliklar/saatlik_siparis_ozeti_varligi.dart';
 import 'package:restoran_app/ozellikler/yonetim/alan/varliklar/salon_bolumu_varligi.dart';
-import 'package:restoran_app/ozellikler/yonetim/alan/varliklar/sistem_yazici_adayi_varligi.dart';
 import 'package:restoran_app/ozellikler/yonetim/alan/varliklar/yazici_durumu_varligi.dart';
 import 'package:restoran_app/ozellikler/yonetim/alan/varliklar/yonetim_paneli_ozeti_varligi.dart';
 import 'package:restoran_app/ozellikler/yonetim/sunum/bilesenler/yonetim_analiz_kartlari.dart';
@@ -21,114 +17,73 @@ import 'package:restoran_app/ozellikler/yonetim/sunum/bilesenler/masa_plani_kart
 import 'package:restoran_app/ozellikler/yonetim/sunum/bilesenler/paket_servis_operasyon_karti.dart';
 import 'package:restoran_app/ozellikler/yonetim/sunum/bilesenler/personel_yonetimi_karti.dart';
 import 'package:restoran_app/ozellikler/yonetim/sunum/bilesenler/yonetim_ayarlari_dialogu.dart';
-import 'package:restoran_app/ozellikler/yonetim/sunum/bilesenler/yonetim_paneli_yardimcilari.dart';
 import 'package:restoran_app/ozellikler/yonetim/sunum/bilesenler/yazici_form_dialogu.dart';
 import 'package:restoran_app/ozellikler/yonetim/sunum/bilesenler/yonetim_rapor_kartlari.dart';
 import 'package:restoran_app/ozellikler/yonetim/sunum/bilesenler/yazici_yonetimi_karti.dart';
-import 'package:restoran_app/ozellikler/yonetim/uygulama/servisler/yonetim_raporu_hesaplayici.dart';
+import 'package:restoran_app/ozellikler/yonetim/sunum/viewmodel/yonetim_paneli_viewmodel.dart';
 
 class YonetimPaneliSayfasi extends StatefulWidget {
-  const YonetimPaneliSayfasi({super.key});
+  const YonetimPaneliSayfasi({
+    super.key,
+    required this.viewModel,
+    required this.servisKaydi,
+  });
+
+  final YonetimPaneliViewModel viewModel;
+  final ServisKaydi servisKaydi;
 
   @override
   State<YonetimPaneliSayfasi> createState() => _YonetimPaneliSayfasiState();
 }
 
 class _YonetimPaneliSayfasiState extends State<YonetimPaneliSayfasi> {
-  late final ServisKaydi _servisKaydi;
-  bool _servisHazir = false;
   final TextEditingController _aramaDenetleyici = TextEditingController();
   final ScrollController _sayfaKaydirmaDenetleyicisi = ScrollController();
 
-  bool _yukleniyor = true;
-  List<SiparisVarligi> _siparisler = const <SiparisVarligi>[];
-  List<YaziciDurumuVarligi> _yazicilar = const <YaziciDurumuVarligi>[];
-  List<SistemYaziciAdayiVarligi> _sistemYazicilari =
-      const <SistemYaziciAdayiVarligi>[];
-  List<PersonelDurumuVarligi> _personeller = const <PersonelDurumuVarligi>[];
-  List<SalonBolumuVarligi> _salonBolumleri = const <SalonBolumuVarligi>[];
-  List<KategoriVarligi> _menuKategorileri = const <KategoriVarligi>[];
-  List<UrunVarligi> _menuUrunleri = const <UrunVarligi>[];
-  StokOzetiVarligi? _stokOzeti;
-  _PanelFiltre _seciliFiltre = _PanelFiltre.tumu;
-  _ZamanFiltresi _seciliZamanFiltresi = _ZamanFiltresi.bugun;
-  _SiparisSirasi _seciliSiralama = _SiparisSirasi.enYeni;
-  String _aramaMetni = '';
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _yukle();
+    });
+  }
 
   @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    if (_servisHazir) {
+  void didUpdateWidget(covariant YonetimPaneliSayfasi oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.viewModel == widget.viewModel) {
       return;
     }
-    _servisKaydi = ServisSaglayici.of(context);
-    _servisHazir = true;
-    _yukle();
+    oldWidget.viewModel.dispose();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _yukle();
+    });
   }
 
   @override
   void dispose() {
     _aramaDenetleyici.dispose();
     _sayfaKaydirmaDenetleyicisi.dispose();
+    widget.viewModel.dispose();
     super.dispose();
   }
 
   Future<void> _yukle() async {
-    final List<SiparisVarligi> siparisler = await _servisKaydi
-        .siparisleriGetirUseCase();
-    final List<PersonelDurumuVarligi> personeller = await _servisKaydi
-        .personelleriGetirUseCase();
-    final List<SistemYaziciAdayiVarligi> sistemYazicilari = await _servisKaydi
-        .sistemYazicilariniGetirUseCase();
-    final List<YaziciDurumuVarligi> yazicilar = await _servisKaydi
-        .yazicilariGetirUseCase();
-    final List<SalonBolumuVarligi> salonBolumleri = await _servisKaydi
-        .salonBolumleriniGetirUseCase();
-    final List<KategoriVarligi> menuKategorileri = await _servisKaydi
-        .kategorileriGetirUseCase();
-    final List<UrunVarligi> menuUrunleri = await _servisKaydi
-        .urunleriGetirUseCase();
-    final StokOzetiVarligi stokOzeti = await _servisKaydi
-        .stokOzetiGetirUseCase();
-
-    if (!mounted) {
+    final YonetimPaneliIslemSonucu sonuc = await widget.viewModel.yukle();
+    if (!mounted || sonuc.basarili) {
       return;
     }
-
-    setState(() {
-      _siparisler = siparisler;
-      _yazicilar = yazicilar;
-      _sistemYazicilari = sistemYazicilari;
-      _personeller = personeller;
-      _salonBolumleri = salonBolumleri;
-      _menuKategorileri = menuKategorileri;
-      _menuUrunleri = menuUrunleri;
-      _stokOzeti = stokOzeti;
-      _yukleniyor = false;
-    });
-  }
-
-  Future<void> _yazicilariYenile() async {
-    final List<YaziciDurumuVarligi> yazicilar = await _servisKaydi
-        .yazicilariGetirUseCase();
-    final List<SistemYaziciAdayiVarligi> sistemYazicilari = await _servisKaydi
-        .sistemYazicilariniGetirUseCase();
-
-    if (!mounted) {
-      return;
-    }
-
-    setState(() {
-      _yazicilar = yazicilar;
-      _sistemYazicilari = sistemYazicilari;
-    });
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(sonuc.mesaj)));
   }
 
   Future<void> _yaziciEkle() async {
+    final YonetimPaneliViewModel viewModel = widget.viewModel;
     final YaziciFormSonucu? sonuc = await showDialog<YaziciFormSonucu>(
       context: context,
       builder: (BuildContext context) {
-        return YaziciFormDialog(sistemYazicilari: _sistemYazicilari);
+        return YaziciFormDialog(sistemYazicilari: viewModel.sistemYazicilari);
       },
     );
 
@@ -136,7 +91,7 @@ class _YonetimPaneliSayfasiState extends State<YonetimPaneliSayfasi> {
       return;
     }
 
-    await _servisKaydi.yaziciEkleUseCase(
+    final YonetimPaneliIslemSonucu islemSonucu = await viewModel.yaziciEkle(
       YaziciDurumuVarligi(
         id: 'yzc_${DateTime.now().microsecondsSinceEpoch}',
         ad: sonuc.ad,
@@ -146,7 +101,6 @@ class _YonetimPaneliSayfasiState extends State<YonetimPaneliSayfasi> {
         durum: sonuc.durum,
       ),
     );
-    await _yazicilariYenile();
 
     if (!mounted) {
       return;
@@ -154,12 +108,13 @@ class _YonetimPaneliSayfasiState extends State<YonetimPaneliSayfasi> {
 
     ScaffoldMessenger.of(
       context,
-    ).showSnackBar(SnackBar(content: Text('${sonuc.ad} eklendi')));
+    ).showSnackBar(SnackBar(content: Text(islemSonucu.mesaj)));
   }
 
   Future<void> _yaziciSil(YaziciDurumuVarligi yazici) async {
-    await _servisKaydi.yaziciSilUseCase(yazici.id);
-    await _yazicilariYenile();
+    final YonetimPaneliIslemSonucu sonuc = await widget.viewModel.yaziciSil(
+      yazici,
+    );
 
     if (!mounted) {
       return;
@@ -167,7 +122,7 @@ class _YonetimPaneliSayfasiState extends State<YonetimPaneliSayfasi> {
 
     ScaffoldMessenger.of(
       context,
-    ).showSnackBar(SnackBar(content: Text('${yazici.ad} kaldirildi')));
+    ).showSnackBar(SnackBar(content: Text(sonuc.mesaj)));
   }
 
   Future<void> _yaziciGuncelle(
@@ -175,60 +130,54 @@ class _YonetimPaneliSayfasiState extends State<YonetimPaneliSayfasi> {
     String? rolEtiketi,
     YaziciBaglantiDurumu? durum,
   }) async {
-    await _servisKaydi.yaziciGuncelleUseCase(
-      yazici.copyWith(rolEtiketi: rolEtiketi, durum: durum),
-    );
-    await _yazicilariYenile();
+    final YonetimPaneliIslemSonucu sonuc = await widget.viewModel
+        .yaziciGuncelle(yazici, rolEtiketi: rolEtiketi, durum: durum);
+    if (!mounted || sonuc.basarili) {
+      return;
+    }
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(sonuc.mesaj)));
   }
 
   Future<void> _yaziciYonetiminiAc() async {
+    final YonetimPaneliViewModel viewModel = widget.viewModel;
     await showDialog<void>(
       context: context,
       builder: (BuildContext context) {
         return YaziciYonetimiDialog(
-          yazicilar: _yazicilar,
-          siparisler: _siparisler,
+          yazicilar: viewModel.yazicilar,
+          siparisler: viewModel.siparisler,
           yaziciEkle: _yaziciEkle,
           yaziciSil: _yaziciSil,
           yaziciGuncelle: _yaziciGuncelle,
         );
       },
     );
-    await _yazicilariYenile();
   }
 
   Future<void> _yonetimVerileriniYenile() async {
-    final List<SalonBolumuVarligi> salonBolumleri = await _servisKaydi
-        .salonBolumleriniGetirUseCase();
-    final List<KategoriVarligi> menuKategorileri = await _servisKaydi
-        .kategorileriGetirUseCase();
-    final List<UrunVarligi> menuUrunleri = await _servisKaydi
-        .urunleriGetirUseCase();
-    final StokOzetiVarligi stokOzeti = await _servisKaydi
-        .stokOzetiGetirUseCase();
-
-    if (!mounted) {
+    final YonetimPaneliIslemSonucu sonuc = await widget.viewModel
+        .yonetimVerileriniYenile();
+    if (!mounted || sonuc.basarili) {
       return;
     }
-
-    setState(() {
-      _salonBolumleri = salonBolumleri;
-      _menuKategorileri = menuKategorileri;
-      _menuUrunleri = menuUrunleri;
-      _stokOzeti = stokOzeti;
-    });
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(sonuc.mesaj)));
   }
 
   Future<void> _yonetimAyarlariniAc([int baslangicSekmesi = 0]) async {
+    final YonetimPaneliViewModel viewModel = widget.viewModel;
     await showDialog<void>(
       context: context,
       builder: (BuildContext context) {
         return YonetimAyarlariDialog(
-          salonBolumleri: _salonBolumleri,
-          menuKategorileri: _menuKategorileri,
-          menuUrunleri: _menuUrunleri,
+          salonBolumleri: viewModel.salonBolumleri,
+          menuKategorileri: viewModel.menuKategorileri,
+          menuUrunleri: viewModel.menuUrunleri,
           veriYenile: _yonetimVerileriniYenile,
-          servisKaydi: _servisKaydi,
+          servisKaydi: widget.servisKaydi,
           baslangicSekmesi: baslangicSekmesi,
         );
       },
@@ -238,251 +187,139 @@ class _YonetimPaneliSayfasiState extends State<YonetimPaneliSayfasi> {
 
   @override
   Widget build(BuildContext context) {
-    final bool masaustu = EkranBoyutu.masaustu(context);
-    final List<SiparisVarligi> filtreliSiparisler = _filtreliSiparisler;
-    final YonetimPaneliOzetiVarligi ozet =
-        YonetimRaporuHesaplayici.panelOzetiniHesapla(filtreliSiparisler);
-    final List<SaatlikSiparisOzetiVarligi> saatlikVeriler =
-        YonetimRaporuHesaplayici.saatlikVeriUret(filtreliSiparisler);
+    return AnimatedBuilder(
+      animation: widget.viewModel,
+      builder: (BuildContext context, _) {
+        final YonetimPaneliViewModel viewModel = widget.viewModel;
+        final bool masaustu = EkranBoyutu.masaustu(context);
+        final List<SiparisVarligi> filtreliSiparisler =
+            viewModel.filtreliSiparisler;
+        final YonetimPaneliOzetiVarligi ozet = viewModel.panelOzeti;
+        final List<SaatlikSiparisOzetiVarligi> saatlikVeriler =
+            viewModel.saatlikVeriler;
 
-    return Scaffold(
-      backgroundColor: const Color(0xFF110D18),
-      body: DecoratedBox(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [Color(0xFF17111F), Color(0xFF241733), Color(0xFF321A45)],
-          ),
-        ),
-        child: SafeArea(
-          child: _yukleniyor
-              ? const Center(child: CircularProgressIndicator())
-              : Center(
-                  child: ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: 1500),
-                    child: Padding(
-                      padding: EdgeInsets.all(masaustu ? 22 : 14),
-                      child: Scrollbar(
-                        thumbVisibility: true,
-                        controller: _sayfaKaydirmaDenetleyicisi,
-                        child: ListView(
-                          controller: _sayfaKaydirmaDenetleyicisi,
-                          children: [
-                            _KompaktUstAlan(
-                              ozet: ozet,
-                              seciliFiltre: _seciliFiltre,
-                              filtreSec: (_PanelFiltre filtre) {
-                                setState(() {
-                                  _seciliFiltre = filtre;
-                                });
-                              },
-                              seciliZamanFiltresi: _seciliZamanFiltresi,
-                              zamanFiltresiSec: (_ZamanFiltresi filtre) {
-                                setState(() {
-                                  _seciliZamanFiltresi = filtre;
-                                });
-                              },
-                              seciliSiralama: _seciliSiralama,
-                              siralamaSec: (_SiparisSirasi siralama) {
-                                setState(() {
-                                  _seciliSiralama = siralama;
-                                });
-                              },
-                              yaziciYonetimiAc: _yaziciYonetiminiAc,
-                              salonYonetimiAc: () => _yonetimAyarlariniAc(0),
-                              menuYonetimiAc: () => _yonetimAyarlariniAc(1),
-                              stokYonetimiAc: () => _yonetimAyarlariniAc(2),
+        return Scaffold(
+          backgroundColor: const Color(0xFF110D18),
+          body: DecoratedBox(
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  Color(0xFF17111F),
+                  Color(0xFF241733),
+                  Color(0xFF321A45),
+                ],
+              ),
+            ),
+            child: SafeArea(
+              child: viewModel.yukleniyor
+                  ? const Center(child: CircularProgressIndicator())
+                  : Center(
+                      child: ConstrainedBox(
+                        constraints: const BoxConstraints(maxWidth: 1500),
+                        child: Padding(
+                          padding: EdgeInsets.all(masaustu ? 22 : 14),
+                          child: Scrollbar(
+                            thumbVisibility: true,
+                            controller: _sayfaKaydirmaDenetleyicisi,
+                            child: ListView(
+                              controller: _sayfaKaydirmaDenetleyicisi,
+                              children: [
+                                _KompaktUstAlan(
+                                  ozet: ozet,
+                                  seciliFiltre: viewModel.seciliFiltre,
+                                  filtreSec: viewModel.filtreSec,
+                                  seciliZamanFiltresi:
+                                      viewModel.seciliZamanFiltresi,
+                                  zamanFiltresiSec: viewModel.zamanFiltresiSec,
+                                  seciliSiralama: viewModel.seciliSiralama,
+                                  siralamaSec: viewModel.siralamaSec,
+                                  yaziciYonetimiAc: _yaziciYonetiminiAc,
+                                  salonYonetimiAc: () =>
+                                      _yonetimAyarlariniAc(0),
+                                  menuYonetimiAc: () => _yonetimAyarlariniAc(1),
+                                  stokYonetimiAc: () => _yonetimAyarlariniAc(2),
+                                ),
+                                const SizedBox(height: 18),
+                                masaustu
+                                    ? Row(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Expanded(
+                                            flex: 7,
+                                            child: _SiparisAkisi(
+                                              siparisler: filtreliSiparisler,
+                                              aramaMetni: viewModel.aramaMetni,
+                                              aramaDenetleyici:
+                                                  _aramaDenetleyici,
+                                              aramaDegisti:
+                                                  viewModel.aramaMetniDegisti,
+                                            ),
+                                          ),
+                                          const SizedBox(width: 18),
+                                          Expanded(
+                                            flex: 5,
+                                            child: _YanPanel(
+                                              ozet: ozet,
+                                              saatlikVeriler: saatlikVeriler,
+                                              siparisler: filtreliSiparisler,
+                                              salonBolumleri:
+                                                  viewModel.salonBolumleri,
+                                              stokOzeti: viewModel.stokOzeti,
+                                              yaziciEkle: _yaziciEkle,
+                                              yaziciSil: _yaziciSil,
+                                              yaziciGuncelle: _yaziciGuncelle,
+                                              personeller:
+                                                  viewModel.personeller,
+                                            ),
+                                          ),
+                                        ],
+                                      )
+                                    : Column(
+                                        children: [
+                                          _SiparisAkisi(
+                                            siparisler: filtreliSiparisler,
+                                            aramaMetni: viewModel.aramaMetni,
+                                            aramaDenetleyici: _aramaDenetleyici,
+                                            aramaDegisti:
+                                                viewModel.aramaMetniDegisti,
+                                          ),
+                                          const SizedBox(height: 18),
+                                          _YanPanel(
+                                            ozet: ozet,
+                                            saatlikVeriler: saatlikVeriler,
+                                            siparisler: filtreliSiparisler,
+                                            salonBolumleri:
+                                                viewModel.salonBolumleri,
+                                            stokOzeti: viewModel.stokOzeti,
+                                            yaziciEkle: _yaziciEkle,
+                                            yaziciSil: _yaziciSil,
+                                            yaziciGuncelle: _yaziciGuncelle,
+                                            personeller: viewModel.personeller,
+                                          ),
+                                        ],
+                                      ),
+                              ],
                             ),
-                            const SizedBox(height: 18),
-                            masaustu
-                                ? Row(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Expanded(
-                                        flex: 7,
-                                        child: _SiparisAkisi(
-                                          siparisler: filtreliSiparisler,
-                                          aramaMetni: _aramaMetni,
-                                          aramaDenetleyici: _aramaDenetleyici,
-                                          aramaDegisti: (String deger) {
-                                            setState(() {
-                                              _aramaMetni = deger;
-                                            });
-                                          },
-                                        ),
-                                      ),
-                                      const SizedBox(width: 18),
-                                      Expanded(
-                                        flex: 5,
-                                        child: _YanPanel(
-                                          ozet: ozet,
-                                          saatlikVeriler: saatlikVeriler,
-                                          siparisler: filtreliSiparisler,
-                                          salonBolumleri: _salonBolumleri,
-                                          stokOzeti: _stokOzeti,
-                                          yaziciEkle: _yaziciEkle,
-                                          yaziciSil: _yaziciSil,
-                                          yaziciGuncelle: _yaziciGuncelle,
-                                          personeller: _personeller,
-                                        ),
-                                      ),
-                                    ],
-                                  )
-                                : Column(
-                                    children: [
-                                      _SiparisAkisi(
-                                        siparisler: filtreliSiparisler,
-                                        aramaMetni: _aramaMetni,
-                                        aramaDenetleyici: _aramaDenetleyici,
-                                        aramaDegisti: (String deger) {
-                                          setState(() {
-                                            _aramaMetni = deger;
-                                          });
-                                        },
-                                      ),
-                                      const SizedBox(height: 18),
-                                      _YanPanel(
-                                        ozet: ozet,
-                                        saatlikVeriler: saatlikVeriler,
-                                        siparisler: filtreliSiparisler,
-                                        salonBolumleri: _salonBolumleri,
-                                        stokOzeti: _stokOzeti,
-                                        yaziciEkle: _yaziciEkle,
-                                        yaziciSil: _yaziciSil,
-                                        yaziciGuncelle: _yaziciGuncelle,
-                                        personeller: _personeller,
-                                      ),
-                                    ],
-                                  ),
-                          ],
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                ),
-        ),
-      ),
+            ),
+          ),
+        );
+      },
     );
-  }
-
-  List<SiparisVarligi> get _filtreliSiparisler {
-    final List<SiparisVarligi> zamanFiltreli = _zamanFiltresiUygula(
-      _siparisler,
-    );
-
-    final List<SiparisVarligi> kanalFiltreli;
-    switch (_seciliFiltre) {
-      case _PanelFiltre.tumu:
-        kanalFiltreli = zamanFiltreli;
-      case _PanelFiltre.aktif:
-        kanalFiltreli = zamanFiltreli
-            .where(
-              (siparis) =>
-                  siparis.durum == SiparisDurumu.alindi ||
-                  siparis.durum == SiparisDurumu.hazirlaniyor ||
-                  siparis.durum == SiparisDurumu.hazir ||
-                  siparis.durum == SiparisDurumu.yolda,
-            )
-            .toList();
-      case _PanelFiltre.gelAl:
-        kanalFiltreli = zamanFiltreli
-            .where((siparis) => siparis.teslimatTipi == TeslimatTipi.gelAl)
-            .toList();
-      case _PanelFiltre.paketServis:
-        kanalFiltreli = zamanFiltreli
-            .where(
-              (siparis) => siparis.teslimatTipi == TeslimatTipi.paketServis,
-            )
-            .toList();
-      case _PanelFiltre.restorandaYe:
-        kanalFiltreli = zamanFiltreli
-            .where(
-              (siparis) => siparis.teslimatTipi == TeslimatTipi.restorandaYe,
-            )
-            .toList();
-    }
-
-    return _sirala(_aramaUygula(kanalFiltreli));
-  }
-
-  List<SiparisVarligi> _aramaUygula(List<SiparisVarligi> kaynak) {
-    final String sorgu = _aramaMetni.trim().toLowerCase();
-    if (sorgu.isEmpty) {
-      return kaynak;
-    }
-
-    return kaynak.where((SiparisVarligi siparis) {
-      final String adSoyad =
-          siparis.sahip.misafirBilgisi?.adSoyad.toLowerCase() ?? '';
-      final String siparisNo = siparis.siparisNo.toLowerCase();
-      return adSoyad.contains(sorgu) || siparisNo.contains(sorgu);
-    }).toList();
-  }
-
-  List<SiparisVarligi> _zamanFiltresiUygula(List<SiparisVarligi> kaynak) {
-    if (kaynak.isEmpty || _seciliZamanFiltresi == _ZamanFiltresi.tumu) {
-      return kaynak;
-    }
-
-    final DateTime enYeniTarih = kaynak
-        .map((siparis) => siparis.olusturmaTarihi)
-        .reduce((a, b) => a.isAfter(b) ? a : b);
-
-    switch (_seciliZamanFiltresi) {
-      case _ZamanFiltresi.bugun:
-        return kaynak
-            .where(
-              (siparis) =>
-                  siparis.olusturmaTarihi.year == enYeniTarih.year &&
-                  siparis.olusturmaTarihi.month == enYeniTarih.month &&
-                  siparis.olusturmaTarihi.day == enYeniTarih.day,
-            )
-            .toList();
-      case _ZamanFiltresi.sonIkiSaat:
-        final DateTime esik = enYeniTarih.subtract(const Duration(hours: 2));
-        return kaynak
-            .where(
-              (siparis) =>
-                  !siparis.olusturmaTarihi.isBefore(esik) &&
-                  !siparis.olusturmaTarihi.isAfter(enYeniTarih),
-            )
-            .toList();
-      case _ZamanFiltresi.tumu:
-        return kaynak;
-    }
-  }
-
-  List<SiparisVarligi> _sirala(List<SiparisVarligi> kaynak) {
-    final List<SiparisVarligi> sirali = List<SiparisVarligi>.from(kaynak);
-
-    switch (_seciliSiralama) {
-      case _SiparisSirasi.enYeni:
-        sirali.sort((a, b) => b.olusturmaTarihi.compareTo(a.olusturmaTarihi));
-      case _SiparisSirasi.tutarYuksek:
-        sirali.sort((a, b) => b.toplamTutar.compareTo(a.toplamTutar));
-      case _SiparisSirasi.durumOncelikli:
-        sirali.sort((a, b) {
-            final int durumKarsilastirma = durumOnceligi(
-              a.durum,
-            ).compareTo(durumOnceligi(b.durum));
-          if (durumKarsilastirma != 0) {
-            return durumKarsilastirma;
-          }
-          return b.olusturmaTarihi.compareTo(a.olusturmaTarihi);
-        });
-    }
-
-    return sirali;
   }
 }
 
-enum _PanelFiltre { tumu, aktif, gelAl, paketServis, restorandaYe }
+typedef _PanelFiltre = PanelFiltre;
 
-enum _ZamanFiltresi { bugun, sonIkiSaat, tumu }
+typedef _ZamanFiltresi = ZamanFiltresi;
 
-enum _SiparisSirasi { enYeni, tutarYuksek, durumOncelikli }
+typedef _SiparisSirasi = SiparisSirasi;
 
 class _KontrolCubugu extends StatelessWidget {
   const _KontrolCubugu({
@@ -834,7 +671,7 @@ class _KompaktUstAlan extends StatelessWidget {
               ),
               _OperasyonMetrigi(
                 baslik: 'Gunluk ciro',
-                  deger: paraYaz(ozet.toplamCiro),
+                deger: paraYaz(ozet.toplamCiro),
                 renk: const Color(0xFF7FE7B3),
               ),
               _OperasyonMetrigi(
@@ -1001,7 +838,7 @@ class _SiparisSatiri extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-      final Color durumRenk = durumRengi(siparis.durum);
+    final Color durumRenk = durumRengi(siparis.durum);
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
@@ -1044,7 +881,7 @@ class _SiparisSatiri extends StatelessWidget {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                      siparisAltEtiketi(siparis),
+                    siparisAltEtiketi(siparis),
                     style: const TextStyle(color: Color(0xFF7A6D86)),
                   ),
                 ],
@@ -1057,7 +894,7 @@ class _SiparisSatiri extends StatelessWidget {
                 borderRadius: BorderRadius.circular(999),
               ),
               child: Text(
-                  durumEtiketi(siparis.durum),
+                durumEtiketi(siparis.durum),
                 style: TextStyle(color: durumRenk, fontWeight: FontWeight.w800),
               ),
             ),
@@ -1155,5 +992,56 @@ class _YanPanel extends StatelessWidget {
         );
       },
     );
+  }
+}
+
+String paraYaz(double tutar) {
+  return '${tutar.toStringAsFixed(0)} TL';
+}
+
+Color durumRengi(SiparisDurumu durum) {
+  switch (durum) {
+    case SiparisDurumu.alindi:
+      return const Color(0xFFFF8B6B);
+    case SiparisDurumu.hazirlaniyor:
+      return const Color(0xFFFFC857);
+    case SiparisDurumu.hazir:
+      return const Color(0xFF48CFA4);
+    case SiparisDurumu.yolda:
+      return const Color(0xFF74A2FF);
+    case SiparisDurumu.teslimEdildi:
+      return const Color(0xFF8B9BB2);
+    case SiparisDurumu.iptalEdildi:
+      return const Color(0xFFFF6F91);
+  }
+}
+
+String siparisAltEtiketi(SiparisVarligi siparis) {
+  final String kanal = switch (siparis.teslimatTipi) {
+    TeslimatTipi.restorandaYe => 'Salon',
+    TeslimatTipi.gelAl => 'Gel al',
+    TeslimatTipi.paketServis => 'Paket servis',
+  };
+  final int urunAdedi = siparis.kalemler.fold<int>(
+    0,
+    (toplam, kalem) => toplam + kalem.adet,
+  );
+  return '$kanal · $urunAdedi urun';
+}
+
+String durumEtiketi(SiparisDurumu durum) {
+  switch (durum) {
+    case SiparisDurumu.alindi:
+      return 'Alindi';
+    case SiparisDurumu.hazirlaniyor:
+      return 'Hazirlaniyor';
+    case SiparisDurumu.hazir:
+      return 'Hazir';
+    case SiparisDurumu.yolda:
+      return 'Yolda';
+    case SiparisDurumu.teslimEdildi:
+      return 'Teslim edildi';
+    case SiparisDurumu.iptalEdildi:
+      return 'Iptal edildi';
   }
 }

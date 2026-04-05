@@ -4,7 +4,7 @@ import 'package:restoran_app/ozellikler/siparis/alan/enumlar/teslimat_tipi.dart'
 import 'package:restoran_app/ozellikler/siparis/alan/varliklar/siparis_varligi.dart';
 import 'package:restoran_app/ozellikler/yonetim/alan/varliklar/salon_bolumu_varligi.dart';
 
-class MasaPlaniKarti extends StatelessWidget {
+class MasaPlaniKarti extends StatefulWidget {
   const MasaPlaniKarti({
     super.key,
     required this.siparisler,
@@ -15,196 +15,109 @@ class MasaPlaniKarti extends StatelessWidget {
   final List<SalonBolumuVarligi> salonBolumleri;
 
   @override
+  State<MasaPlaniKarti> createState() => _MasaPlaniKartiState();
+}
+
+class _MasaPlaniKartiState extends State<MasaPlaniKarti> {
+  _MasaFiltre _seciliFiltre = _MasaFiltre.tumu;
+  _HizliAksiyon _seciliAksiyon = _HizliAksiyon.barkod;
+  String? _seciliBolumId;
+  String? _seciliMasaAnahtari;
+
+  @override
   Widget build(BuildContext context) {
-    final List<_BolumPlaniVeri> bolumler = _BolumPlaniVeri.uret(
-      siparisler,
-      salonBolumleri,
+    final List<_BolumPlaniVeri> bolumler = _bolumleriHazirla(
+      siparisler: widget.siparisler,
+      salonBolumleri: widget.salonBolumleri,
+    );
+    final _BolumPlaniVeri? seciliBolum = _seciliBolumGetir(bolumler);
+    final List<_MasaPlaniVeri> filtreliMasalar = _filtreliMasalariGetir(
+      bolum: seciliBolum,
+    );
+    final List<SiparisVarligi> aktifAdisyonlar = _aktifAdisyonlariGetir();
+    final double toplamTutar = aktifAdisyonlar.fold<double>(
+      0,
+      (double toplam, SiparisVarligi siparis) => toplam + siparis.toplamTutar,
     );
 
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(28),
+        borderRadius: BorderRadius.circular(26),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'Masa plani',
-            style: Theme.of(
-              context,
-            ).textTheme.titleLarge?.copyWith(color: const Color(0xFF25192E)),
-          ),
-          const SizedBox(height: 6),
-          const Text(
-            'Salon yerlesimini bolum bazli izle, dolu masalari aninda fark et.',
-            style: TextStyle(color: Color(0xFF7A6D86)),
-          ),
-          const SizedBox(height: 18),
-          Wrap(
-            spacing: 10,
-            runSpacing: 10,
-            children: const [
-              _MasaDurumLejandi(
-                etiket: 'Bos',
-                renk: Color(0xFF5B8CFF),
-                ikon: Icons.event_seat_outlined,
-              ),
-              _MasaDurumLejandi(
-                etiket: 'Siparis bekliyor',
-                renk: Color(0xFFFF8B6B),
-                ikon: Icons.restaurant_menu_rounded,
-              ),
-              _MasaDurumLejandi(
-                etiket: 'Serviste',
-                renk: Color(0xFFC58CFF),
-                ikon: Icons.room_service_rounded,
-              ),
-              _MasaDurumLejandi(
-                etiket: 'Temizleniyor',
-                renk: Color(0xFF9AA6B2),
-                ikon: Icons.cleaning_services_rounded,
-              ),
-            ],
-          ),
-          const SizedBox(height: 18),
-          ...bolumler.map(
-            (_BolumPlaniVeri bolum) => Padding(
-              padding: const EdgeInsets.only(bottom: 14),
-              child: _BolumPlaniKapsulu(bolum: bolum),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _MasaDurumLejandi extends StatelessWidget {
-  const _MasaDurumLejandi({
-    required this.etiket,
-    required this.renk,
-    required this.ikon,
-  });
-
-  final String etiket;
-  final Color renk;
-  final IconData ikon;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-      decoration: BoxDecoration(
-        color: renk.withValues(alpha: 0.10),
-        borderRadius: BorderRadius.circular(999),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(ikon, size: 16, color: renk),
-          const SizedBox(width: 8),
-          Text(
-            etiket,
-            style: TextStyle(color: renk, fontWeight: FontWeight.w800),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _BolumPlaniKapsulu extends StatelessWidget {
-  const _BolumPlaniKapsulu({required this.bolum});
-
-  final _BolumPlaniVeri bolum;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: bolum.zeminRengi,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: bolum.kenarRengi),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                width: 44,
-                height: 44,
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(14),
-                ),
-                child: Icon(bolum.ikon, color: bolum.vurguRengi),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      bolum.baslik,
-                      style: const TextStyle(
-                        color: Color(0xFF25192E),
-                        fontSize: 18,
-                        fontWeight: FontWeight.w900,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      bolum.aciklama,
-                      style: const TextStyle(
-                        color: Color(0xFF6D6079),
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 12),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 10,
-                ),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(999),
-                ),
-                child: Text(
-                  '${bolum.doluMasaSayisi}/${bolum.masalar.length} dolu',
-                  style: TextStyle(
-                    color: bolum.vurguRengi,
-                    fontWeight: FontWeight.w900,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
+          _MasaPlaniUstCubugu(uyariSayisi: aktifAdisyonlar.length),
+          const SizedBox(height: 12),
           LayoutBuilder(
             builder: (BuildContext context, BoxConstraints constraints) {
-              final double kartGenisligi = constraints.maxWidth < 520
-                  ? 120
-                  : 138;
-              return Wrap(
-                spacing: 12,
-                runSpacing: 12,
-                children: bolum.masalar
-                    .map(
-                      (_MasaPlaniKutusuVeri masa) => SizedBox(
-                        width: kartGenisligi,
-                        child: _MasaPlaniKutusu(masa: masa),
-                      ),
-                    )
-                    .toList(),
+              final bool dikeyYerlesim = constraints.maxWidth < 1120;
+              if (dikeyYerlesim) {
+                return Column(
+                  children: [
+                    _SolAdisyonPaneli(
+                      seciliAksiyon: _seciliAksiyon,
+                      aksiyonSec: _aksiyonSec,
+                      aktifAdisyonlar: aktifAdisyonlar,
+                      toplamTutar: toplamTutar,
+                      adisyonSec: _adisyondanMasaSec,
+                    ),
+                    const SizedBox(height: 12),
+                    _SagFiltrePaneli(
+                      bolumler: bolumler,
+                      seciliFiltre: _seciliFiltre,
+                      seciliBolumId: seciliBolum?.id,
+                      filtreSec: _filtreSec,
+                      bolumSec: _bolumSec,
+                    ),
+                    const SizedBox(height: 12),
+                    _OrtaMasaPlaniPaneli(
+                      bolum: seciliBolum,
+                      masalar: filtreliMasalar,
+                      seciliMasaAnahtari: _seciliMasaAnahtari,
+                      masaSec: _masaSec,
+                    ),
+                  ],
+                );
+              }
+
+              return Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  SizedBox(
+                    width: 334,
+                    child: _SolAdisyonPaneli(
+                      seciliAksiyon: _seciliAksiyon,
+                      aksiyonSec: _aksiyonSec,
+                      aktifAdisyonlar: aktifAdisyonlar,
+                      toplamTutar: toplamTutar,
+                      adisyonSec: _adisyondanMasaSec,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: _OrtaMasaPlaniPaneli(
+                      bolum: seciliBolum,
+                      masalar: filtreliMasalar,
+                      seciliMasaAnahtari: _seciliMasaAnahtari,
+                      masaSec: _masaSec,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  SizedBox(
+                    width: 176,
+                    child: _SagFiltrePaneli(
+                      bolumler: bolumler,
+                      seciliFiltre: _seciliFiltre,
+                      seciliBolumId: seciliBolum?.id,
+                      filtreSec: _filtreSec,
+                      bolumSec: _bolumSec,
+                    ),
+                  ),
+                ],
               );
             },
           ),
@@ -212,82 +125,384 @@ class _BolumPlaniKapsulu extends StatelessWidget {
       ),
     );
   }
+
+  List<SiparisVarligi> _aktifAdisyonlariGetir() {
+    final List<SiparisVarligi> salonSiparisleri = widget.siparisler.where((
+      SiparisVarligi siparis,
+    ) {
+      if (siparis.teslimatTipi != TeslimatTipi.restorandaYe) {
+        return false;
+      }
+      return siparis.durum != SiparisDurumu.teslimEdildi &&
+          siparis.durum != SiparisDurumu.iptalEdildi;
+    }).toList();
+    salonSiparisleri.sort(
+      (SiparisVarligi a, SiparisVarligi b) =>
+          b.olusturmaTarihi.compareTo(a.olusturmaTarihi),
+    );
+    return salonSiparisleri;
+  }
+
+  _BolumPlaniVeri? _seciliBolumGetir(List<_BolumPlaniVeri> bolumler) {
+    if (bolumler.isEmpty) {
+      return null;
+    }
+    if (_seciliBolumId == null) {
+      return bolumler.first;
+    }
+    return bolumler.firstWhere(
+      (_BolumPlaniVeri bolum) => bolum.id == _seciliBolumId,
+      orElse: () => bolumler.first,
+    );
+  }
+
+  List<_MasaPlaniVeri> _filtreliMasalariGetir({
+    required _BolumPlaniVeri? bolum,
+  }) {
+    if (bolum == null) {
+      return const <_MasaPlaniVeri>[];
+    }
+    switch (_seciliFiltre) {
+      case _MasaFiltre.tumu:
+        return bolum.masalar;
+      case _MasaFiltre.dolu:
+        return bolum.masalar
+            .where((_MasaPlaniVeri masa) => masa.doluMu)
+            .toList();
+      case _MasaFiltre.bos:
+        return bolum.masalar
+            .where((_MasaPlaniVeri masa) => !masa.doluMu)
+            .toList();
+    }
+  }
+
+  void _aksiyonSec(_HizliAksiyon aksiyon) {
+    setState(() {
+      _seciliAksiyon = aksiyon;
+    });
+  }
+
+  void _filtreSec(_MasaFiltre filtre) {
+    setState(() {
+      _seciliFiltre = filtre;
+    });
+  }
+
+  void _bolumSec(String bolumId) {
+    setState(() {
+      _seciliBolumId = bolumId;
+    });
+  }
+
+  void _masaSec(_MasaPlaniVeri masa) {
+    setState(() {
+      _seciliMasaAnahtari = masa.anahtar;
+    });
+  }
+
+  void _adisyondanMasaSec(SiparisVarligi siparis) {
+    final String bolumAdi = (siparis.bolumAdi ?? '').trim().toLowerCase();
+    final String? bulunanBolumId = widget.salonBolumleri
+        .where(
+          (SalonBolumuVarligi bolum) =>
+              bolum.ad.trim().toLowerCase() == bolumAdi,
+        )
+        .map((SalonBolumuVarligi bolum) => bolum.id)
+        .cast<String?>()
+        .firstWhere(
+          (String? id) => id != null,
+          orElse: () => widget.salonBolumleri.isEmpty
+              ? null
+              : widget.salonBolumleri.first.id,
+        );
+    setState(() {
+      _seciliBolumId = bulunanBolumId;
+      _seciliMasaAnahtari =
+          '${(bulunanBolumId ?? '').toLowerCase()}::${_masaNormallestir(siparis.masaNo ?? '')}';
+    });
+  }
 }
 
-class _MasaPlaniKutusu extends StatelessWidget {
-  const _MasaPlaniKutusu({required this.masa});
+class _MasaPlaniUstCubugu extends StatelessWidget {
+  const _MasaPlaniUstCubugu({required this.uyariSayisi});
 
-  final _MasaPlaniKutusuVeri masa;
+  final int uyariSayisi;
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      constraints: const BoxConstraints(minHeight: 142),
-      padding: const EdgeInsets.all(14),
+      height: 42,
+      padding: const EdgeInsets.symmetric(horizontal: 12),
       decoration: BoxDecoration(
-        color: masa.renk.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: masa.renk.withValues(alpha: 0.22)),
+        gradient: const LinearGradient(
+          colors: <Color>[
+            Color(0xFFE53D6F),
+            Color(0xFF7931D6),
+            Color(0xFF291046),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(12),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Row(
         children: [
-          Row(
-            children: [
-              Container(
-                width: 38,
-                height: 38,
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Icon(masa.ikon, color: masa.renk, size: 18),
+          Container(
+            width: 26,
+            height: 26,
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.14),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: const Center(
+              child: Icon(
+                Icons.verified_user_rounded,
+                color: Colors.white,
+                size: 16,
               ),
+            ),
+          ),
+          const SizedBox(width: 10),
+          const Text(
+            'RESTORANAPP Pos',
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 15,
+              fontWeight: FontWeight.w900,
+              letterSpacing: 0.2,
+            ),
+          ),
+          const Spacer(),
+          Stack(
+            clipBehavior: Clip.none,
+            children: [
+              const Icon(
+                Icons.notifications_active_rounded,
+                color: Colors.white,
+                size: 18,
+              ),
+              if (uyariSayisi > 0)
+                Positioned(
+                  right: -10,
+                  top: -8,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 5,
+                      vertical: 1,
+                    ),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFFCF4A),
+                      borderRadius: BorderRadius.circular(999),
+                    ),
+                    child: Text(
+                      uyariSayisi > 99 ? '99+' : '$uyariSayisi',
+                      style: const TextStyle(
+                        color: Color(0xFF301336),
+                        fontSize: 9,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                  ),
+                ),
             ],
           ),
-          const SizedBox(height: 10),
-          Align(
-            alignment: Alignment.centerLeft,
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.80),
-                borderRadius: BorderRadius.circular(999),
+        ],
+      ),
+    );
+  }
+}
+
+class _SolAdisyonPaneli extends StatelessWidget {
+  const _SolAdisyonPaneli({
+    required this.seciliAksiyon,
+    required this.aksiyonSec,
+    required this.aktifAdisyonlar,
+    required this.toplamTutar,
+    required this.adisyonSec,
+  });
+
+  final _HizliAksiyon seciliAksiyon;
+  final ValueChanged<_HizliAksiyon> aksiyonSec;
+  final List<SiparisVarligi> aktifAdisyonlar;
+  final double toplamTutar;
+  final ValueChanged<SiparisVarligi> adisyonSec;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 620,
+      decoration: BoxDecoration(
+        color: const Color(0xFFF8F6FB),
+        borderRadius: BorderRadius.circular(18),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 64,
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: <Color>[Color(0xFF8E2B83), Color(0xFF57206E)],
               ),
-              child: Text(
-                masa.durumEtiketi,
-                style: TextStyle(
-                  color: masa.renk,
-                  fontSize: 11,
-                  fontWeight: FontWeight.w800,
-                ),
+              borderRadius: BorderRadius.circular(18),
+            ),
+            child: Column(
+              children: [
+                const SizedBox(height: 8),
+                ..._HizliAksiyon.values.map((aksiyon) {
+                  final bool seciliMi = seciliAksiyon == aksiyon;
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 6,
+                      vertical: 4,
+                    ),
+                    child: InkWell(
+                      onTap: () => aksiyonSec(aksiyon),
+                      borderRadius: BorderRadius.circular(10),
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 140),
+                        padding: const EdgeInsets.symmetric(
+                          vertical: 8,
+                          horizontal: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: seciliMi
+                              ? Colors.white.withValues(alpha: 0.18)
+                              : Colors.transparent,
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Column(
+                          children: [
+                            Icon(aksiyon.ikon, size: 16, color: Colors.white),
+                            const SizedBox(height: 4),
+                            Text(
+                              aksiyon.etiket,
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 9,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  );
+                }),
+              ],
+            ),
+          ),
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(12, 12, 12, 10),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    '${aktifAdisyonlar.length} ADISYON',
+                    style: const TextStyle(
+                      color: Color(0xFFE53D6F),
+                      fontSize: 13,
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Expanded(
+                    child: ListView.separated(
+                      itemCount: aktifAdisyonlar.length,
+                      separatorBuilder: (_, _) => const Divider(height: 1),
+                      itemBuilder: (BuildContext context, int index) {
+                        final SiparisVarligi siparis = aktifAdisyonlar[index];
+                        return InkWell(
+                          onTap: () => adisyonSec(siparis),
+                          borderRadius: BorderRadius.circular(10),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 10),
+                            child: Row(
+                              children: [
+                                Container(
+                                  width: 22,
+                                  height: 22,
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFFE53D6F),
+                                    borderRadius: BorderRadius.circular(999),
+                                  ),
+                                  alignment: Alignment.center,
+                                  child: Text(
+                                    '${index + 1}',
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w900,
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: Text(
+                                    _masaBasligi(siparis),
+                                    style: const TextStyle(
+                                      color: Color(0xFF2B1D3A),
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                  ),
+                                ),
+                                Text(
+                                  _saatYaz(siparis.olusturmaTarihi),
+                                  style: const TextStyle(
+                                    color: Color(0xFF7C6F89),
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                Text(
+                                  '${siparis.toplamTutar.toStringAsFixed(0)} TL',
+                                  style: const TextStyle(
+                                    color: Color(0xFF2B1D3A),
+                                    fontWeight: FontWeight.w900,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 12,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Row(
+                      children: [
+                        const Text(
+                          'TOPLAM',
+                          style: TextStyle(
+                            color: Color(0xFF6C5F7C),
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                        const Spacer(),
+                        Text(
+                          '${toplamTutar.toStringAsFixed(0)} TL',
+                          style: const TextStyle(
+                            color: Color(0xFF3A2057),
+                            fontSize: 28,
+                            fontWeight: FontWeight.w900,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ),
-            ),
-          ),
-          const SizedBox(height: 14),
-          Text(
-            masa.baslik,
-            style: const TextStyle(
-              color: Color(0xFF25192E),
-              fontSize: 16,
-              fontWeight: FontWeight.w900,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            '${masa.kapasite} kisilik duzen',
-            style: const TextStyle(
-              color: Color(0xFF6D6079),
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            masa.aciklama,
-            style: const TextStyle(
-              color: Color(0xFF6D6079),
-              fontWeight: FontWeight.w600,
-              height: 1.35,
             ),
           ),
         ],
@@ -296,271 +511,470 @@ class _MasaPlaniKutusu extends StatelessWidget {
   }
 }
 
+class _OrtaMasaPlaniPaneli extends StatelessWidget {
+  const _OrtaMasaPlaniPaneli({
+    required this.bolum,
+    required this.masalar,
+    required this.seciliMasaAnahtari,
+    required this.masaSec,
+  });
+
+  final _BolumPlaniVeri? bolum;
+  final List<_MasaPlaniVeri> masalar;
+  final String? seciliMasaAnahtari;
+  final ValueChanged<_MasaPlaniVeri> masaSec;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 620,
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF8F6FB),
+        borderRadius: BorderRadius.circular(18),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Text(
+                'Katlar  >  ${bolum?.ad ?? '-'}',
+                style: const TextStyle(
+                  color: Color(0xFF6F627D),
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              const Spacer(),
+              Text(
+                '${masalar.where((_MasaPlaniVeri masa) => masa.doluMu).length} dolu masa',
+                style: const TextStyle(
+                  color: Color(0xFF2B1D3A),
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          if (masalar.isEmpty)
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(14),
+              ),
+              child: const Text(
+                'Secili filtrede masa bulunamadi.',
+                style: TextStyle(
+                  color: Color(0xFF7C6F89),
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            )
+          else
+            Expanded(
+              child: LayoutBuilder(
+                builder: (BuildContext context, BoxConstraints constraints) {
+                  final int kolonSayisi = constraints.maxWidth < 640
+                      ? 2
+                      : constraints.maxWidth < 930
+                      ? 3
+                      : 4;
+                  final double kutuGenisligi =
+                      (constraints.maxWidth - ((kolonSayisi - 1) * 10)) /
+                      kolonSayisi;
+                  return SingleChildScrollView(
+                    child: Wrap(
+                      spacing: 10,
+                      runSpacing: 10,
+                      children: masalar.map((_MasaPlaniVeri masa) {
+                        final bool seciliMi =
+                            masa.anahtar == seciliMasaAnahtari;
+                        return SizedBox(
+                          width: kutuGenisligi,
+                          child: InkWell(
+                            onTap: () => masaSec(masa),
+                            borderRadius: BorderRadius.circular(14),
+                            child: AnimatedContainer(
+                              duration: const Duration(milliseconds: 140),
+                              padding: const EdgeInsets.all(10),
+                              decoration: BoxDecoration(
+                                color: masa.zeminRengi,
+                                borderRadius: BorderRadius.circular(14),
+                                border: Border.all(
+                                  color: seciliMi
+                                      ? const Color(0xFF5822C9)
+                                      : masa.kenarRengi,
+                                  width: seciliMi ? 2 : 1,
+                                ),
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    masa.baslik,
+                                    style: TextStyle(
+                                      color: masa.yaziRengi,
+                                      fontWeight: FontWeight.w900,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    masa.durumEtiketi,
+                                    style: TextStyle(
+                                      color: masa.altYaziRengi,
+                                      fontWeight: FontWeight.w700,
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 6),
+                                  Text(
+                                    masa.aciklama,
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: TextStyle(
+                                      color: masa.altYaziRengi,
+                                      fontWeight: FontWeight.w600,
+                                      fontSize: 11,
+                                      height: 1.3,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    '${masa.kapasite} kisilik',
+                                    style: TextStyle(
+                                      color: masa.altYaziRengi,
+                                      fontWeight: FontWeight.w700,
+                                      fontSize: 11,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                  );
+                },
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+class _SagFiltrePaneli extends StatelessWidget {
+  const _SagFiltrePaneli({
+    required this.bolumler,
+    required this.seciliFiltre,
+    required this.seciliBolumId,
+    required this.filtreSec,
+    required this.bolumSec,
+  });
+
+  final List<_BolumPlaniVeri> bolumler;
+  final _MasaFiltre seciliFiltre;
+  final String? seciliBolumId;
+  final ValueChanged<_MasaFiltre> filtreSec;
+  final ValueChanged<String> bolumSec;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 620,
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: <Color>[Color(0xFF2B1644), Color(0xFF1E1233)],
+        ),
+        borderRadius: BorderRadius.circular(18),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'MASALAR',
+            style: TextStyle(
+              color: Colors.white70,
+              fontWeight: FontWeight.w800,
+              fontSize: 12,
+            ),
+          ),
+          const SizedBox(height: 12),
+          _yanFiltreButonu(
+            etiket: 'Tum masalar',
+            seciliMi: seciliFiltre == _MasaFiltre.tumu,
+            onTap: () => filtreSec(_MasaFiltre.tumu),
+          ),
+          const SizedBox(height: 8),
+          _yanFiltreButonu(
+            etiket: 'Dolu masalar',
+            seciliMi: seciliFiltre == _MasaFiltre.dolu,
+            onTap: () => filtreSec(_MasaFiltre.dolu),
+          ),
+          const SizedBox(height: 8),
+          _yanFiltreButonu(
+            etiket: 'Bos masalar',
+            seciliMi: seciliFiltre == _MasaFiltre.bos,
+            onTap: () => filtreSec(_MasaFiltre.bos),
+          ),
+          const SizedBox(height: 16),
+          const Text(
+            'BOLUMLER',
+            style: TextStyle(
+              color: Colors.white70,
+              fontWeight: FontWeight.w800,
+              fontSize: 12,
+            ),
+          ),
+          const SizedBox(height: 10),
+          Expanded(
+            child: ListView.separated(
+              itemCount: bolumler.length,
+              separatorBuilder: (_, _) => const SizedBox(height: 8),
+              itemBuilder: (BuildContext context, int index) {
+                final _BolumPlaniVeri bolum = bolumler[index];
+                return _yanFiltreButonu(
+                  etiket: bolum.ad.toUpperCase(),
+                  seciliMi: seciliBolumId == bolum.id,
+                  onTap: () => bolumSec(bolum.id),
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _yanFiltreButonu({
+    required String etiket,
+    required bool seciliMi,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(999),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+        decoration: BoxDecoration(
+          color: seciliMi ? Colors.white : Colors.white.withValues(alpha: 0.08),
+          borderRadius: BorderRadius.circular(999),
+        ),
+        child: Text(
+          etiket,
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            color: seciliMi ? const Color(0xFF25183A) : Colors.white,
+            fontSize: 12,
+            fontWeight: FontWeight.w800,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+enum _MasaFiltre { tumu, dolu, bos }
+
+enum _HizliAksiyon {
+  barkod(Icons.qr_code_scanner_rounded, 'Barkod'),
+  duzenle(Icons.tune_rounded, 'Duzenle'),
+  iptal(Icons.cancel_rounded, 'Iptal'),
+  paket(Icons.local_shipping_rounded, 'Paket'),
+  notlar(Icons.sticky_note_2_rounded, 'Notlar'),
+  tasi(Icons.swap_horiz_rounded, 'Tasi');
+
+  const _HizliAksiyon(this.ikon, this.etiket);
+
+  final IconData ikon;
+  final String etiket;
+}
+
 class _BolumPlaniVeri {
   const _BolumPlaniVeri({
-    required this.baslik,
-    required this.aciklama,
-    required this.ikon,
-    required this.vurguRengi,
-    required this.zeminRengi,
-    required this.kenarRengi,
+    required this.id,
+    required this.ad,
     required this.masalar,
   });
 
-  final String baslik;
-  final String aciklama;
-  final IconData ikon;
-  final Color vurguRengi;
-  final Color zeminRengi;
-  final Color kenarRengi;
-  final List<_MasaPlaniKutusuVeri> masalar;
-
-  int get doluMasaSayisi =>
-      masalar.where((_MasaPlaniKutusuVeri masa) => masa.doluMu).length;
-
-  static List<_BolumPlaniVeri> uret(
-    List<SiparisVarligi> siparisler,
-    List<SalonBolumuVarligi> salonBolumleri,
-  ) {
-    final List<SiparisVarligi> salonSiparisleri = siparisler
-        .where((siparis) => siparis.teslimatTipi == TeslimatTipi.restorandaYe)
-        .toList();
-
-    return salonBolumleri.asMap().entries.map((entry) {
-      final int index = entry.key;
-      final SalonBolumuVarligi bolum = entry.value;
-      final _BolumGorunumu gorunum = _BolumGorunumu.indexIle(index, bolum.ad);
-
-      return _BolumPlaniVeri(
-        baslik: bolum.ad == 'Salon' ? 'Ana salon' : bolum.ad,
-        aciklama: bolum.aciklama,
-        ikon: gorunum.ikon,
-        vurguRengi: gorunum.vurguRengi,
-        zeminRengi: gorunum.zeminRengi,
-        kenarRengi: gorunum.kenarRengi,
-        masalar: _bolumMasalariniHazirla(
-          bolum: bolum,
-          siparisler: salonSiparisleri,
-        ),
-      );
-    }).toList();
-  }
-
-  static List<_MasaPlaniKutusuVeri> _bolumMasalariniHazirla({
-    required SalonBolumuVarligi bolum,
-    required List<SiparisVarligi> siparisler,
-  }) {
-    return bolum.masalar.map((MasaTanimiVarligi masa) {
-      SiparisVarligi? eslesenSiparis;
-      for (final SiparisVarligi siparis in siparisler) {
-        final String adayBolum = (siparis.bolumAdi ?? bolum.ad).trim();
-        final String adayMasa = (siparis.masaNo ?? '').trim();
-        if (adayBolum.toLowerCase() == bolum.ad.toLowerCase() &&
-            adayMasa == masa.ad) {
-          eslesenSiparis = siparis;
-          break;
-        }
-      }
-
-      if (eslesenSiparis != null) {
-        return _MasaPlaniKutusuVeri.siparisten(
-          masaNo: masa.ad,
-          kapasite: masa.kapasite,
-          siparis: eslesenSiparis,
-        );
-      }
-
-      final int index = bolum.masalar.indexOf(masa);
-      return _MasaPlaniKutusuVeri.beklemede(
-        masaNo: masa.ad,
-        kapasite: masa.kapasite,
-        varyant: index % 3,
-      );
-    }).toList();
-  }
+  final String id;
+  final String ad;
+  final List<_MasaPlaniVeri> masalar;
 }
 
-class _BolumGorunumu {
-  const _BolumGorunumu({
-    required this.ikon,
-    required this.vurguRengi,
-    required this.zeminRengi,
-    required this.kenarRengi,
-  });
-
-  final IconData ikon;
-  final Color vurguRengi;
-  final Color zeminRengi;
-  final Color kenarRengi;
-
-  factory _BolumGorunumu.indexIle(int index, String ad) {
-    final String adKucuk = ad.toLowerCase();
-    if (adKucuk.contains('teras')) {
-      return const _BolumGorunumu(
-        ikon: Icons.deck_rounded,
-        vurguRengi: Color(0xFF5B8CFF),
-        zeminRengi: Color(0xFFF2F7FF),
-        kenarRengi: Color(0xFFD6E5FF),
-      );
-    }
-    if (adKucuk.contains('bahce')) {
-      return const _BolumGorunumu(
-        ikon: Icons.park_rounded,
-        vurguRengi: Color(0xFF30C48D),
-        zeminRengi: Color(0xFFF1FBF5),
-        kenarRengi: Color(0xFFD4F1DE),
-      );
-    }
-    const List<_BolumGorunumu> varsayilanlar = <_BolumGorunumu>[
-      _BolumGorunumu(
-        ikon: Icons.chair_alt_rounded,
-        vurguRengi: Color(0xFFFF7A59),
-        zeminRengi: Color(0xFFFFF4EF),
-        kenarRengi: Color(0xFFFFD5C6),
-      ),
-      _BolumGorunumu(
-        ikon: Icons.coffee_rounded,
-        vurguRengi: Color(0xFFC58CFF),
-        zeminRengi: Color(0xFFF7F0FF),
-        kenarRengi: Color(0xFFE8D8FF),
-      ),
-      _BolumGorunumu(
-        ikon: Icons.window_rounded,
-        vurguRengi: Color(0xFF5B8CFF),
-        zeminRengi: Color(0xFFF2F7FF),
-        kenarRengi: Color(0xFFD6E5FF),
-      ),
-    ];
-    return varsayilanlar[index % varsayilanlar.length];
-  }
-}
-
-class _MasaPlaniKutusuVeri {
-  const _MasaPlaniKutusuVeri({
+class _MasaPlaniVeri {
+  const _MasaPlaniVeri({
+    required this.anahtar,
     required this.baslik,
     required this.durumEtiketi,
     required this.aciklama,
     required this.kapasite,
-    required this.ikon,
-    required this.renk,
     required this.doluMu,
+    required this.zeminRengi,
+    required this.kenarRengi,
+    required this.yaziRengi,
+    required this.altYaziRengi,
   });
 
+  final String anahtar;
   final String baslik;
   final String durumEtiketi;
   final String aciklama;
   final int kapasite;
-  final IconData ikon;
-  final Color renk;
   final bool doluMu;
+  final Color zeminRengi;
+  final Color kenarRengi;
+  final Color yaziRengi;
+  final Color altYaziRengi;
+}
 
-  factory _MasaPlaniKutusuVeri.siparisten({
-    required String masaNo,
-    required int kapasite,
-    required SiparisVarligi siparis,
-  }) {
-    final _MasaDurumSunumu sunum = _MasaDurumSunumu.siparisten(siparis.durum);
-    return _MasaPlaniKutusuVeri(
-      baslik: 'Masa $masaNo',
-      durumEtiketi: sunum.etiket,
-      aciklama:
-          '${siparis.sahip.misafirBilgisi?.adSoyad ?? 'Misafir'} - ${siparis.kalemler.length} kalem',
-      kapasite: kapasite,
-      ikon: sunum.ikon,
-      renk: sunum.renk,
-      doluMu: true,
+List<_BolumPlaniVeri> _bolumleriHazirla({
+  required List<SiparisVarligi> siparisler,
+  required List<SalonBolumuVarligi> salonBolumleri,
+}) {
+  final List<SiparisVarligi> salonSiparisleri =
+      siparisler
+          .where(
+            (SiparisVarligi siparis) =>
+                siparis.teslimatTipi == TeslimatTipi.restorandaYe,
+          )
+          .toList()
+        ..sort(
+          (SiparisVarligi a, SiparisVarligi b) =>
+              b.olusturmaTarihi.compareTo(a.olusturmaTarihi),
+        );
+
+  return salonBolumleri.map((SalonBolumuVarligi bolum) {
+    final List<_MasaPlaniVeri> masaKartlari = bolum.masalar.map((
+      MasaTanimiVarligi masa,
+    ) {
+      final SiparisVarligi? eslesen = salonSiparisleri
+          .cast<SiparisVarligi?>()
+          .firstWhere((SiparisVarligi? siparis) {
+            if (siparis == null) {
+              return false;
+            }
+            final bool bolumEslesiyor =
+                (siparis.bolumAdi ?? bolum.ad).trim().toLowerCase() ==
+                bolum.ad.trim().toLowerCase();
+            final bool masaEslesiyor =
+                _masaNormallestir(siparis.masaNo ?? '') ==
+                _masaNormallestir(masa.ad);
+            return bolumEslesiyor && masaEslesiyor;
+          }, orElse: () => null);
+      return _masaKartiniUret(bolumId: bolum.id, masa: masa, siparis: eslesen);
+    }).toList();
+
+    return _BolumPlaniVeri(id: bolum.id, ad: bolum.ad, masalar: masaKartlari);
+  }).toList();
+}
+
+_MasaPlaniVeri _masaKartiniUret({
+  required String bolumId,
+  required MasaTanimiVarligi masa,
+  required SiparisVarligi? siparis,
+}) {
+  final String anahtar =
+      '${bolumId.toLowerCase()}::${_masaNormallestir(masa.ad)}';
+  final String baslik = 'Salon ${masa.ad}';
+  if (siparis == null) {
+    return _MasaPlaniVeri(
+      anahtar: anahtar,
+      baslik: baslik,
+      durumEtiketi: 'Bos',
+      aciklama: 'Yeni misafir icin hazir',
+      kapasite: masa.kapasite,
+      doluMu: false,
+      zeminRengi: Colors.white,
+      kenarRengi: const Color(0xFFE4DDEB),
+      yaziRengi: const Color(0xFF3A2A4A),
+      altYaziRengi: const Color(0xFF8A7C97),
     );
   }
 
-  factory _MasaPlaniKutusuVeri.beklemede({
-    required String masaNo,
-    required int kapasite,
-    required int varyant,
-  }) {
-    switch (varyant) {
-      case 0:
-        return _MasaPlaniKutusuVeri(
-          baslik: 'Masa $masaNo',
-          durumEtiketi: 'Bos',
-          aciklama: 'Yeni misafir icin hazir bekliyor.',
-          kapasite: kapasite,
-          ikon: Icons.event_seat_outlined,
-          renk: const Color(0xFF5B8CFF),
-          doluMu: false,
-        );
-      case 1:
-        return _MasaPlaniKutusuVeri(
-          baslik: 'Masa $masaNo',
-          durumEtiketi: 'Temizleniyor',
-          aciklama: 'Kapanan servis sonrasi masa duzeni yenileniyor.',
-          kapasite: kapasite,
-          ikon: Icons.cleaning_services_rounded,
-          renk: const Color(0xFF9AA6B2),
-          doluMu: false,
-        );
-      default:
-        return _MasaPlaniKutusuVeri(
-          baslik: 'Masa $masaNo',
-          durumEtiketi: 'Hazir',
-          aciklama: 'Kuver ve QR karti yerlestirildi.',
-          kapasite: kapasite,
-          ikon: Icons.check_circle_outline_rounded,
-          renk: const Color(0xFF30C48D),
-          doluMu: false,
-        );
-    }
+  final String sahip =
+      siparis.sahip.misafirBilgisi?.adSoyad ??
+      siparis.sahip.kullanici?.adSoyad ??
+      'Misafir';
+  final String aciklama =
+      '$sahip - ${siparis.toplamTutar.toStringAsFixed(0)} TL';
+
+  switch (siparis.durum) {
+    case SiparisDurumu.alindi:
+    case SiparisDurumu.hazirlaniyor:
+      return _MasaPlaniVeri(
+        anahtar: anahtar,
+        baslik: baslik,
+        durumEtiketi: 'Sipariste',
+        aciklama: aciklama,
+        kapasite: masa.kapasite,
+        doluMu: true,
+        zeminRengi: const Color(0xFFFA3B78),
+        kenarRengi: const Color(0xFFFA3B78),
+        yaziRengi: Colors.white,
+        altYaziRengi: const Color(0xFFFFD8E7),
+      );
+    case SiparisDurumu.hazir:
+    case SiparisDurumu.yolda:
+      return _MasaPlaniVeri(
+        anahtar: anahtar,
+        baslik: baslik,
+        durumEtiketi: 'Serviste',
+        aciklama: aciklama,
+        kapasite: masa.kapasite,
+        doluMu: true,
+        zeminRengi: const Color(0xFF678CD9),
+        kenarRengi: const Color(0xFF678CD9),
+        yaziRengi: Colors.white,
+        altYaziRengi: const Color(0xFFDDE8FF),
+      );
+    case SiparisDurumu.teslimEdildi:
+      return _MasaPlaniVeri(
+        anahtar: anahtar,
+        baslik: baslik,
+        durumEtiketi: 'Hesapta',
+        aciklama: aciklama,
+        kapasite: masa.kapasite,
+        doluMu: true,
+        zeminRengi: const Color(0xFFD7A567),
+        kenarRengi: const Color(0xFFD7A567),
+        yaziRengi: Colors.white,
+        altYaziRengi: const Color(0xFFFFF0DB),
+      );
+    case SiparisDurumu.iptalEdildi:
+      return _MasaPlaniVeri(
+        anahtar: anahtar,
+        baslik: baslik,
+        durumEtiketi: 'Bos',
+        aciklama: 'Tekrar kullanim icin uygun',
+        kapasite: masa.kapasite,
+        doluMu: false,
+        zeminRengi: Colors.white,
+        kenarRengi: const Color(0xFFE4DDEB),
+        yaziRengi: const Color(0xFF3A2A4A),
+        altYaziRengi: const Color(0xFF8A7C97),
+      );
   }
 }
 
-class _MasaDurumSunumu {
-  const _MasaDurumSunumu({
-    required this.etiket,
-    required this.ikon,
-    required this.renk,
-  });
+String _masaNormallestir(String ham) {
+  return ham.toLowerCase().replaceAll('masa', '').replaceAll(' ', '');
+}
 
-  final String etiket;
-  final IconData ikon;
-  final Color renk;
+String _masaBasligi(SiparisVarligi siparis) {
+  final String masa = (siparis.masaNo ?? '-').trim();
+  return 'Salon $masa';
+}
 
-  factory _MasaDurumSunumu.siparisten(SiparisDurumu durum) {
-    switch (durum) {
-      case SiparisDurumu.alindi:
-        return const _MasaDurumSunumu(
-          etiket: 'Siparis bekliyor',
-          ikon: Icons.restaurant_menu_rounded,
-          renk: Color(0xFFFF8B6B),
-        );
-      case SiparisDurumu.hazirlaniyor:
-        return const _MasaDurumSunumu(
-          etiket: 'Hazirlaniyor',
-          ikon: Icons.local_fire_department_outlined,
-          renk: Color(0xFFFF7A59),
-        );
-      case SiparisDurumu.hazir:
-        return const _MasaDurumSunumu(
-          etiket: 'Serviste',
-          ikon: Icons.room_service_rounded,
-          renk: Color(0xFFC58CFF),
-        );
-      case SiparisDurumu.yolda:
-        return const _MasaDurumSunumu(
-          etiket: 'Hesap istendi',
-          ikon: Icons.receipt_long_rounded,
-          renk: Color(0xFF7B6DFF),
-        );
-      case SiparisDurumu.teslimEdildi:
-        return const _MasaDurumSunumu(
-          etiket: 'Kapanisa yakin',
-          ikon: Icons.payments_outlined,
-          renk: Color(0xFF30C48D),
-        );
-      case SiparisDurumu.iptalEdildi:
-        return const _MasaDurumSunumu(
-          etiket: 'Iptal edildi',
-          ikon: Icons.do_not_disturb_alt_rounded,
-          renk: Color(0xFFEF6A6A),
-        );
-    }
-  }
+String _saatYaz(DateTime tarih) {
+  final String saat = tarih.hour.toString().padLeft(2, '0');
+  final String dakika = tarih.minute.toString().padLeft(2, '0');
+  return '$saat:$dakika';
 }

@@ -46,16 +46,20 @@ class SiparisiYazdirUseCase {
     for (final YaziciDurumuVarligi yazici in hedefYazicilar) {
       final bool brotherMi = yazici.ad.toLowerCase().contains('brother');
       if (brotherMi) {
-        final bool basarili = await _yaziciCiktiPlatformu.gonder(
-          yaziciAdi: yazici.ad,
-          icerik: SiparisFisiOlusturucu.olustur(
-            siparis: siparis,
-            yazici: yazici,
-          ),
-        );
-        if (basarili) {
-          gercekYazicilar.add(yazici.ad);
-          continue;
+        try {
+          final bool basarili = await _yaziciCiktiPlatformu.gonder(
+            yaziciAdi: yazici.ad,
+            icerik: SiparisFisiOlusturucu.olustur(
+              siparis: siparis,
+              yazici: yazici,
+            ),
+          );
+          if (basarili) {
+            gercekYazicilar.add(yazici.ad);
+            continue;
+          }
+        } catch (_) {
+          // Fiziksel yazdirma problemi siparis akisini kesmemeli.
         }
       }
       kuyrukYazicilar.add(yazici.ad);

@@ -1,6 +1,8 @@
 # Proje Kurallari
 
 Bu dosya, proje boyunca uyulacak temel kurallari icerir. Tum gelistirme adimlari bu dosyaya bakilarak yapilacaktir.
+## MCP SERVER KURALI
+Çalışırken Dart ve Flutter Mcp Server Sürekli Kullanılacak.
 
 ## Mimari Kurallar
 

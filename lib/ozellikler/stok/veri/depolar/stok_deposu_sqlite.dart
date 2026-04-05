@@ -1,5 +1,5 @@
-import 'dart:convert';
-
+import 'package:drift/drift.dart';
+import 'package:restoran_app/ozellikler/menu/alan/varliklar/urun_varligi.dart';
 import 'package:restoran_app/ozellikler/stok/alan/depolar/stok_deposu.dart';
 import 'package:restoran_app/ozellikler/stok/alan/varliklar/hammadde_stok_varligi.dart';
 import 'package:restoran_app/ozellikler/stok/alan/varliklar/recete_kalemi_varligi.dart';
@@ -15,21 +15,40 @@ class StokDeposuSqlite implements StokDeposu {
   final SeedVerisiSaglayici _seedSaglayici = const SeedVerisiSaglayici();
   bool _seedKontrolEdildi = false;
 
-  static const String _stokVeriAnahtari = 'stok_veri_v1';
-  static const String _stokSeedAnahtari = 'stok_seeded';
-
   @override
   Future<List<HammaddeStokVarligi>> hammaddeleriGetir() async {
     await _seedEminOl();
-    final _StokVeri veri = await _veriyiOku();
-    return veri.hammaddeler;
+    final kayitlar = await _veritabani
+        .select(_veritabani.hammaddeKayitlari)
+        .get();
+    return kayitlar
+        .map(
+          (kayit) => HammaddeStokVarligi(
+            id: kayit.id,
+            ad: kayit.ad,
+            birim: kayit.birim,
+            mevcutMiktar: kayit.mevcutMiktar,
+            kritikEsik: kayit.kritikEsik,
+            birimMaliyet: kayit.birimMaliyet,
+          ),
+        )
+        .toList();
   }
 
   @override
   Future<List<ReceteKalemiVarligi>> receteyiGetir(String urunId) async {
     await _seedEminOl();
-    final _StokVeri veri = await _veriyiOku();
-    return veri.receteler[urunId] ?? const <ReceteKalemiVarligi>[];
+    final kayitlar = await (_veritabani.select(
+      _veritabani.receteKalemKayitlari,
+    )..where((tbl) => tbl.urunId.equals(urunId))).get();
+    return kayitlar
+        .map(
+          (kayit) => ReceteKalemiVarligi(
+            hammaddeId: kayit.hammaddeId,
+            miktar: kayit.miktar,
+          ),
+        )
+        .toList();
   }
 
   @override
@@ -38,197 +57,163 @@ class StokDeposuSqlite implements StokDeposu {
     List<ReceteKalemiVarligi> recete,
   ) async {
     await _seedEminOl();
-    final _StokVeri veri = await _veriyiOku();
-    final Map<String, List<ReceteKalemiVarligi>> receteler =
-        <String, List<ReceteKalemiVarligi>>{
-      ...veri.receteler,
-      urunId: List<ReceteKalemiVarligi>.from(recete),
-    };
-    await _veriyiYaz(
-      hammaddeler: veri.hammaddeler,
-      receteler: receteler,
-    );
+    final String? urunKimligi =
+        await (_veritabani.select(_veritabani.urunKayitlari)
+              ..where((tbl) => tbl.id.equals(urunId)))
+            .map((row) => row.id)
+            .getSingleOrNull();
+    if (urunKimligi == null) {
+      return;
+    }
+    await _veritabani.transaction(() async {
+      await (_veritabani.delete(
+        _veritabani.receteKalemKayitlari,
+      )..where((tbl) => tbl.urunId.equals(urunKimligi))).go();
+      for (final kalem in recete) {
+        final String? hammaddeKimligi =
+            await (_veritabani.select(_veritabani.hammaddeKayitlari)
+                  ..where((tbl) => tbl.id.equals(kalem.hammaddeId)))
+                .map((row) => row.id)
+                .getSingleOrNull();
+        if (hammaddeKimligi == null) {
+          continue;
+        }
+        await _veritabani
+            .into(_veritabani.receteKalemKayitlari)
+            .insertOnConflictUpdate(
+              ReceteKalemKayitlariCompanion(
+                urunId: Value(urunKimligi),
+                hammaddeId: Value(hammaddeKimligi),
+                miktar: Value(kalem.miktar),
+              ),
+            );
+      }
+    });
   }
 
   @override
   Future<void> hammaddeEkle(HammaddeStokVarligi hammadde) async {
     await _seedEminOl();
-    final _StokVeri veri = await _veriyiOku();
-    final List<HammaddeStokVarligi> hammaddeler =
-        List<HammaddeStokVarligi>.from(veri.hammaddeler)..add(hammadde);
-    await _veriyiYaz(
-      hammaddeler: hammaddeler,
-      receteler: veri.receteler,
+    final String id = await _veritabani.numerikKimlikCozumle(
+      tabloAdi: 'hammadde_kayitlari',
+      adayKimlik: hammadde.id,
     );
+    await _hammaddeKaydet(hammadde.copyWith(id: id));
   }
 
   @override
   Future<void> hammaddeGuncelle(HammaddeStokVarligi hammadde) async {
     await _seedEminOl();
-    final _StokVeri veri = await _veriyiOku();
-    final List<HammaddeStokVarligi> hammaddeler =
-        List<HammaddeStokVarligi>.from(veri.hammaddeler);
-    final int index = hammaddeler.indexWhere(
-      (HammaddeStokVarligi kayit) => kayit.id == hammadde.id,
+    final String id = await _veritabani.numerikKimlikCozumle(
+      tabloAdi: 'hammadde_kayitlari',
+      adayKimlik: hammadde.id,
     );
-    if (index < 0) {
-      return;
-    }
-    hammaddeler[index] = hammadde;
-    await _veriyiYaz(
-      hammaddeler: hammaddeler,
-      receteler: veri.receteler,
-    );
+    await _hammaddeKaydet(hammadde.copyWith(id: id));
   }
 
   @override
-  Future<void> stokDus({required String hammaddeId, required double miktar}) async {
+  Future<void> stokDus({
+    required String hammaddeId,
+    required double miktar,
+  }) async {
     await _seedEminOl();
-    final _StokVeri veri = await _veriyiOku();
-    final List<HammaddeStokVarligi> hammaddeler =
-        List<HammaddeStokVarligi>.from(veri.hammaddeler);
-    final int index = hammaddeler.indexWhere(
-      (HammaddeStokVarligi hammadde) => hammadde.id == hammaddeId,
-    );
-    if (index < 0) {
+    final mevcut = await (_veritabani.select(
+      _veritabani.hammaddeKayitlari,
+    )..where((tbl) => tbl.id.equals(hammaddeId))).getSingleOrNull();
+    if (mevcut == null) {
       return;
     }
-    final HammaddeStokVarligi mevcut = hammaddeler[index];
-    final double yeniMiktar =
-        (mevcut.mevcutMiktar - miktar).clamp(0, double.infinity);
-    hammaddeler[index] = mevcut.copyWith(mevcutMiktar: yeniMiktar);
-    await _veriyiYaz(
-      hammaddeler: hammaddeler,
-      receteler: veri.receteler,
+    final double yeniMiktar = (mevcut.mevcutMiktar - miktar).clamp(
+      0,
+      double.infinity,
     );
+    await (_veritabani.update(_veritabani.hammaddeKayitlari)
+          ..where((tbl) => tbl.id.equals(hammaddeId)))
+        .write(HammaddeKayitlariCompanion(mevcutMiktar: Value(yeniMiktar)));
   }
 
   Future<void> _seedEminOl() async {
     if (_seedKontrolEdildi) {
       return;
     }
-    final String? seedDurumu = await _veritabani.ayarOku(_stokSeedAnahtari);
-    if (seedDurumu == 'true') {
+    final mevcutHammadde = await _veritabani
+        .select(_veritabani.hammaddeKayitlari)
+        .get();
+    if (mevcutHammadde.isNotEmpty) {
       _seedKontrolEdildi = true;
       return;
     }
 
-    final List<HammaddeStokVarligi> hammaddeler =
-        await _seedDeposu.hammaddeleriGetir();
+    final List<HammaddeStokVarligi> hammaddeler = await _seedDeposu
+        .hammaddeleriGetir();
+    final List<UrunVarligi> tohumUrunler = await _seedSaglayici.urunleriGetir();
+    final List<UrunKayitlariData> kayitliUrunler = await _veritabani
+        .select(_veritabani.urunKayitlari)
+        .get();
+    final Map<String, String> urunIdHaritasi = <String, String>{
+      for (final UrunVarligi tohumUrun in tohumUrunler)
+        if (kayitliUrunler.any((kayit) => kayit.ad == tohumUrun.ad))
+          tohumUrun.id: kayitliUrunler
+              .firstWhere((kayit) => kayit.ad == tohumUrun.ad)
+              .id,
+    };
     final receteler = <String, List<ReceteKalemiVarligi>>{};
-    final urunler = await _seedSaglayici.urunleriGetir();
-    for (final urun in urunler) {
-      final List<ReceteKalemiVarligi> recete = await _seedDeposu.receteyiGetir(
-        urun.id,
-      );
-      if (recete.isNotEmpty) {
-        receteler[urun.id] = recete;
-      }
-    }
+    final Map<String, String> hammaddeIdHaritasi = <String, String>{};
 
-    await _veriyiYaz(hammaddeler: hammaddeler, receteler: receteler);
-    await _veritabani.ayarYaz(_stokSeedAnahtari, 'true');
+    await _veritabani.transaction(() async {
+      for (final hammadde in hammaddeler) {
+        final String id = await _veritabani.sonrakiNumerikKimlikGetir(
+          tabloAdi: 'hammadde_kayitlari',
+        );
+        hammaddeIdHaritasi[hammadde.id] = id;
+        await _hammaddeKaydet(hammadde.copyWith(id: id));
+      }
+      for (final UrunVarligi tohumUrun in tohumUrunler) {
+        final String? urunId = urunIdHaritasi[tohumUrun.id];
+        if (urunId == null) {
+          continue;
+        }
+        final List<ReceteKalemiVarligi> recete = await _seedDeposu
+            .receteyiGetir(tohumUrun.id);
+        if (recete.isEmpty) {
+          continue;
+        }
+        receteler[urunId] = recete;
+      }
+
+      for (final giris in receteler.entries) {
+        for (final kalem in giris.value) {
+          final String? hammaddeId = hammaddeIdHaritasi[kalem.hammaddeId];
+          if (hammaddeId == null) {
+            continue;
+          }
+          await _veritabani
+              .into(_veritabani.receteKalemKayitlari)
+              .insertOnConflictUpdate(
+                ReceteKalemKayitlariCompanion(
+                  urunId: Value(giris.key),
+                  hammaddeId: Value(hammaddeId),
+                  miktar: Value(kalem.miktar),
+                ),
+              );
+        }
+      }
+    });
     _seedKontrolEdildi = true;
   }
 
-  Future<_StokVeri> _veriyiOku() async {
-    final String? jsonVeri = await _veritabani.ayarOku(_stokVeriAnahtari);
-    if (jsonVeri == null || jsonVeri.isEmpty) {
-      return const _StokVeri.bos();
-    }
-
-    final dynamic ham = jsonDecode(jsonVeri);
-    if (ham is! Map) {
-      return const _StokVeri.bos();
-    }
-    return _StokVeri.mapten(Map<String, Object?>.from(ham as Map));
-  }
-
-  Future<void> _veriyiYaz({
-    required List<HammaddeStokVarligi> hammaddeler,
-    required Map<String, List<ReceteKalemiVarligi>> receteler,
-  }) async {
-    final Map<String, Object?> veri = <String, Object?>{
-      'hammaddeler': hammaddeler
-          .map(
-            (hammadde) => <String, Object?>{
-              'id': hammadde.id,
-              'ad': hammadde.ad,
-              'birim': hammadde.birim,
-              'mevcutMiktar': hammadde.mevcutMiktar,
-              'kritikEsik': hammadde.kritikEsik,
-              'birimMaliyet': hammadde.birimMaliyet,
-            },
-          )
-          .toList(),
-      'receteler': receteler.map(
-        (urunId, kalemler) => MapEntry<String, Object?>(
-          urunId,
-          kalemler
-              .map(
-                (kalem) => <String, Object?>{
-                  'hammaddeId': kalem.hammaddeId,
-                  'miktar': kalem.miktar,
-                },
-              )
-              .toList(),
-        ),
-      ),
-    };
-
-    await _veritabani.ayarYaz(_stokVeriAnahtari, jsonEncode(veri));
-  }
-}
-
-class _StokVeri {
-  const _StokVeri({
-    required this.hammaddeler,
-    required this.receteler,
-  });
-
-  const _StokVeri.bos()
-      : hammaddeler = const <HammaddeStokVarligi>[],
-        receteler = const <String, List<ReceteKalemiVarligi>>{};
-
-  final List<HammaddeStokVarligi> hammaddeler;
-  final Map<String, List<ReceteKalemiVarligi>> receteler;
-
-  factory _StokVeri.mapten(Map<String, Object?> veri) {
-    final List<dynamic> hammaddelerHam =
-        (veri['hammaddeler'] as List<dynamic>? ?? const <dynamic>[]);
-    final Map<String, dynamic> recetelerHam =
-        Map<String, dynamic>.from(veri['receteler'] as Map? ?? const <String, dynamic>{});
-
-    final List<HammaddeStokVarligi> hammaddeler = hammaddelerHam
-        .map((ham) => Map<String, Object?>.from(ham as Map))
-        .map(
-          (ham) => HammaddeStokVarligi(
-            id: ham['id'] as String,
-            ad: ham['ad'] as String,
-            birim: ham['birim'] as String,
-            mevcutMiktar: (ham['mevcutMiktar'] as num).toDouble(),
-            kritikEsik: (ham['kritikEsik'] as num).toDouble(),
-            birimMaliyet: (ham['birimMaliyet'] as num).toDouble(),
+  Future<void> _hammaddeKaydet(HammaddeStokVarligi hammadde) {
+    return _veritabani
+        .into(_veritabani.hammaddeKayitlari)
+        .insertOnConflictUpdate(
+          HammaddeKayitlariCompanion(
+            id: Value(hammadde.id),
+            ad: Value(hammadde.ad),
+            birim: Value(hammadde.birim),
+            mevcutMiktar: Value(hammadde.mevcutMiktar),
+            kritikEsik: Value(hammadde.kritikEsik),
+            birimMaliyet: Value(hammadde.birimMaliyet),
           ),
-        )
-        .toList();
-
-    final Map<String, List<ReceteKalemiVarligi>> receteler =
-        <String, List<ReceteKalemiVarligi>>{};
-    for (final MapEntry<String, dynamic> giris in recetelerHam.entries) {
-      final List<dynamic> kalemlerHam =
-          (giris.value as List<dynamic>? ?? const <dynamic>[]);
-      receteler[giris.key] = kalemlerHam
-          .map((ham) => Map<String, Object?>.from(ham as Map))
-          .map(
-            (ham) => ReceteKalemiVarligi(
-              hammaddeId: ham['hammaddeId'] as String,
-              miktar: (ham['miktar'] as num).toDouble(),
-            ),
-          )
-          .toList();
-    }
-
-    return _StokVeri(hammaddeler: hammaddeler, receteler: receteler);
+        );
   }
 }

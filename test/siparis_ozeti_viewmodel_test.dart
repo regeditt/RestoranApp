@@ -1,0 +1,47 @@
+import 'package:flutter_test/flutter_test.dart';
+import 'package:restoran_app/bagimlilik_enjeksiyonu/servis_kaydi.dart';
+import 'package:restoran_app/ozellikler/sepet/alan/varliklar/sepet_varligi.dart';
+import 'package:restoran_app/ozellikler/siparis/alan/enumlar/teslimat_tipi.dart';
+import 'package:restoran_app/ozellikler/siparis/sunum/viewmodel/siparis_ozeti_viewmodel.dart';
+
+Future<SepetVarligi> _testSepetiOlustur(ServisKaydi servisKaydi) async {
+  await servisKaydi.sepeteUrunEkleUseCase(urunId: 'urn_001', adet: 1);
+  return servisKaydi.sepetiGetirUseCase();
+}
+
+void main() {
+  test(
+    'SiparisOzetiViewModel paket serviste adres zorunlulugunu uygular',
+    () async {
+      final ServisKaydi servisKaydi = ServisKaydi.mock();
+      final SepetVarligi sepet = await _testSepetiOlustur(servisKaydi);
+      final SiparisOzetiViewModel viewModel =
+          SiparisOzetiViewModel.servisKaydindan(servisKaydi, sepet: sepet);
+      viewModel.teslimatTipiSec(TeslimatTipi.paketServis);
+      viewModel.adresDegisti('');
+
+      final SiparisOzetiIslemSonucu sonuc = await viewModel.siparisiOnayla();
+
+      expect(sonuc.basarili, isFalse);
+      expect(sonuc.mesaj, contains('teslimat adresi'));
+    },
+  );
+
+  test(
+    'SiparisOzetiViewModel siparis olusturup yazdirma sonucu dondurur',
+    () async {
+      final ServisKaydi servisKaydi = ServisKaydi.mock();
+      final SepetVarligi sepet = await _testSepetiOlustur(servisKaydi);
+      final SiparisOzetiViewModel viewModel =
+          SiparisOzetiViewModel.servisKaydindan(servisKaydi, sepet: sepet);
+      await viewModel.varsayilanBilgileriYukle();
+      viewModel.adresDegisti('Ataturk Mah. No:1');
+
+      final SiparisOzetiIslemSonucu sonuc = await viewModel.siparisiOnayla();
+
+      expect(sonuc.basarili, isTrue);
+      expect(sonuc.siparis, isNotNull);
+      expect(sonuc.yazdirmaSonucu, isNotNull);
+    },
+  );
+}

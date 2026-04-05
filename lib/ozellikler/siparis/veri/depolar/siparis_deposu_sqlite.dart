@@ -16,66 +16,93 @@ class SiparisDeposuSqlite implements SiparisDeposu {
 
   @override
   Future<SiparisVarligi> siparisOlustur(SiparisVarligi siparis) async {
+    final String siparisId = await _veritabani.numerikKimlikCozumle(
+      tabloAdi: 'siparis_kayitlari',
+      adayKimlik: siparis.id,
+    );
+    final List<SiparisKalemiVarligi> kalemler = <SiparisKalemiVarligi>[];
+    for (final SiparisKalemiVarligi kalem in siparis.kalemler) {
+      final String kalemId = await _veritabani.numerikKimlikCozumle(
+        tabloAdi: 'siparis_kalemleri',
+        adayKimlik: kalem.id,
+      );
+      kalemler.add(
+        SiparisKalemiVarligi(
+          id: kalemId,
+          urunId: kalem.urunId,
+          urunAdi: kalem.urunAdi,
+          birimFiyat: kalem.birimFiyat,
+          adet: kalem.adet,
+          secenekAdi: kalem.secenekAdi,
+          notMetni: kalem.notMetni,
+        ),
+      );
+    }
+    final SiparisVarligi kaydedilecekSiparis = siparis.copyWith(
+      id: siparisId,
+      kalemler: kalemler,
+    );
+
     await _veritabani.transaction(() async {
       await _veritabani
           .into(_veritabani.siparisKayitlari)
           .insertOnConflictUpdate(
-        SiparisKayitlariCompanion(
-          id: Value(siparis.id),
-          siparisNo: Value(siparis.siparisNo),
-          teslimatTipi: Value(siparis.teslimatTipi.index),
-          durum: Value(siparis.durum.index),
-          olusturmaTarihi: Value(siparis.olusturmaTarihi),
-          adresMetni: Value(siparis.adresMetni),
-          teslimatNotu: Value(siparis.teslimatNotu),
-          kuryeAdi: Value(siparis.kuryeAdi),
-          paketTeslimatDurumu: Value(
-            siparis.paketTeslimatDurumu?.index,
-          ),
-          masaNo: Value(siparis.masaNo),
-          bolumAdi: Value(siparis.bolumAdi),
-          kaynak: Value(siparis.kaynak),
-          sahipMisafir: Value(siparis.sahip.misafirMi),
-          sahipAdSoyad: Value(
-            siparis.sahip.misafirBilgisi?.adSoyad ??
-                siparis.sahip.kullanici?.adSoyad ??
-                'Misafir',
-          ),
-          sahipTelefon: Value(
-            siparis.sahip.misafirBilgisi?.telefon ??
-                siparis.sahip.kullanici?.telefon ??
-                '',
-          ),
-          sahipEposta: Value(
-            siparis.sahip.misafirBilgisi?.eposta ??
-                siparis.sahip.kullanici?.eposta,
-          ),
-          sahipAdres: Value(
-            siparis.sahip.misafirBilgisi?.adres ??
-                siparis.sahip.kullanici?.adresMetni,
-          ),
-        ),
-      );
+            SiparisKayitlariCompanion(
+              id: Value(kaydedilecekSiparis.id),
+              siparisNo: Value(kaydedilecekSiparis.siparisNo),
+              teslimatTipi: Value(kaydedilecekSiparis.teslimatTipi.index),
+              durum: Value(kaydedilecekSiparis.durum.index),
+              olusturmaTarihi: Value(kaydedilecekSiparis.olusturmaTarihi),
+              adresMetni: Value(kaydedilecekSiparis.adresMetni),
+              teslimatNotu: Value(kaydedilecekSiparis.teslimatNotu),
+              kuryeAdi: Value(kaydedilecekSiparis.kuryeAdi),
+              paketTeslimatDurumu: Value(
+                kaydedilecekSiparis.paketTeslimatDurumu?.index,
+              ),
+              masaNo: Value(kaydedilecekSiparis.masaNo),
+              bolumAdi: Value(kaydedilecekSiparis.bolumAdi),
+              kaynak: Value(kaydedilecekSiparis.kaynak),
+              sahipMisafir: Value(kaydedilecekSiparis.sahip.misafirMi),
+              sahipAdSoyad: Value(
+                kaydedilecekSiparis.sahip.misafirBilgisi?.adSoyad ??
+                    kaydedilecekSiparis.sahip.kullanici?.adSoyad ??
+                    'Misafir',
+              ),
+              sahipTelefon: Value(
+                kaydedilecekSiparis.sahip.misafirBilgisi?.telefon ??
+                    kaydedilecekSiparis.sahip.kullanici?.telefon ??
+                    '',
+              ),
+              sahipEposta: Value(
+                kaydedilecekSiparis.sahip.misafirBilgisi?.eposta ??
+                    kaydedilecekSiparis.sahip.kullanici?.eposta,
+              ),
+              sahipAdres: Value(
+                kaydedilecekSiparis.sahip.misafirBilgisi?.adres ??
+                    kaydedilecekSiparis.sahip.kullanici?.adresMetni,
+              ),
+            ),
+          );
 
-      for (final SiparisKalemiVarligi kalem in siparis.kalemler) {
+      for (final SiparisKalemiVarligi kalem in kaydedilecekSiparis.kalemler) {
         await _veritabani
             .into(_veritabani.siparisKalemleri)
             .insertOnConflictUpdate(
-          SiparisKalemleriCompanion(
-            id: Value(kalem.id),
-            siparisId: Value(siparis.id),
-            urunId: Value(kalem.urunId),
-            urunAdi: Value(kalem.urunAdi),
-            birimFiyat: Value(kalem.birimFiyat),
-            adet: Value(kalem.adet),
-            secenekAdi: Value(kalem.secenekAdi),
-            notMetni: Value(kalem.notMetni),
-          ),
-        );
+              SiparisKalemleriCompanion(
+                id: Value(kalem.id),
+                siparisId: Value(kaydedilecekSiparis.id),
+                urunId: Value(kalem.urunId),
+                urunAdi: Value(kalem.urunAdi),
+                birimFiyat: Value(kalem.birimFiyat),
+                adet: Value(kalem.adet),
+                secenekAdi: Value(kalem.secenekAdi),
+                notMetni: Value(kalem.notMetni),
+              ),
+            );
       }
     });
 
-    return siparis;
+    return kaydedilecekSiparis;
   }
 
   @override
@@ -95,30 +122,27 @@ class SiparisDeposuSqlite implements SiparisDeposu {
 
   @override
   Future<List<SiparisVarligi>> siparisleriGetir() async {
-    final siparisKayitlari =
-        await _veritabani.select(_veritabani.siparisKayitlari).get();
+    final siparisKayitlari = await _veritabani
+        .select(_veritabani.siparisKayitlari)
+        .get();
     if (siparisKayitlari.isEmpty) {
       return <SiparisVarligi>[];
     }
-    final List<String> siparisIdleri =
-        siparisKayitlari.map((kayit) => kayit.id).toList();
-    final List<SiparisKalemleriData> tumKalemler =
-        await (_veritabani.select(_veritabani.siparisKalemleri)
-              ..where((tbl) => tbl.siparisId.isIn(siparisIdleri)))
-            .get();
+    final List<String> siparisIdleri = siparisKayitlari
+        .map((kayit) => kayit.id)
+        .toList();
+    final List<SiparisKalemleriData> tumKalemler = await (_veritabani.select(
+      _veritabani.siparisKalemleri,
+    )..where((tbl) => tbl.siparisId.isIn(siparisIdleri))).get();
     final Map<String, List<SiparisKalemleriData>> kalemHaritasi =
         <String, List<SiparisKalemleriData>>{};
     for (final SiparisKalemleriData kalem in tumKalemler) {
-      (kalemHaritasi[kalem.siparisId] ??= <SiparisKalemleriData>[])
-          .add(kalem);
+      (kalemHaritasi[kalem.siparisId] ??= <SiparisKalemleriData>[]).add(kalem);
     }
     final List<SiparisVarligi> sonuc = <SiparisVarligi>[];
     for (final kayit in siparisKayitlari) {
       sonuc.add(
-        _siparisCoz(
-          kayit,
-          kalemHaritasi[kayit.id] ?? <SiparisKalemleriData>[],
-        ),
+        _siparisCoz(kayit, kalemHaritasi[kayit.id] ?? <SiparisKalemleriData>[]),
       );
     }
     return sonuc;
@@ -126,13 +150,13 @@ class SiparisDeposuSqlite implements SiparisDeposu {
 
   @override
   Future<SiparisVarligi?> siparisGetir(String siparisId) async {
-    final kayit = await (_veritabani.select(_veritabani.siparisKayitlari)
-          ..where((tbl) => tbl.id.equals(siparisId)))
-        .getSingleOrNull();
+    final kayit = await (_veritabani.select(
+      _veritabani.siparisKayitlari,
+    )..where((tbl) => tbl.id.equals(siparisId))).getSingleOrNull();
     if (kayit == null) return null;
-    final kalemler = await (_veritabani.select(_veritabani.siparisKalemleri)
-          ..where((tbl) => tbl.siparisId.equals(kayit.id)))
-        .get();
+    final kalemler = await (_veritabani.select(
+      _veritabani.siparisKalemleri,
+    )..where((tbl) => tbl.siparisId.equals(kayit.id))).get();
     return _siparisCoz(kayit, kalemler);
   }
 

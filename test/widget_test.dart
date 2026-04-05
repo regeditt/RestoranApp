@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:restoran_app/bagimlilik_enjeksiyonu/servis_kaydi.dart';
 import 'package:restoran_app/ozellikler/kimlik/sunum/sayfalar/giris_secim_sayfasi.dart';
+import 'package:restoran_app/ozellikler/kimlik/sunum/viewmodel/giris_secim_viewmodel.dart';
 import 'package:restoran_app/ozellikler/kimlik/alan/varliklar/misafir_bilgisi_varligi.dart';
 import 'package:restoran_app/ozellikler/menu/alan/varliklar/urun_varligi.dart';
 import 'package:restoran_app/ozellikler/sepet/alan/varliklar/sepet_kalemi_varligi.dart';
@@ -12,6 +14,8 @@ import 'package:restoran_app/ozellikler/siparis/alan/varliklar/siparis_sahibi_va
 import 'package:restoran_app/ozellikler/siparis/alan/varliklar/siparis_varligi.dart';
 import 'package:restoran_app/ozellikler/siparis/sunum/sayfalar/mutfak_siparis_sayfasi.dart';
 import 'package:restoran_app/ozellikler/siparis/sunum/sayfalar/siparis_ozeti_sayfasi.dart';
+import 'package:restoran_app/ozellikler/siparis/sunum/viewmodel/mutfak_siparis_viewmodel.dart';
+import 'package:restoran_app/ozellikler/siparis/sunum/viewmodel/siparis_ozeti_viewmodel.dart';
 import 'package:restoran_app/ozellikler/yonetim/alan/varliklar/personel_durumu_varligi.dart';
 import 'package:restoran_app/ozellikler/yonetim/alan/varliklar/saatlik_siparis_ozeti_varligi.dart';
 import 'package:restoran_app/ozellikler/yonetim/alan/varliklar/salon_bolumu_varligi.dart';
@@ -43,7 +47,11 @@ void main() {
     WidgetTester tester,
   ) async {
     await tester.pumpWidget(
-      testUygulamasi(child: const GirisSecimSayfasi()),
+      testUygulamasi(
+        child: GirisSecimSayfasi(
+          viewModel: GirisSecimViewModel.servisKaydindan(ServisKaydi.mock()),
+        ),
+      ),
     );
     await tester.pumpAndSettle();
 
@@ -109,7 +117,11 @@ void main() {
 
     await tester.binding.setSurfaceSize(const Size(1400, 900));
     await tester.pumpWidget(
-      testUygulamasi(child: const MutfakSiparisSayfasi()),
+      testUygulamasi(
+        child: MutfakSiparisSayfasi(
+          viewModel: MutfakSiparisViewModel.servisKaydindan(ServisKaydi.mock()),
+        ),
+      ),
     );
     await tester.pumpAndSettle();
 
@@ -145,7 +157,14 @@ void main() {
     );
 
     await tester.pumpWidget(
-      testUygulamasi(child: SiparisOzetiSayfasi(sepet: sepet)),
+      testUygulamasi(
+        child: SiparisOzetiSayfasi(
+          viewModel: SiparisOzetiViewModel.servisKaydindan(
+            ServisKaydi.mock(),
+            sepet: sepet,
+          ),
+        ),
+      ),
     );
     await tester.pumpAndSettle();
 

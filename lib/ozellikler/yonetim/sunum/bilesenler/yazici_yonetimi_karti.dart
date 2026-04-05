@@ -58,14 +58,18 @@ class YaziciYonetimiKarti extends StatelessWidget {
                       'Yazici yonetimi',
                       style: TextStyle(
                         color: Colors.white,
-                        fontSize: 20,
+                        fontSize: 18,
                         fontWeight: FontWeight.w800,
                       ),
                     ),
                     const SizedBox(height: 6),
                     Text(
                       '$bagliYaziciSayisi / ${yazicilar.length} yazici bagli durumda. Mutfak, bar ve fis rollerini buradan takip et.',
-                      style: const TextStyle(color: Color(0xFFE8DDF0)),
+                      style: const TextStyle(
+                        color: Color(0xFFE8DDF0),
+                        fontSize: 14,
+                        height: 1.35,
+                      ),
                     ),
                   ],
                 ),
@@ -80,7 +84,10 @@ class YaziciYonetimiKarti extends StatelessWidget {
                     foregroundColor: Colors.white,
                   ),
                   icon: const Icon(Icons.add),
-                  label: const Text('Yazici ekle'),
+                  label: const Text(
+                    'Yazici ekle',
+                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700),
+                  ),
                 ),
               ),
             ],
@@ -102,7 +109,7 @@ class YaziciYonetimiKarti extends StatelessWidget {
                     'Canli Yazici kuyrugu',
                     style: TextStyle(
                       color: Colors.white,
-                      fontSize: 16,
+                      fontSize: 15,
                       fontWeight: FontWeight.w800,
                     ),
                   ),
@@ -243,13 +250,17 @@ class _YaziciSatiri extends StatelessWidget {
                       yazici.ad,
                       style: const TextStyle(
                         color: Colors.white,
+                        fontSize: 16,
                         fontWeight: FontWeight.w800,
                       ),
                     ),
                     const SizedBox(height: 4),
                     Text(
                       '${yazici.rolEtiketi}  |  ${yazici.baglantiNoktasi}',
-                      style: const TextStyle(color: Color(0xFFE8DDF0)),
+                      style: const TextStyle(
+                        color: Color(0xFFE8DDF0),
+                        fontSize: 13,
+                      ),
                     ),
                   ],
                 ),
@@ -324,7 +335,11 @@ class _YaziciSatiri extends StatelessWidget {
               Expanded(
                 child: Text(
                   yazici.aciklama,
-                  style: const TextStyle(color: Color(0xFFE8DDF0)),
+                  style: const TextStyle(
+                    color: Color(0xFFE8DDF0),
+                    fontSize: 14,
+                    height: 1.35,
+                  ),
                 ),
               ),
               const SizedBox(width: 12),
@@ -347,7 +362,10 @@ class _YaziciSatiri extends StatelessWidget {
                   ),
                 ),
                 icon: const Icon(Icons.receipt_long_outlined, size: 18),
-                label: const Text('Test'),
+                label: const Text(
+                  'Test',
+                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700),
+                ),
               ),
             ],
           ),
@@ -372,7 +390,11 @@ class _YaziciDurumRozeti extends StatelessWidget {
       ),
       child: Text(
         yazici.durumEtiketi,
-        style: TextStyle(color: yazici.renk, fontWeight: FontWeight.w800),
+        style: TextStyle(
+          color: yazici.renk,
+          fontSize: 12,
+          fontWeight: FontWeight.w800,
+        ),
       ),
     );
   }
@@ -411,6 +433,7 @@ class _YaziciKuyrukSatiri extends StatelessWidget {
                 '${isEmri.yaziciRolu} - ${isEmri.durumEtiketi}',
                 style: const TextStyle(
                   color: Colors.white,
+                  fontSize: 13,
                   fontWeight: FontWeight.w700,
                 ),
               ),

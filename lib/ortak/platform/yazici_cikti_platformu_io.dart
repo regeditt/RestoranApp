@@ -30,12 +30,16 @@ class _YaziciCiktiPlatformuIo implements YaziciCiktiPlatformu {
     } catch (_) {
       return false;
     } finally {
-      if (await geciciDosya.exists()) {
-        await geciciDosya.delete();
-      }
-      if (await geciciKlasor.exists()) {
-        await geciciKlasor.delete();
-      }
+      try {
+        if (await geciciDosya.exists()) {
+          await geciciDosya.delete();
+        }
+      } catch (_) {}
+      try {
+        if (await geciciKlasor.exists()) {
+          await geciciKlasor.delete(recursive: true);
+        }
+      } catch (_) {}
     }
   }
 }

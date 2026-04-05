@@ -1,5 +1,4 @@
-import 'dart:convert';
-
+import 'package:drift/drift.dart';
 import 'package:restoran_app/ozellikler/yonetim/alan/depolar/salon_plani_deposu.dart';
 import 'package:restoran_app/ozellikler/yonetim/alan/varliklar/salon_bolumu_varligi.dart';
 import 'package:restoran_app/ozellikler/yonetim/veri/depolar/salon_plani_deposu_mock.dart';
@@ -12,9 +11,6 @@ class SalonPlaniDeposuSqlite implements SalonPlaniDeposu {
   final SalonPlaniDeposuMock _seedDeposu = SalonPlaniDeposuMock();
   bool _seedKontrolEdildi = false;
 
-  static const String _salonVeriAnahtari = 'yonetim_salon_plani_v1';
-  static const String _salonSeedAnahtari = 'yonetim_salon_plani_seeded';
-
   @override
   Future<List<SalonBolumuVarligi>> bolumleriGetir() async {
     await _seedEminOl();
@@ -24,48 +20,80 @@ class SalonPlaniDeposuSqlite implements SalonPlaniDeposu {
   @override
   Future<void> bolumEkle(SalonBolumuVarligi bolum) async {
     await _seedEminOl();
-    final List<SalonBolumuVarligi> bolumler = await _bolumleriOku();
-    bolumler.add(bolum);
-    await _bolumleriYaz(bolumler);
+    final String bolumId = await _veritabani.numerikKimlikCozumle(
+      tabloAdi: 'salon_bolum_kayitlari',
+      adayKimlik: bolum.id,
+    );
+    await _veritabani
+        .into(_veritabani.salonBolumKayitlari)
+        .insertOnConflictUpdate(
+          SalonBolumKayitlariCompanion(
+            id: Value(bolumId),
+            ad: Value(bolum.ad),
+            aciklama: Value(bolum.aciklama),
+          ),
+        );
+    for (final masa in bolum.masalar) {
+      final String masaId = await _veritabani.numerikKimlikCozumle(
+        tabloAdi: 'masa_kayitlari',
+        adayKimlik: masa.id,
+      );
+      await _veritabani
+          .into(_veritabani.masaKayitlari)
+          .insertOnConflictUpdate(
+            MasaKayitlariCompanion(
+              id: Value(masaId),
+              bolumId: Value(bolumId),
+              ad: Value(masa.ad),
+              kapasite: Value(masa.kapasite),
+            ),
+          );
+    }
   }
 
   @override
   Future<void> bolumGuncelle(SalonBolumuVarligi bolum) async {
     await _seedEminOl();
-    final List<SalonBolumuVarligi> bolumler = await _bolumleriOku();
-    final int index = bolumler.indexWhere(
-      (SalonBolumuVarligi kayit) => kayit.id == bolum.id,
+    await (_veritabani.update(
+      _veritabani.salonBolumKayitlari,
+    )..where((tbl) => tbl.id.equals(bolum.id))).write(
+      SalonBolumKayitlariCompanion(
+        ad: Value(bolum.ad),
+        aciklama: Value(bolum.aciklama),
+      ),
     );
-    if (index < 0) {
-      return;
-    }
-    bolumler[index] = bolum;
-    await _bolumleriYaz(bolumler);
   }
 
   @override
   Future<void> bolumSil(String bolumId) async {
     await _seedEminOl();
-    final List<SalonBolumuVarligi> bolumler = await _bolumleriOku();
-    bolumler.removeWhere((SalonBolumuVarligi bolum) => bolum.id == bolumId);
-    await _bolumleriYaz(bolumler);
+    await _veritabani.transaction(() async {
+      await (_veritabani.delete(
+        _veritabani.masaKayitlari,
+      )..where((tbl) => tbl.bolumId.equals(bolumId))).go();
+      await (_veritabani.delete(
+        _veritabani.salonBolumKayitlari,
+      )..where((tbl) => tbl.id.equals(bolumId))).go();
+    });
   }
 
   @override
   Future<void> masaEkle(String bolumId, MasaTanimiVarligi masa) async {
     await _seedEminOl();
-    final List<SalonBolumuVarligi> bolumler = await _bolumleriOku();
-    final int index = bolumler.indexWhere(
-      (SalonBolumuVarligi bolum) => bolum.id == bolumId,
+    final String masaId = await _veritabani.numerikKimlikCozumle(
+      tabloAdi: 'masa_kayitlari',
+      adayKimlik: masa.id,
     );
-    if (index < 0) {
-      return;
-    }
-    final SalonBolumuVarligi bolum = bolumler[index];
-    bolumler[index] = bolum.copyWith(
-      masalar: <MasaTanimiVarligi>[...bolum.masalar, masa],
-    );
-    await _bolumleriYaz(bolumler);
+    await _veritabani
+        .into(_veritabani.masaKayitlari)
+        .insertOnConflictUpdate(
+          MasaKayitlariCompanion(
+            id: Value(masaId),
+            bolumId: Value(bolumId),
+            ad: Value(masa.ad),
+            kapasite: Value(masa.kapasite),
+          ),
+        );
   }
 
   @override
@@ -74,20 +102,15 @@ class SalonPlaniDeposuSqlite implements SalonPlaniDeposu {
     required MasaTanimiVarligi masa,
   }) async {
     await _seedEminOl();
-    final List<SalonBolumuVarligi> bolumler = await _bolumleriOku();
-    final int index = bolumler.indexWhere(
-      (SalonBolumuVarligi bolum) => bolum.id == bolumId,
+    await (_veritabani.update(
+      _veritabani.masaKayitlari,
+    )..where((tbl) => tbl.id.equals(masa.id))).write(
+      MasaKayitlariCompanion(
+        bolumId: Value(bolumId),
+        ad: Value(masa.ad),
+        kapasite: Value(masa.kapasite),
+      ),
     );
-    if (index < 0) {
-      return;
-    }
-    final SalonBolumuVarligi bolum = bolumler[index];
-    bolumler[index] = bolum.copyWith(
-      masalar: bolum.masalar
-          .map((MasaTanimiVarligi kayit) => kayit.id == masa.id ? masa : kayit)
-          .toList(),
-    );
-    await _bolumleriYaz(bolumler);
   }
 
   @override
@@ -96,95 +119,93 @@ class SalonPlaniDeposuSqlite implements SalonPlaniDeposu {
     required String masaId,
   }) async {
     await _seedEminOl();
-    final List<SalonBolumuVarligi> bolumler = await _bolumleriOku();
-    final int index = bolumler.indexWhere(
-      (SalonBolumuVarligi bolum) => bolum.id == bolumId,
-    );
-    if (index < 0) {
-      return;
-    }
-    final SalonBolumuVarligi bolum = bolumler[index];
-    bolumler[index] = bolum.copyWith(
-      masalar: bolum.masalar
-          .where((MasaTanimiVarligi masa) => masa.id != masaId)
-          .toList(),
-    );
-    await _bolumleriYaz(bolumler);
+    await (_veritabani.delete(_veritabani.masaKayitlari)
+          ..where((tbl) => tbl.id.equals(masaId) & tbl.bolumId.equals(bolumId)))
+        .go();
   }
 
   Future<void> _seedEminOl() async {
     if (_seedKontrolEdildi) {
       return;
     }
-    final String? seedDurumu = await _veritabani.ayarOku(_salonSeedAnahtari);
-    if (seedDurumu == 'true') {
+    final mevcutBolumler = await _veritabani
+        .select(_veritabani.salonBolumKayitlari)
+        .get();
+    if (mevcutBolumler.isNotEmpty) {
       _seedKontrolEdildi = true;
       return;
     }
 
-    final List<SalonBolumuVarligi> bolumler = await _seedDeposu.bolumleriGetir();
-    await _bolumleriYaz(bolumler);
-    await _veritabani.ayarYaz(_salonSeedAnahtari, 'true');
+    final List<SalonBolumuVarligi> bolumler = await _seedDeposu
+        .bolumleriGetir();
+    await _veritabani.transaction(() async {
+      for (final bolum in bolumler) {
+        final String bolumId = await _veritabani.sonrakiNumerikKimlikGetir(
+          tabloAdi: 'salon_bolum_kayitlari',
+        );
+        await _veritabani
+            .into(_veritabani.salonBolumKayitlari)
+            .insertOnConflictUpdate(
+              SalonBolumKayitlariCompanion(
+                id: Value(bolumId),
+                ad: Value(bolum.ad),
+                aciklama: Value(bolum.aciklama),
+              ),
+            );
+        for (final masa in bolum.masalar) {
+          final String masaId = await _veritabani.sonrakiNumerikKimlikGetir(
+            tabloAdi: 'masa_kayitlari',
+          );
+          await _veritabani
+              .into(_veritabani.masaKayitlari)
+              .insertOnConflictUpdate(
+                MasaKayitlariCompanion(
+                  id: Value(masaId),
+                  bolumId: Value(bolumId),
+                  ad: Value(masa.ad),
+                  kapasite: Value(masa.kapasite),
+                ),
+              );
+        }
+      }
+    });
     _seedKontrolEdildi = true;
   }
 
   Future<List<SalonBolumuVarligi>> _bolumleriOku() async {
-    final String? jsonVeri = await _veritabani.ayarOku(_salonVeriAnahtari);
-    if (jsonVeri == null || jsonVeri.isEmpty) {
+    final bolumKayitlari = await _veritabani
+        .select(_veritabani.salonBolumKayitlari)
+        .get();
+    if (bolumKayitlari.isEmpty) {
       return <SalonBolumuVarligi>[];
     }
-
-    final dynamic ham = jsonDecode(jsonVeri);
-    if (ham is! List) {
-      return <SalonBolumuVarligi>[];
+    final bolumIdleri = bolumKayitlari.map((item) => item.id).toList();
+    final masaKayitlari = await (_veritabani.select(
+      _veritabani.masaKayitlari,
+    )..where((tbl) => tbl.bolumId.isIn(bolumIdleri))).get();
+    final Map<String, List<MasaKayitlariData>> masaHaritasi =
+        <String, List<MasaKayitlariData>>{};
+    for (final masa in masaKayitlari) {
+      (masaHaritasi[masa.bolumId] ??= <MasaKayitlariData>[]).add(masa);
     }
 
-    return ham
-        .map((kayit) => Map<String, Object?>.from(kayit as Map))
-        .map((kayit) {
-          final List<dynamic> masalarHam =
-              (kayit['masalar'] as List<dynamic>? ?? const <dynamic>[]);
-          final List<MasaTanimiVarligi> masalar = masalarHam
-              .map((masa) => Map<String, Object?>.from(masa as Map))
-              .map(
-                (masa) => MasaTanimiVarligi(
-                  id: masa['id'] as String,
-                  ad: masa['ad'] as String,
-                  kapasite: (masa['kapasite'] as num).toInt(),
-                ),
-              )
-              .toList();
-
-          return SalonBolumuVarligi(
-            id: kayit['id'] as String,
-            ad: kayit['ad'] as String,
-            aciklama: kayit['aciklama'] as String,
-            masalar: masalar,
-          );
-        })
-        .toList();
-  }
-
-  Future<void> _bolumleriYaz(List<SalonBolumuVarligi> bolumler) async {
-    final List<Map<String, Object?>> jsonaHazir = bolumler
+    return bolumKayitlari
         .map(
-          (bolum) => <String, Object?>{
-            'id': bolum.id,
-            'ad': bolum.ad,
-            'aciklama': bolum.aciklama,
-            'masalar': bolum.masalar
+          (bolum) => SalonBolumuVarligi(
+            id: bolum.id,
+            ad: bolum.ad,
+            aciklama: bolum.aciklama,
+            masalar: (masaHaritasi[bolum.id] ?? <MasaKayitlariData>[])
                 .map(
-                  (masa) => <String, Object?>{
-                    'id': masa.id,
-                    'ad': masa.ad,
-                    'kapasite': masa.kapasite,
-                  },
+                  (masa) => MasaTanimiVarligi(
+                    id: masa.id,
+                    ad: masa.ad,
+                    kapasite: masa.kapasite,
+                  ),
                 )
                 .toList(),
-          },
+          ),
         )
         .toList();
-
-    await _veritabani.ayarYaz(_salonVeriAnahtari, jsonEncode(jsonaHazir));
   }
 }

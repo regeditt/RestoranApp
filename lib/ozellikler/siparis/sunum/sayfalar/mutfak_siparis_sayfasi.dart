@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:restoran_app/bagimlilik_enjeksiyonu/servis_kaydi.dart';
-import 'package:restoran_app/ortak/bagimlilik/servis_saglayici.dart';
 import 'package:restoran_app/ortak/responsive/ekran_boyutu.dart';
 import 'package:restoran_app/ortak/yonlendirme/rota_yapisi.dart';
 import 'package:restoran_app/ozellikler/siparis/alan/enumlar/paket_teslimat_durumu.dart';
@@ -8,386 +6,289 @@ import 'package:restoran_app/ozellikler/siparis/alan/enumlar/siparis_durumu.dart
 import 'package:restoran_app/ozellikler/siparis/alan/enumlar/teslimat_tipi.dart';
 import 'package:restoran_app/ozellikler/siparis/alan/varliklar/siparis_kalemi_varligi.dart';
 import 'package:restoran_app/ozellikler/siparis/alan/varliklar/siparis_varligi.dart';
+import 'package:restoran_app/ozellikler/siparis/sunum/viewmodel/mutfak_siparis_viewmodel.dart';
 import 'package:restoran_app/ozellikler/yonetim/alan/varliklar/yazici_durumu_varligi.dart';
 import 'package:restoran_app/ozellikler/yonetim/alan/varliklar/yazici_is_kuyrugu_varligi.dart';
-import 'package:restoran_app/ozellikler/yonetim/uygulama/servisler/yazici_is_kuyrugu_hesaplayici.dart';
+
+typedef _TeslimatFiltresi = TeslimatFiltresi;
 
 class MutfakSiparisSayfasi extends StatefulWidget {
-  const MutfakSiparisSayfasi({super.key});
+  const MutfakSiparisSayfasi({super.key, required this.viewModel});
+
+  final MutfakSiparisViewModel viewModel;
 
   @override
   State<MutfakSiparisSayfasi> createState() => _MutfakSiparisSayfasiState();
 }
 
 class _MutfakSiparisSayfasiState extends State<MutfakSiparisSayfasi> {
-  late final ServisKaydi _servisKaydi;
-  bool _servisHazir = false;
   final ScrollController _yatayKaydirmaDenetleyicisi = ScrollController();
 
-  bool _yukleniyor = true;
-  List<SiparisVarligi> _siparisler = const <SiparisVarligi>[];
-  List<YaziciDurumuVarligi> _yazicilar = const <YaziciDurumuVarligi>[];
-  _TeslimatFiltresi _seciliFiltre = _TeslimatFiltresi.tumu;
+  bool get _yukleniyor => widget.viewModel.yukleniyor;
+  List<YaziciDurumuVarligi> get _yazicilar => widget.viewModel.yazicilar;
+  _TeslimatFiltresi get _seciliFiltre => widget.viewModel.seciliFiltre;
 
   @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    if (_servisHazir) {
-      return;
-    }
-    _servisKaydi = ServisSaglayici.of(context);
-    _servisHazir = true;
+  void initState() {
+    super.initState();
     _yukle();
+  }
+
+  @override
+  void didUpdateWidget(covariant MutfakSiparisSayfasi oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.viewModel != widget.viewModel) {
+      oldWidget.viewModel.dispose();
+      _yukle();
+    }
   }
 
   @override
   void dispose() {
     _yatayKaydirmaDenetleyicisi.dispose();
+    widget.viewModel.dispose();
     super.dispose();
   }
 
   Future<void> _yukle() async {
-    final List<SiparisVarligi> siparisler = await _servisKaydi
-        .siparisleriGetirUseCase();
-    final List<YaziciDurumuVarligi> yazicilar = await _servisKaydi
-        .yazicilariGetirUseCase();
+    final MutfakSiparisIslemSonucu sonuc = await widget.viewModel.yukle();
     if (!mounted) {
       return;
     }
-    setState(() {
-      _siparisler = siparisler;
-      _yazicilar = yazicilar;
-      _yukleniyor = false;
-    });
+    if (!sonuc.basarili) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(sonuc.mesaj)));
+    }
   }
 
   Future<void> _durumIlerle(SiparisVarligi siparis) async {
-    final SiparisDurumu? sonrakiDurum = _sonrakiDurum(siparis);
-    if (sonrakiDurum == null) {
-      return;
-    }
-
-    await _servisKaydi.siparisDurumuGuncelleUseCase(siparis.id, sonrakiDurum);
-    await _yukle();
+    final MutfakSiparisIslemSonucu sonuc = await widget.viewModel.durumIlerle(
+      siparis,
+    );
 
     if (!mounted) {
       return;
     }
-    final String yaziciMesaji = _durumYaziciMesaji(siparis, sonrakiDurum);
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          '${siparis.siparisNo} ${_durumEtiketi(sonrakiDurum).toLowerCase()} durumuna alindi. $yaziciMesaji',
-        ),
-      ),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(sonuc.mesaj)));
   }
 
   Future<void> _siparisiIptalEt(SiparisVarligi siparis) async {
-    await _servisKaydi.siparisDurumuGuncelleUseCase(
-      siparis.id,
-      SiparisDurumu.iptalEdildi,
-    );
-    await _yukle();
+    final MutfakSiparisIslemSonucu sonuc = await widget.viewModel
+        .siparisiIptalEt(siparis);
 
     if (!mounted) {
       return;
     }
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          '${siparis.siparisNo} iptal edildi ve operasyon listesinden dusuruldu.',
-        ),
-      ),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(sonuc.mesaj)));
   }
 
   @override
   Widget build(BuildContext context) {
-    final bool masaustu = EkranBoyutu.masaustu(context);
-    final List<SiparisVarligi> filtrelenmisSiparisler = _filtrelenmisSiparisler;
-    final List<SiparisVarligi> yeniSiparisler = _grupSiparisleri(
-      filtrelenmisSiparisler,
-      const <SiparisDurumu>[SiparisDurumu.alindi],
-    );
-    final List<SiparisVarligi> hazirlananlar = _grupSiparisleri(
-      filtrelenmisSiparisler,
-      const <SiparisDurumu>[SiparisDurumu.hazirlaniyor],
-    );
-    final List<SiparisVarligi> hazirlar = _grupSiparisleri(
-      filtrelenmisSiparisler,
-      const <SiparisDurumu>[SiparisDurumu.hazir],
-    );
-    final List<SiparisVarligi> kapanisAkisi = _grupSiparisleri(
-      filtrelenmisSiparisler,
-      const <SiparisDurumu>[SiparisDurumu.yolda, SiparisDurumu.teslimEdildi],
-    );
-    final List<YaziciIsKuyruguVarligi> yaziciKuyrugu =
-        YaziciIsKuyruguHesaplayici.kuyruguHazirla(_siparisler);
-    final List<SiparisVarligi> aktifSiparisler = filtrelenmisSiparisler
-        .where(
-          (SiparisVarligi siparis) =>
-              siparis.durum != SiparisDurumu.teslimEdildi &&
-              siparis.durum != SiparisDurumu.iptalEdildi,
-        )
-        .toList();
+    return AnimatedBuilder(
+      animation: widget.viewModel,
+      builder: (BuildContext context, Widget? child) {
+        final bool masaustu = EkranBoyutu.masaustu(context);
+        final List<SiparisVarligi> filtrelenmisSiparisler =
+            widget.viewModel.filtrelenmisSiparisler;
+        final List<SiparisVarligi> yeniSiparisler =
+            widget.viewModel.yeniSiparisler;
+        final List<SiparisVarligi> hazirlananlar =
+            widget.viewModel.hazirlananlar;
+        final List<SiparisVarligi> hazirlar = widget.viewModel.hazirlar;
+        final List<SiparisVarligi> kapanisAkisi = widget.viewModel.kapanisAkisi;
+        final List<YaziciIsKuyruguVarligi> yaziciKuyrugu =
+            widget.viewModel.yaziciKuyrugu;
+        final List<SiparisVarligi> aktifSiparisler =
+            widget.viewModel.aktifSiparisler;
 
-    return Scaffold(
-      backgroundColor: const Color(0xFF130F1D),
-      appBar: AppBar(
-        title: const Text('Mutfak Siparis Yonetimi'),
-        actions: [
-          IconButton(
-            onPressed: _yukle,
-            icon: const Icon(Icons.refresh_rounded),
+        return Scaffold(
+          backgroundColor: const Color(0xFF130F1D),
+          appBar: AppBar(
+            title: const Text('Mutfak Siparis Yonetimi'),
+            actions: [
+              IconButton(
+                onPressed: _yukle,
+                icon: const Icon(Icons.refresh_rounded),
+              ),
+            ],
           ),
-        ],
-      ),
-      body: _yukleniyor
-          ? const Center(child: CircularProgressIndicator())
-          : SafeArea(
-              child: masaustu
-                  ? Padding(
-                      padding: const EdgeInsets.all(20),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          _MutfakNavigasyonSeridi(mobil: false),
-                          const SizedBox(height: 16),
-                          _MutfakYaziciSeridi(
-                            yazicilar: _yazicilar,
-                            kuyruk: yaziciKuyrugu,
-                          ),
-                          const SizedBox(height: 16),
-                          _MutfakOzetSeridi(siparisler: filtrelenmisSiparisler),
-                          const SizedBox(height: 16),
-                          _MutfakOncelikSeridi(siparisler: aktifSiparisler),
-                          const SizedBox(height: 16),
-                          _MutfakKanalDagilimSeridi(
-                            siparisler: aktifSiparisler,
-                          ),
-                          const SizedBox(height: 16),
-                          _TeslimatFiltreSeridi(
-                            seciliFiltre: _seciliFiltre,
-                            filtreDegistir: (_TeslimatFiltresi filtre) {
-                              setState(() {
-                                _seciliFiltre = filtre;
-                              });
-                            },
-                          ),
-                          const SizedBox(height: 16),
-                          Expanded(
-                            child: Scrollbar(
-                              thumbVisibility: true,
-                              controller: _yatayKaydirmaDenetleyicisi,
-                              child: SingleChildScrollView(
-                                controller: _yatayKaydirmaDenetleyicisi,
-                                scrollDirection: Axis.horizontal,
-                                child: Row(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    _DurumKolonu(
-                                      baslik: 'Yeni',
-                                      aciklama: 'Mutfaga yeni dusen siparisler',
-                                      bosDurumMetni:
-                                          'Bu filtrede yeni siparis yok',
-                                      vurguRengi: const Color(0xFFFF8A5B),
-                                      siparisler: yeniSiparisler,
-                                      aksiyonCalistir: _durumIlerle,
-                                      iptalCalistir: _siparisiIptalEt,
+          body: _yukleniyor
+              ? const Center(child: CircularProgressIndicator())
+              : SafeArea(
+                  child: masaustu
+                      ? Padding(
+                          padding: const EdgeInsets.all(20),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              _MutfakNavigasyonSeridi(mobil: false),
+                              const SizedBox(height: 16),
+                              _MutfakYaziciSeridi(
+                                yazicilar: _yazicilar,
+                                kuyruk: yaziciKuyrugu,
+                              ),
+                              const SizedBox(height: 16),
+                              _MutfakOzetSeridi(
+                                siparisler: filtrelenmisSiparisler,
+                              ),
+                              const SizedBox(height: 16),
+                              _MutfakOncelikSeridi(siparisler: aktifSiparisler),
+                              const SizedBox(height: 16),
+                              _MutfakKanalDagilimSeridi(
+                                siparisler: aktifSiparisler,
+                              ),
+                              const SizedBox(height: 16),
+                              _TeslimatFiltreSeridi(
+                                seciliFiltre: _seciliFiltre,
+                                filtreDegistir: widget.viewModel.filtreSec,
+                              ),
+                              const SizedBox(height: 16),
+                              Expanded(
+                                child: Scrollbar(
+                                  thumbVisibility: true,
+                                  controller: _yatayKaydirmaDenetleyicisi,
+                                  child: SingleChildScrollView(
+                                    controller: _yatayKaydirmaDenetleyicisi,
+                                    scrollDirection: Axis.horizontal,
+                                    child: Row(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        _DurumKolonu(
+                                          baslik: 'Yeni',
+                                          aciklama:
+                                              'Mutfaga yeni dusen siparisler',
+                                          bosDurumMetni:
+                                              'Bu filtrede yeni siparis yok',
+                                          vurguRengi: const Color(0xFFFF8A5B),
+                                          siparisler: yeniSiparisler,
+                                          aksiyonCalistir: _durumIlerle,
+                                          iptalCalistir: _siparisiIptalEt,
+                                        ),
+                                        const SizedBox(width: 14),
+                                        _DurumKolonu(
+                                          baslik: 'Hazirlaniyor',
+                                          aciklama: 'Aktif mutfak operasyonu',
+                                          bosDurumMetni:
+                                              'Su an mutfakta aktif siparis yok',
+                                          vurguRengi: const Color(0xFFFFC857),
+                                          siparisler: hazirlananlar,
+                                          aksiyonCalistir: _durumIlerle,
+                                          iptalCalistir: _siparisiIptalEt,
+                                        ),
+                                        const SizedBox(width: 14),
+                                        _DurumKolonu(
+                                          baslik: 'Hazir',
+                                          aciklama:
+                                              'Servis veya teslim bekleyenler',
+                                          bosDurumMetni:
+                                              'Bekleyen hazir siparis yok',
+                                          vurguRengi: const Color(0xFF30C48D),
+                                          siparisler: hazirlar,
+                                          aksiyonCalistir: _durumIlerle,
+                                          iptalCalistir: _siparisiIptalEt,
+                                        ),
+                                        const SizedBox(width: 14),
+                                        _DurumKolonu(
+                                          baslik: 'Kapanis',
+                                          aciklama:
+                                              'Dagitim ve teslim kapanisi',
+                                          bosDurumMetni:
+                                              'Kapanis akisinda siparis yok',
+                                          vurguRengi: const Color(0xFF7BA7FF),
+                                          siparisler: kapanisAkisi,
+                                          aksiyonCalistir: _durumIlerle,
+                                          iptalCalistir: _siparisiIptalEt,
+                                        ),
+                                      ],
                                     ),
-                                    const SizedBox(width: 14),
-                                    _DurumKolonu(
-                                      baslik: 'Hazirlaniyor',
-                                      aciklama: 'Aktif mutfak operasyonu',
-                                      bosDurumMetni:
-                                          'Su an mutfakta aktif siparis yok',
-                                      vurguRengi: const Color(0xFFFFC857),
-                                      siparisler: hazirlananlar,
-                                      aksiyonCalistir: _durumIlerle,
-                                      iptalCalistir: _siparisiIptalEt,
-                                    ),
-                                    const SizedBox(width: 14),
-                                    _DurumKolonu(
-                                      baslik: 'Hazir',
-                                      aciklama:
-                                          'Servis veya teslim bekleyenler',
-                                      bosDurumMetni:
-                                          'Bekleyen hazir siparis yok',
-                                      vurguRengi: const Color(0xFF30C48D),
-                                      siparisler: hazirlar,
-                                      aksiyonCalistir: _durumIlerle,
-                                      iptalCalistir: _siparisiIptalEt,
-                                    ),
-                                    const SizedBox(width: 14),
-                                    _DurumKolonu(
-                                      baslik: 'Kapanis',
-                                      aciklama: 'Dagitim ve teslim kapanisi',
-                                      bosDurumMetni:
-                                          'Kapanis akisinda siparis yok',
-                                      vurguRengi: const Color(0xFF7BA7FF),
-                                      siparisler: kapanisAkisi,
-                                      aksiyonCalistir: _durumIlerle,
-                                      iptalCalistir: _siparisiIptalEt,
-                                    ),
-                                  ],
+                                  ),
                                 ),
                               ),
-                            ),
+                            ],
                           ),
-                        ],
-                      ),
-                    )
-                  : ListView(
-                      padding: const EdgeInsets.all(14),
-                      children: [
-                        _MutfakNavigasyonSeridi(mobil: true),
-                        const SizedBox(height: 16),
-                        _MutfakYaziciSeridi(
-                          yazicilar: _yazicilar,
-                          kuyruk: yaziciKuyrugu,
+                        )
+                      : ListView(
+                          padding: const EdgeInsets.all(14),
+                          children: [
+                            _MutfakNavigasyonSeridi(mobil: true),
+                            const SizedBox(height: 16),
+                            _MutfakYaziciSeridi(
+                              yazicilar: _yazicilar,
+                              kuyruk: yaziciKuyrugu,
+                            ),
+                            const SizedBox(height: 16),
+                            _MutfakOzetSeridi(
+                              siparisler: filtrelenmisSiparisler,
+                            ),
+                            const SizedBox(height: 16),
+                            _MutfakOncelikSeridi(siparisler: aktifSiparisler),
+                            const SizedBox(height: 16),
+                            _MutfakKanalDagilimSeridi(
+                              siparisler: aktifSiparisler,
+                            ),
+                            const SizedBox(height: 16),
+                            _TeslimatFiltreSeridi(
+                              seciliFiltre: _seciliFiltre,
+                              filtreDegistir: widget.viewModel.filtreSec,
+                            ),
+                            const SizedBox(height: 16),
+                            _DurumKolonu(
+                              baslik: 'Yeni',
+                              aciklama: 'Mutfaga yeni dusen siparisler',
+                              bosDurumMetni: 'Bu filtrede yeni siparis yok',
+                              vurguRengi: const Color(0xFFFF8A5B),
+                              siparisler: yeniSiparisler,
+                              aksiyonCalistir: _durumIlerle,
+                              iptalCalistir: _siparisiIptalEt,
+                              yukseklik: 380,
+                            ),
+                            const SizedBox(height: 14),
+                            _DurumKolonu(
+                              baslik: 'Hazirlaniyor',
+                              aciklama: 'Aktif mutfak operasyonu',
+                              bosDurumMetni: 'Su an mutfakta aktif siparis yok',
+                              vurguRengi: const Color(0xFFFFC857),
+                              siparisler: hazirlananlar,
+                              aksiyonCalistir: _durumIlerle,
+                              iptalCalistir: _siparisiIptalEt,
+                              yukseklik: 380,
+                            ),
+                            const SizedBox(height: 14),
+                            _DurumKolonu(
+                              baslik: 'Hazir',
+                              aciklama: 'Servis veya teslim bekleyenler',
+                              bosDurumMetni: 'Bekleyen hazir siparis yok',
+                              vurguRengi: const Color(0xFF30C48D),
+                              siparisler: hazirlar,
+                              aksiyonCalistir: _durumIlerle,
+                              iptalCalistir: _siparisiIptalEt,
+                              yukseklik: 380,
+                            ),
+                            const SizedBox(height: 14),
+                            _DurumKolonu(
+                              baslik: 'Kapanis',
+                              aciklama: 'Dagitim ve teslim kapanisi',
+                              bosDurumMetni: 'Kapanis akisinda siparis yok',
+                              vurguRengi: const Color(0xFF7BA7FF),
+                              siparisler: kapanisAkisi,
+                              aksiyonCalistir: _durumIlerle,
+                              iptalCalistir: _siparisiIptalEt,
+                              yukseklik: 340,
+                            ),
+                          ],
                         ),
-                        const SizedBox(height: 16),
-                        _MutfakOzetSeridi(siparisler: filtrelenmisSiparisler),
-                        const SizedBox(height: 16),
-                        _MutfakOncelikSeridi(siparisler: aktifSiparisler),
-                        const SizedBox(height: 16),
-                        _MutfakKanalDagilimSeridi(siparisler: aktifSiparisler),
-                        const SizedBox(height: 16),
-                        _TeslimatFiltreSeridi(
-                          seciliFiltre: _seciliFiltre,
-                          filtreDegistir: (_TeslimatFiltresi filtre) {
-                            setState(() {
-                              _seciliFiltre = filtre;
-                            });
-                          },
-                        ),
-                        const SizedBox(height: 16),
-                        _DurumKolonu(
-                          baslik: 'Yeni',
-                          aciklama: 'Mutfaga yeni dusen siparisler',
-                          bosDurumMetni: 'Bu filtrede yeni siparis yok',
-                          vurguRengi: const Color(0xFFFF8A5B),
-                          siparisler: yeniSiparisler,
-                          aksiyonCalistir: _durumIlerle,
-                          iptalCalistir: _siparisiIptalEt,
-                          yukseklik: 380,
-                        ),
-                        const SizedBox(height: 14),
-                        _DurumKolonu(
-                          baslik: 'Hazirlaniyor',
-                          aciklama: 'Aktif mutfak operasyonu',
-                          bosDurumMetni: 'Su an mutfakta aktif siparis yok',
-                          vurguRengi: const Color(0xFFFFC857),
-                          siparisler: hazirlananlar,
-                          aksiyonCalistir: _durumIlerle,
-                          iptalCalistir: _siparisiIptalEt,
-                          yukseklik: 380,
-                        ),
-                        const SizedBox(height: 14),
-                        _DurumKolonu(
-                          baslik: 'Hazir',
-                          aciklama: 'Servis veya teslim bekleyenler',
-                          bosDurumMetni: 'Bekleyen hazir siparis yok',
-                          vurguRengi: const Color(0xFF30C48D),
-                          siparisler: hazirlar,
-                          aksiyonCalistir: _durumIlerle,
-                          iptalCalistir: _siparisiIptalEt,
-                          yukseklik: 380,
-                        ),
-                        const SizedBox(height: 14),
-                        _DurumKolonu(
-                          baslik: 'Kapanis',
-                          aciklama: 'Dagitim ve teslim kapanisi',
-                          bosDurumMetni: 'Kapanis akisinda siparis yok',
-                          vurguRengi: const Color(0xFF7BA7FF),
-                          siparisler: kapanisAkisi,
-                          aksiyonCalistir: _durumIlerle,
-                          iptalCalistir: _siparisiIptalEt,
-                          yukseklik: 340,
-                        ),
-                      ],
-                    ),
-            ),
+                ),
+        );
+      },
     );
   }
-
-  List<SiparisVarligi> get _filtrelenmisSiparisler {
-    if (_seciliFiltre == _TeslimatFiltresi.tumu) {
-      return _siparisler;
-    }
-
-    return _siparisler
-        .where(
-          (SiparisVarligi siparis) =>
-              siparis.teslimatTipi == _seciliFiltre.teslimatTipi,
-        )
-        .toList();
-  }
-
-  List<SiparisVarligi> _grupSiparisleri(
-    List<SiparisVarligi> kaynak,
-    List<SiparisDurumu> durumlar,
-  ) {
-    return kaynak
-        .where((SiparisVarligi siparis) => durumlar.contains(siparis.durum))
-        .toList()
-      ..sort(
-        (SiparisVarligi a, SiparisVarligi b) =>
-            a.olusturmaTarihi.compareTo(b.olusturmaTarihi),
-      );
-  }
-
-  SiparisDurumu? _sonrakiDurum(SiparisVarligi siparis) {
-    switch (siparis.durum) {
-      case SiparisDurumu.alindi:
-        return SiparisDurumu.hazirlaniyor;
-      case SiparisDurumu.hazirlaniyor:
-        return SiparisDurumu.hazir;
-      case SiparisDurumu.hazir:
-        return siparis.teslimatTipi == TeslimatTipi.paketServis
-            ? SiparisDurumu.yolda
-            : SiparisDurumu.teslimEdildi;
-      case SiparisDurumu.yolda:
-        return SiparisDurumu.teslimEdildi;
-      case SiparisDurumu.teslimEdildi:
-      case SiparisDurumu.iptalEdildi:
-        return null;
-    }
-  }
-
-  String _durumYaziciMesaji(
-    SiparisVarligi siparis,
-    SiparisDurumu sonrakiDurum,
-  ) {
-    final String hat = _yaziciHattiEtiketi(siparis);
-    switch (sonrakiDurum) {
-      case SiparisDurumu.hazirlaniyor:
-        return '$hat hatti aktif kuyrukta guncellendi';
-      case SiparisDurumu.hazir:
-        return '$hat hattina hazir bildirimi yansidi';
-      case SiparisDurumu.yolda:
-        return 'Kasa ve paket hattina teslim cikisi aktarildi';
-      case SiparisDurumu.teslimEdildi:
-        return 'Yazici kuyrugunda siparis kapanisa alindi';
-      case SiparisDurumu.alindi:
-      case SiparisDurumu.iptalEdildi:
-        return '$hat hatti ile senkron tamamlandi';
-    }
-  }
-}
-
-enum _TeslimatFiltresi {
-  tumu('Tum', null),
-  salon('Salon', TeslimatTipi.restorandaYe),
-  gelAl('Gel al', TeslimatTipi.gelAl),
-  paket('Paket', TeslimatTipi.paketServis);
-
-  const _TeslimatFiltresi(this.etiket, this.teslimatTipi);
-
-  final String etiket;
-  final TeslimatTipi? teslimatTipi;
 }
 
 class _MutfakNavigasyonSeridi extends StatelessWidget {
@@ -1474,34 +1375,6 @@ String _paketTeslimatDurumuEtiketi(PaketTeslimatDurumu durum) {
       return 'Kurye yolda';
     case PaketTeslimatDurumu.teslimEdildi:
       return 'Teslim edildi';
-  }
-}
-
-String _durumEtiketi(SiparisDurumu durum) {
-  switch (durum) {
-    case SiparisDurumu.alindi:
-      return 'Alindi';
-    case SiparisDurumu.hazirlaniyor:
-      return 'Hazirlaniyor';
-    case SiparisDurumu.hazir:
-      return 'Hazir';
-    case SiparisDurumu.yolda:
-      return 'Yolda';
-    case SiparisDurumu.teslimEdildi:
-      return 'Teslim edildi';
-    case SiparisDurumu.iptalEdildi:
-      return 'Iptal edildi';
-  }
-}
-
-String _yaziciHattiEtiketi(SiparisVarligi siparis) {
-  switch (siparis.teslimatTipi) {
-    case TeslimatTipi.restorandaYe:
-      return 'Mutfak';
-    case TeslimatTipi.gelAl:
-      return 'Kasa';
-    case TeslimatTipi.paketServis:
-      return 'Icecek';
   }
 }
 

@@ -23,8 +23,11 @@ class KimlikDeposuSqlite implements KimlikDeposu {
     String? eposta,
     String? adresMetni,
   }) async {
+    final String kullaniciId = await _veritabani.sonrakiNumerikKimlikGetir(
+      tabloAdi: 'kullanici_kayitlari',
+    );
     final KullaniciVarligi kullanici = KullaniciVarligi(
-      id: 'kul_${DateTime.now().microsecondsSinceEpoch}',
+      id: kullaniciId,
       adSoyad: adSoyad ?? telefon,
       telefon: telefon,
       eposta: eposta,

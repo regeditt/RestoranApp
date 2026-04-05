@@ -10,11 +10,13 @@ class MusteriMenuUstCubugu extends StatelessWidget {
     required this.seciliKategoriAdi,
     required this.qrModu,
     this.qrBaglami,
+    this.uyariSayisi = 1,
   });
 
   final String seciliKategoriAdi;
   final bool qrModu;
   final QrMenuBaglamiVarligi? qrBaglami;
+  final int uyariSayisi;
 
   @override
   Widget build(BuildContext context) {
@@ -34,6 +36,13 @@ class MusteriMenuUstCubugu extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 _solKisim(context, mobil),
+                const SizedBox(height: 10),
+                Wrap(
+                  spacing: 10,
+                  runSpacing: 8,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  children: [_uyariButonu(kompakt: true)],
+                ),
                 if (!qrModu) ...[
                   const SizedBox(height: 10),
                   _modulGecisleri(context, mobil: true),
@@ -50,12 +59,7 @@ class MusteriMenuUstCubugu extends StatelessWidget {
               children: [
                 Expanded(child: _solKisim(context, mobil)),
                 const SizedBox(width: 12),
-                _DurumRozeti(
-                  ikon: qrModu ? Icons.qr_code_2 : Icons.wifi,
-                  etiket: qrModu ? 'QR menu' : 'Internet',
-                ),
-                const SizedBox(width: 10),
-                const _DurumRozeti(ikon: Icons.dns, etiket: 'Server'),
+                _uyariButonu(),
                 if (qrModu && qrBaglami?.rozetler.isNotEmpty == true) ...[
                   const SizedBox(width: 10),
                   QrRozetleri(rozetler: qrBaglami!.rozetler),
@@ -256,6 +260,51 @@ class MusteriMenuUstCubugu extends StatelessWidget {
       ),
       icon: const Icon(Icons.badge_outlined, size: 18),
       label: const Text('Personel girisi'),
+    );
+  }
+
+  Widget _uyariButonu({bool kompakt = false}) {
+    final bool uyariVar = uyariSayisi > 0;
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        Container(
+          width: kompakt ? 40 : 42,
+          height: kompakt ? 40 : 42,
+          decoration: BoxDecoration(
+            color: Colors.white.withValues(alpha: 0.14),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
+          ),
+          child: const Icon(
+            Icons.notifications_active_rounded,
+            size: 20,
+            color: Colors.white,
+          ),
+        ),
+        if (uyariVar)
+          Positioned(
+            top: -4,
+            right: -4,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+              decoration: BoxDecoration(
+                color: const Color(0xFFE53935),
+                borderRadius: BorderRadius.circular(999),
+                border: Border.all(color: Colors.white, width: 1.4),
+              ),
+              child: Text(
+                uyariSayisi > 99 ? '99+' : '$uyariSayisi',
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 10,
+                  fontWeight: FontWeight.w800,
+                  height: 1,
+                ),
+              ),
+            ),
+          ),
+      ],
     );
   }
 }

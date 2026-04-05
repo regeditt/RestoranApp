@@ -7,7 +7,9 @@ class VeriAktarimServisi {
   final UygulamaVeritabani _veritabani;
 
   Future<Map<String, Object?>> menuDisaAktar() async {
-    final kategoriler = await _veritabani.select(_veritabani.kategoriKayitlari).get();
+    final kategoriler = await _veritabani
+        .select(_veritabani.kategoriKayitlari)
+        .get();
     final urunler = await _veritabani.select(_veritabani.urunKayitlari).get();
 
     return <String, Object?>{
@@ -60,11 +62,20 @@ class VeriAktarimServisi {
         await _veritabani.delete(_veritabani.kategoriKayitlari).go();
       }
 
+      final Map<String, String> kategoriIdHaritasi = <String, String>{};
       for (final ham in kategoriHam) {
         final Map<String, Object?> k = Map<String, Object?>.from(ham as Map);
-        await _veritabani.into(_veritabani.kategoriKayitlari).insertOnConflictUpdate(
+        final String kaynakId = (k['id'] as String?) ?? '';
+        final String kategoriId = await _veritabani.numerikKimlikCozumle(
+          tabloAdi: 'kategori_kayitlari',
+          adayKimlik: kaynakId,
+        );
+        kategoriIdHaritasi[kaynakId] = kategoriId;
+        await _veritabani
+            .into(_veritabani.kategoriKayitlari)
+            .insertOnConflictUpdate(
               KategoriKayitlariCompanion(
-                id: Value(k['id'] as String),
+                id: Value(kategoriId),
                 ad: Value(k['ad'] as String),
                 sira: Value((k['sira'] as num).toInt()),
                 acikMi: Value(k['acikMi'] as bool),
@@ -74,10 +85,26 @@ class VeriAktarimServisi {
 
       for (final ham in urunHam) {
         final Map<String, Object?> u = Map<String, Object?>.from(ham as Map);
-        await _veritabani.into(_veritabani.urunKayitlari).insertOnConflictUpdate(
+        final String urunId = await _veritabani.numerikKimlikCozumle(
+          tabloAdi: 'urun_kayitlari',
+          adayKimlik: (u['id'] as String?) ?? '',
+        );
+        final String kaynakKategoriId = (u['kategoriId'] as String?) ?? '';
+        final String? kategoriId =
+            kategoriIdHaritasi[kaynakKategoriId] ??
+            (await (_veritabani.select(_veritabani.kategoriKayitlari)
+                      ..where((tbl) => tbl.id.equals(kaynakKategoriId)))
+                    .getSingleOrNull())
+                ?.id;
+        if (kategoriId == null) {
+          continue;
+        }
+        await _veritabani
+            .into(_veritabani.urunKayitlari)
+            .insertOnConflictUpdate(
               UrunKayitlariCompanion(
-                id: Value(u['id'] as String),
-                kategoriId: Value(u['kategoriId'] as String),
+                id: Value(urunId),
+                kategoriId: Value(kategoriId),
                 ad: Value(u['ad'] as String),
                 aciklama: Value(u['aciklama'] as String),
                 fiyat: Value((u['fiyat'] as num).toDouble()),

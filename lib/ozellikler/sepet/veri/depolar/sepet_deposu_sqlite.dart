@@ -12,13 +12,17 @@ class SepetDeposuSqlite implements SepetDeposu {
   final UygulamaVeritabani _veritabani;
   final MenuDeposu _menuDeposu;
 
-  static const String _varsayilanSepetId = 'sep_001';
+  static const String _varsayilanSepetId = '1';
 
   @override
   Future<SepetVarligi> sepetiGetir() async {
     final sepet = await _sepetKaydiniGetir();
     final kalemler = await _kalemleriGetir(sepet.id);
-    return SepetVarligi(id: sepet.id, kalemler: kalemler, kuponKodu: sepet.kuponKodu);
+    return SepetVarligi(
+      id: sepet.id,
+      kalemler: kalemler,
+      kuponKodu: sepet.kuponKodu,
+    );
   }
 
   @override
@@ -33,24 +37,28 @@ class SepetDeposuSqlite implements SepetDeposu {
     if (urun == null) {
       return sepetiGetir();
     }
-    final String kalemId = 'kal_${DateTime.now().microsecondsSinceEpoch}';
-    await _veritabani.into(_veritabani.sepetKalemleri).insert(
-      SepetKalemleriCompanion(
-        id: Value(kalemId),
-        sepetId: Value(sepet.id),
-        urunId: Value(urun.id),
-        birimFiyat: Value(urun.fiyat),
-        adet: Value(adet),
-        secenekAdi: Value(
-          secenekId == null
-              ? urun.varsayilanSecenek?.ad
-              : urun.secenekler
-                  .firstWhere((secenek) => secenek.id == secenekId)
-                  .ad,
-        ),
-        notMetni: Value(notMetni),
-      ),
+    final String kalemId = await _veritabani.sonrakiNumerikKimlikGetir(
+      tabloAdi: 'sepet_kalemleri',
     );
+    await _veritabani
+        .into(_veritabani.sepetKalemleri)
+        .insert(
+          SepetKalemleriCompanion(
+            id: Value(kalemId),
+            sepetId: Value(sepet.id),
+            urunId: Value(urun.id),
+            birimFiyat: Value(urun.fiyat),
+            adet: Value(adet),
+            secenekAdi: Value(
+              secenekId == null
+                  ? urun.varsayilanSecenek?.ad
+                  : urun.secenekler
+                        .firstWhere((secenek) => secenek.id == secenekId)
+                        .ad,
+            ),
+            notMetni: Value(notMetni),
+          ),
+        );
     return sepetiGetir();
   }
 
@@ -67,42 +75,44 @@ class SepetDeposuSqlite implements SepetDeposu {
 
   @override
   Future<SepetVarligi> kalemSil(String kalemId) async {
-    await (_veritabani.delete(_veritabani.sepetKalemleri)
-          ..where((tbl) => tbl.id.equals(kalemId)))
-        .go();
+    await (_veritabani.delete(
+      _veritabani.sepetKalemleri,
+    )..where((tbl) => tbl.id.equals(kalemId))).go();
     return sepetiGetir();
   }
 
   @override
   Future<void> sepetiTemizle() async {
     final sepet = await _sepetKaydiniGetir();
-    await (_veritabani.delete(_veritabani.sepetKalemleri)
-          ..where((tbl) => tbl.sepetId.equals(sepet.id)))
-        .go();
+    await (_veritabani.delete(
+      _veritabani.sepetKalemleri,
+    )..where((tbl) => tbl.sepetId.equals(sepet.id))).go();
   }
 
   Future<SepetKayitlariData> _sepetKaydiniGetir() async {
-    final mevcut = await (_veritabani.select(_veritabani.sepetKayitlari)
-          ..where((tbl) => tbl.id.equals(_varsayilanSepetId)))
-        .getSingleOrNull();
+    final mevcut = await (_veritabani.select(
+      _veritabani.sepetKayitlari,
+    )..where((tbl) => tbl.id.equals(_varsayilanSepetId))).getSingleOrNull();
     if (mevcut != null) {
       return mevcut;
     }
-    await _veritabani.into(_veritabani.sepetKayitlari).insert(
-      SepetKayitlariCompanion(
-        id: Value(_varsayilanSepetId),
-        kuponKodu: const Value.absent(),
-      ),
-    );
-    return (await (_veritabani.select(_veritabani.sepetKayitlari)
-          ..where((tbl) => tbl.id.equals(_varsayilanSepetId)))
-        .getSingle());
+    await _veritabani
+        .into(_veritabani.sepetKayitlari)
+        .insert(
+          SepetKayitlariCompanion(
+            id: Value(_varsayilanSepetId),
+            kuponKodu: const Value.absent(),
+          ),
+        );
+    return (await (_veritabani.select(
+      _veritabani.sepetKayitlari,
+    )..where((tbl) => tbl.id.equals(_varsayilanSepetId))).getSingle());
   }
 
   Future<List<SepetKalemiVarligi>> _kalemleriGetir(String sepetId) async {
-    final kalemKayitlari = await (_veritabani.select(_veritabani.sepetKalemleri)
-          ..where((tbl) => tbl.sepetId.equals(sepetId)))
-        .get();
+    final kalemKayitlari = await (_veritabani.select(
+      _veritabani.sepetKalemleri,
+    )..where((tbl) => tbl.sepetId.equals(sepetId))).get();
     final List<UrunVarligi> urunler = await _menuDeposu.urunleriGetir();
     final Map<String, UrunVarligi> urunHaritasi = <String, UrunVarligi>{
       for (final UrunVarligi urun in urunler) urun.id: urun,

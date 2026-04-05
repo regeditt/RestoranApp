@@ -1,21 +1,22 @@
 import 'package:flutter/material.dart';
-import 'package:restoran_app/bagimlilik_enjeksiyonu/servis_kaydi.dart';
-import 'package:restoran_app/ortak/bagimlilik/servis_saglayici.dart';
 import 'package:restoran_app/ortak/responsive/ekran_boyutu.dart';
 import 'package:restoran_app/ortak/sabitler/uygulama_sabitleri.dart';
 import 'package:restoran_app/ozellikler/kimlik/alan/roller/kullanici_rolu.dart';
 import 'package:restoran_app/ozellikler/kimlik/alan/varliklar/kullanici_varligi.dart';
+import 'package:restoran_app/ozellikler/kimlik/sunum/viewmodel/hesabim_viewmodel.dart';
+
+typedef _AdresVerisi = AdresVerisi;
 
 class HesabimSayfasi extends StatefulWidget {
-  const HesabimSayfasi({super.key});
+  const HesabimSayfasi({super.key, required this.viewModel});
+
+  final HesabimViewModel viewModel;
 
   @override
   State<HesabimSayfasi> createState() => _HesabimSayfasiState();
 }
 
 class _HesabimSayfasiState extends State<HesabimSayfasi> {
-  late final ServisKaydi _servisKaydi;
-  bool _servisHazir = false;
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   final TextEditingController _telefonDenetleyici = TextEditingController();
   final TextEditingController _sifreDenetleyici = TextEditingController();
@@ -28,30 +29,25 @@ class _HesabimSayfasiState extends State<HesabimSayfasi> {
   final TextEditingController _adresBaslikDenetleyici = TextEditingController();
   final TextEditingController _adresMetniDenetleyici = TextEditingController();
 
-  KullaniciVarligi? _aktifKullanici;
-  bool _yukleniyor = true;
-  bool _islemde = false;
-  bool _profilDuzenleniyor = false;
-  List<_AdresVerisi> _adresler = const <_AdresVerisi>[
-    _AdresVerisi(
-      baslik: 'Ev',
-      adresMetni: 'Ataturk Mah. 14. Sok. No:7 Daire:4',
-    ),
-    _AdresVerisi(
-      baslik: 'Ofis',
-      adresMetni: 'Cumhuriyet Cad. No:24 Kat:2',
-    ),
-  ];
+  KullaniciVarligi? get _aktifKullanici => widget.viewModel.aktifKullanici;
+  bool get _yukleniyor => widget.viewModel.yukleniyor;
+  bool get _islemde => widget.viewModel.islemde;
+  bool get _profilDuzenleniyor => widget.viewModel.profilDuzenleniyor;
+  List<_AdresVerisi> get _adresler => widget.viewModel.adresler;
 
   @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    if (_servisHazir) {
-      return;
-    }
-    _servisKaydi = ServisSaglayici.of(context);
-    _servisHazir = true;
+  void initState() {
+    super.initState();
     _kullaniciYukle();
+  }
+
+  @override
+  void didUpdateWidget(covariant HesabimSayfasi oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.viewModel != widget.viewModel) {
+      oldWidget.viewModel.dispose();
+      _kullaniciYukle();
+    }
   }
 
   @override
@@ -63,21 +59,23 @@ class _HesabimSayfasiState extends State<HesabimSayfasi> {
     _profilEpostaDenetleyici.dispose();
     _adresBaslikDenetleyici.dispose();
     _adresMetniDenetleyici.dispose();
+    widget.viewModel.dispose();
     super.dispose();
   }
 
   Future<void> _kullaniciYukle() async {
-    final KullaniciVarligi? kullanici = await _servisKaydi
-        .aktifKullaniciGetirUseCase();
+    final HesabimIslemSonucu sonuc = await widget.viewModel.kullaniciYukle();
 
     if (!mounted) {
       return;
     }
 
-    setState(() {
-      _aktifKullanici = kullanici;
-      _yukleniyor = false;
-    });
+    if (!sonuc.basarili) {
+      _bildirimGoster(sonuc.mesaj);
+      return;
+    }
+
+    final KullaniciVarligi? kullanici = widget.viewModel.aktifKullanici;
     if (kullanici != null) {
       _profilDenetleyicileriniDoldur(kullanici);
     }
@@ -88,75 +86,47 @@ class _HesabimSayfasiState extends State<HesabimSayfasi> {
       return;
     }
 
-    setState(() {
-      _islemde = true;
-    });
+    final HesabimIslemSonucu sonuc = await widget.viewModel.girisYap(
+      telefon: _telefonDenetleyici.text,
+      sifre: _sifreDenetleyici.text,
+    );
 
-    try {
-      final KullaniciVarligi kullanici = await _servisKaydi.girisYapUseCase(
-        telefon: _telefonDenetleyici.text.trim(),
-        sifre: _sifreDenetleyici.text.trim(),
-      );
+    if (!mounted) {
+      return;
+    }
 
-      if (!mounted) {
-        return;
-      }
+    if (!sonuc.basarili) {
+      _bildirimGoster(sonuc.mesaj);
+      return;
+    }
 
-      setState(() {
-        _aktifKullanici = kullanici;
-        _islemde = false;
-      });
+    final KullaniciVarligi? kullanici = widget.viewModel.aktifKullanici;
+    if (kullanici != null) {
       _profilDenetleyicileriniDoldur(kullanici);
-    } catch (_) {
-      if (!mounted) {
-        return;
-      }
-
-      setState(() {
-        _islemde = false;
-      });
-      _bildirimGoster('Giris yapilamadi');
     }
   }
 
   Future<void> _cikisYap() async {
-    setState(() {
-      _islemde = true;
-    });
+    final HesabimIslemSonucu sonuc = await widget.viewModel.cikisYap();
 
-    try {
-      await _servisKaydi.cikisYapUseCase();
-
-      if (!mounted) {
-        return;
-      }
-
-      setState(() {
-        _aktifKullanici = null;
-        _islemde = false;
-        _profilDuzenleniyor = false;
-        _telefonDenetleyici.clear();
-        _sifreDenetleyici.clear();
-        _profilAdSoyadDenetleyici.clear();
-        _profilTelefonDenetleyici.clear();
-        _profilEpostaDenetleyici.clear();
-      });
-    } catch (_) {
-      if (!mounted) {
-        return;
-      }
-
-      setState(() {
-        _islemde = false;
-      });
-      _bildirimGoster('Cikis yapilamadi');
+    if (!mounted) {
+      return;
     }
+
+    if (!sonuc.basarili) {
+      _bildirimGoster(sonuc.mesaj);
+      return;
+    }
+
+    _telefonDenetleyici.clear();
+    _sifreDenetleyici.clear();
+    _profilAdSoyadDenetleyici.clear();
+    _profilTelefonDenetleyici.clear();
+    _profilEpostaDenetleyici.clear();
   }
 
   void _bildirimGoster(String mesaj) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(mesaj)),
-    );
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(mesaj)));
   }
 
   void _profilDenetleyicileriniDoldur(KullaniciVarligi kullanici) {
@@ -172,9 +142,7 @@ class _HesabimSayfasiState extends State<HesabimSayfasi> {
     }
 
     _profilDenetleyicileriniDoldur(kullanici);
-    setState(() {
-      _profilDuzenleniyor = true;
-    });
+    widget.viewModel.profilDuzenlemeyiAc();
   }
 
   void _profilKaydet() {
@@ -183,93 +151,83 @@ class _HesabimSayfasiState extends State<HesabimSayfasi> {
       return;
     }
 
-    setState(() {
-      _aktifKullanici = KullaniciVarligi(
-        id: kullanici.id,
-        adSoyad: _profilAdSoyadDenetleyici.text.trim(),
-        telefon: _profilTelefonDenetleyici.text.trim(),
-        eposta: _profilEpostaDenetleyici.text.trim().isEmpty
-            ? null
-            : _profilEpostaDenetleyici.text.trim(),
-        rol: kullanici.rol,
-        aktifMi: kullanici.aktifMi,
-      );
-      _profilDuzenleniyor = false;
-    });
-    _bildirimGoster('Profil bilgileri guncellendi');
+    final HesabimIslemSonucu sonuc = widget.viewModel.profilKaydet(
+      adSoyad: _profilAdSoyadDenetleyici.text,
+      telefon: _profilTelefonDenetleyici.text,
+      eposta: _profilEpostaDenetleyici.text,
+    );
+    _bildirimGoster(sonuc.mesaj);
   }
 
   void _adresEkle() {
-    final String baslik = _adresBaslikDenetleyici.text.trim();
-    final String adresMetni = _adresMetniDenetleyici.text.trim();
-    if (baslik.isEmpty || adresMetni.isEmpty) {
-      _bildirimGoster('Adres basligi ve adres metni gerekli');
-      return;
-    }
-
-    setState(() {
-      _adresler = <_AdresVerisi>[
-        ..._adresler,
-        _AdresVerisi(baslik: baslik, adresMetni: adresMetni),
-      ];
+    final HesabimIslemSonucu sonuc = widget.viewModel.adresEkle(
+      baslik: _adresBaslikDenetleyici.text,
+      adresMetni: _adresMetniDenetleyici.text,
+    );
+    if (sonuc.basarili) {
       _adresBaslikDenetleyici.clear();
       _adresMetniDenetleyici.clear();
-    });
-    _bildirimGoster('Adres eklendi');
+    }
+    _bildirimGoster(sonuc.mesaj);
   }
 
   void _adresSil(_AdresVerisi adres) {
-    setState(() {
-      _adresler = _adresler
-          .where((mevcutAdres) => mevcutAdres != adres)
-          .toList();
-    });
-    _bildirimGoster('Adres kaldirildi');
+    final HesabimIslemSonucu sonuc = widget.viewModel.adresSil(adres);
+    _bildirimGoster(sonuc.mesaj);
   }
 
   @override
   Widget build(BuildContext context) {
-    final bool masaustu = EkranBoyutu.masaustu(context);
+    return AnimatedBuilder(
+      animation: widget.viewModel,
+      builder: (BuildContext context, Widget? child) {
+        final bool masaustu = EkranBoyutu.masaustu(context);
 
-    return Scaffold(
-      backgroundColor: const Color(0xFF110C1B),
-      body: DecoratedBox(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [Color(0xFF17101F), Color(0xFF28143A), Color(0xFF150C20)],
-          ),
-        ),
-        child: SafeArea(
-          child: _yukleniyor
-              ? const Center(child: CircularProgressIndicator())
-              : Center(
-                  child: ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: 1160),
-                    child: Padding(
-                      padding: const EdgeInsets.all(22),
-                      child: masaustu
-                          ? Row(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Expanded(flex: 11, child: _solAlan()),
-                                const SizedBox(width: 20),
-                                Expanded(flex: 9, child: _sagAlan()),
-                              ],
-                            )
-                          : ListView(
-                              children: [
-                                _solAlan(),
-                                const SizedBox(height: 18),
-                                _sagAlan(),
-                              ],
-                            ),
+        return Scaffold(
+          backgroundColor: const Color(0xFF110C1B),
+          body: DecoratedBox(
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  Color(0xFF17101F),
+                  Color(0xFF28143A),
+                  Color(0xFF150C20),
+                ],
+              ),
+            ),
+            child: SafeArea(
+              child: _yukleniyor
+                  ? const Center(child: CircularProgressIndicator())
+                  : Center(
+                      child: ConstrainedBox(
+                        constraints: const BoxConstraints(maxWidth: 1160),
+                        child: Padding(
+                          padding: const EdgeInsets.all(22),
+                          child: masaustu
+                              ? Row(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Expanded(flex: 11, child: _solAlan()),
+                                    const SizedBox(width: 20),
+                                    Expanded(flex: 9, child: _sagAlan()),
+                                  ],
+                                )
+                              : ListView(
+                                  children: [
+                                    _solAlan(),
+                                    const SizedBox(height: 18),
+                                    _sagAlan(),
+                                  ],
+                                ),
+                        ),
+                      ),
                     ),
-                  ),
-                ),
-        ),
-      ),
+            ),
+          ),
+        );
+      },
     );
   }
 
@@ -353,9 +311,7 @@ class _HesabimSayfasiState extends State<HesabimSayfasi> {
             const SizedBox(height: 8),
             Text(
               'Mock ortamda herhangi bir telefon ve sifre ile oturum acabilirsin.',
-              style: TextStyle(
-                color: Colors.white.withValues(alpha: 0.70),
-              ),
+              style: TextStyle(color: Colors.white.withValues(alpha: 0.70)),
             ),
             const SizedBox(height: 18),
             TextFormField(
@@ -484,7 +440,9 @@ class _HesabimSayfasiState extends State<HesabimSayfasi> {
           SizedBox(
             width: double.infinity,
             child: FilledButton(
-              onPressed: _profilDuzenleniyor ? _profilKaydet : _profilDuzenlemeyiAc,
+              onPressed: _profilDuzenleniyor
+                  ? _profilKaydet
+                  : _profilDuzenlemeyiAc,
               style: FilledButton.styleFrom(
                 backgroundColor: const Color(0xFFFF5D8F),
                 foregroundColor: Colors.white,
@@ -541,9 +499,7 @@ class _HesabimSayfasiState extends State<HesabimSayfasi> {
           const SizedBox(height: 6),
           Text(
             'Siparislerde hizli secim icin adreslerini burada tut.',
-            style: TextStyle(
-              color: Colors.white.withValues(alpha: 0.68),
-            ),
+            style: TextStyle(color: Colors.white.withValues(alpha: 0.68)),
           ),
           const SizedBox(height: 14),
           ..._adresler.map(
@@ -716,14 +672,4 @@ class _KimlikRozeti extends StatelessWidget {
       ),
     );
   }
-}
-
-class _AdresVerisi {
-  const _AdresVerisi({
-    required this.baslik,
-    required this.adresMetni,
-  });
-
-  final String baslik;
-  final String adresMetni;
 }

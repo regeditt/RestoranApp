@@ -1,216 +1,167 @@
 import 'package:flutter/material.dart';
-import 'package:restoran_app/bagimlilik_enjeksiyonu/servis_kaydi.dart';
-import 'package:restoran_app/ortak/bagimlilik/servis_saglayici.dart';
 import 'package:restoran_app/ortak/bilesenler/suruklenebilir_dialog_kapsayici.dart';
 import 'package:restoran_app/ortak/responsive/ekran_boyutu.dart';
-import 'package:restoran_app/ozellikler/kimlik/alan/varliklar/misafir_bilgisi_varligi.dart';
 import 'package:restoran_app/ozellikler/menu/alan/varliklar/qr_menu_baglami_varligi.dart';
 import 'package:restoran_app/ozellikler/sepet/alan/varliklar/sepet_kalemi_varligi.dart';
 import 'package:restoran_app/ozellikler/sepet/alan/varliklar/sepet_varligi.dart';
-import 'package:restoran_app/ozellikler/siparis/alan/enumlar/paket_teslimat_durumu.dart';
-import 'package:restoran_app/ozellikler/siparis/alan/enumlar/siparis_durumu.dart';
 import 'package:restoran_app/ozellikler/siparis/alan/enumlar/teslimat_tipi.dart';
-import 'package:restoran_app/ozellikler/siparis/alan/varliklar/siparis_kalemi_varligi.dart';
-import 'package:restoran_app/ozellikler/siparis/alan/varliklar/siparis_sahibi_varligi.dart';
 import 'package:restoran_app/ozellikler/siparis/alan/varliklar/siparis_varligi.dart';
-import 'package:restoran_app/ozellikler/siparis/alan/varliklar/yazdirma_sonucu_varligi.dart';
+import 'package:restoran_app/ozellikler/siparis/sunum/viewmodel/siparis_ozeti_viewmodel.dart';
 
 class SiparisOzetiSayfasi extends StatefulWidget {
-  const SiparisOzetiSayfasi({super.key, required this.sepet, this.qrBaglami});
+  const SiparisOzetiSayfasi({super.key, required this.viewModel});
 
-  final SepetVarligi sepet;
-  final QrMenuBaglamiVarligi? qrBaglami;
+  final SiparisOzetiViewModel viewModel;
 
   @override
   State<SiparisOzetiSayfasi> createState() => _SiparisOzetiSayfasiState();
 }
 
 class _SiparisOzetiSayfasiState extends State<SiparisOzetiSayfasi> {
-  late final ServisKaydi _servisKaydi;
-  bool _servisHazir = false;
   final TextEditingController _adresDenetleyici = TextEditingController();
   final TextEditingController _teslimatNotuDenetleyici =
       TextEditingController();
-  bool _kaydediliyor = false;
-  bool _varsayilanBilgilerYuklendi = false;
-  late TeslimatTipi _seciliTeslimatTipi;
+
+  SepetVarligi get _sepet => widget.viewModel.sepet;
+  QrMenuBaglamiVarligi? get _qrBaglami => widget.viewModel.qrBaglami;
+  bool get _kaydediliyor => widget.viewModel.kaydediliyor;
+  TeslimatTipi get _seciliTeslimatTipi => widget.viewModel.seciliTeslimatTipi;
+  bool get _paketServisSeciliMi => widget.viewModel.paketServisSeciliMi;
+  String get _teslimatEtiketi => widget.viewModel.teslimatEtiketi;
+  String get _adresKisaOzet => widget.viewModel.adresKisaOzet;
 
   @override
   void initState() {
     super.initState();
-    _seciliTeslimatTipi = widget.qrBaglami?.masaNo != null
-        ? TeslimatTipi.restorandaYe
-        : TeslimatTipi.gelAl;
-  }
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    if (_servisHazir) {
-      return;
-    }
-    _servisKaydi = ServisSaglayici.of(context);
-    _servisHazir = true;
+    _adresDenetleyici.addListener(_adresDegisimiDinle);
+    _teslimatNotuDenetleyici.addListener(_teslimatNotuDegisimiDinle);
     _varsayilanBilgileriYukle();
   }
 
   @override
-  void dispose() {
-    _adresDenetleyici.dispose();
-    _teslimatNotuDenetleyici.dispose();
-    super.dispose();
-  }
-
-  Future<void> _varsayilanBilgileriYukle() async {
-    final aktifKullanici = await _servisKaydi.aktifKullaniciGetirUseCase();
-    if (!mounted || _varsayilanBilgilerYuklendi) {
-      return;
-    }
-
-    setState(() {
-      _adresDenetleyici.text = aktifKullanici?.adresMetni ?? '';
-      _varsayilanBilgilerYuklendi = true;
-    });
-  }
-
-  Future<void> _siparisiOnayla() async {
-    if (_paketServisSeciliMi && _adresDenetleyici.text.trim().isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Paket sipariste teslimat adresi gerekli'),
-        ),
-      );
-      return;
-    }
-
-    setState(() {
-      _kaydediliyor = true;
-    });
-
-    try {
-      final aktifKullanici = await _servisKaydi.aktifKullaniciGetirUseCase();
-      final MisafirBilgisiVarligi misafir = await _servisKaydi
-          .misafirOlusturUseCase(
-            adSoyad: aktifKullanici?.adSoyad ?? 'Misafir Musteri',
-            telefon: aktifKullanici?.telefon ?? '5550000000',
-            eposta: aktifKullanici?.eposta,
-            adres: aktifKullanici?.adresMetni,
-          );
-
-      final DateTime simdi = DateTime.now();
-      final SiparisVarligi siparis = SiparisVarligi(
-        id: 'sip_${simdi.microsecondsSinceEpoch}',
-        siparisNo: 'R-${simdi.millisecondsSinceEpoch.toString().substring(7)}',
-        sahip: SiparisSahibiVarligi.misafir(misafir),
-        teslimatTipi: _seciliTeslimatTipi,
-        durum: SiparisDurumu.alindi,
-        kalemler: widget.sepet.kalemler
-            .map(
-              (kalem) => SiparisKalemiVarligi(
-                id: kalem.id,
-                urunId: kalem.urun.id,
-                urunAdi: kalem.urun.ad,
-                birimFiyat: kalem.birimFiyat,
-                adet: kalem.adet,
-                secenekAdi: kalem.secenekAdi,
-                notMetni: kalem.notMetni,
-              ),
-            )
-            .toList(),
-        olusturmaTarihi: simdi,
-        adresMetni: _paketServisSeciliMi
-            ? _adresDenetleyici.text.trim()
-            : aktifKullanici?.adresMetni,
-        teslimatNotu: _teslimatNotuDenetleyici.text.trim().isEmpty
-            ? null
-            : _teslimatNotuDenetleyici.text.trim(),
-        paketTeslimatDurumu: _paketServisSeciliMi
-            ? PaketTeslimatDurumu.adresDogrulandi
-            : null,
-        masaNo: widget.qrBaglami?.masaNo,
-        bolumAdi: widget.qrBaglami?.bolumAdi,
-        kaynak: widget.qrBaglami?.kaynak,
-      );
-
-      final SiparisVarligi kaydedilenSiparis = await _servisKaydi
-          .siparisOlusturUseCase(siparis);
-      await _servisKaydi.sipariseGoreStokDusUseCase(kaydedilenSiparis);
-      final YazdirmaSonucuVarligi yazdirmaSonucu = await _servisKaydi
-          .siparisiYazdirUseCase(kaydedilenSiparis);
-      await _servisKaydi.sepetiTemizleUseCase();
-
-      if (!mounted) {
-        return;
-      }
-
-      await showDialog<void>(
-        context: context,
-        builder: (BuildContext context) {
-          return SuruklenebilirPopupSablonu(
-            materialKullan: false,
-            child: AlertDialog(
-              title: const Text('Siparis alindi'),
-              content: Text(
-                '${kaydedilenSiparis.siparisNo} numarali siparis kaydedildi. '
-                '${_siparisBilgisi(kaydedilenSiparis)}. '
-                '${yazdirmaSonucu.ozetMetni}. '
-                'Toplam ${kaydedilenSiparis.toplamTutar.toStringAsFixed(0)} TL.',
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.of(context).pop(),
-                  child: const Text('Tamam'),
-                ),
-              ],
-            ),
-          );
-        },
-      );
-
-      if (!mounted) {
-        return;
-      }
-
-      Navigator.of(context).pop(true);
-    } catch (_) {
-      if (!mounted) {
-        return;
-      }
-
-      setState(() {
-        _kaydediliyor = false;
-      });
-
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Siparis olusturulamadi')));
+  void didUpdateWidget(covariant SiparisOzetiSayfasi oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.viewModel != widget.viewModel) {
+      oldWidget.viewModel.dispose();
+      _adresDenetleyici.text = widget.viewModel.adresMetni;
+      _teslimatNotuDenetleyici.text = widget.viewModel.teslimatNotu;
+      _varsayilanBilgileriYukle();
     }
   }
 
   @override
-  Widget build(BuildContext context) {
-    final bool masaustu = EkranBoyutu.masaustu(context);
+  void dispose() {
+    _adresDenetleyici.removeListener(_adresDegisimiDinle);
+    _teslimatNotuDenetleyici.removeListener(_teslimatNotuDegisimiDinle);
+    _adresDenetleyici.dispose();
+    _teslimatNotuDenetleyici.dispose();
+    widget.viewModel.dispose();
+    super.dispose();
+  }
 
-    return Scaffold(
-      backgroundColor: const Color(0xFF140B20),
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        foregroundColor: Colors.white,
-        title: const Text('Siparis Ozeti'),
-      ),
-      body: SafeArea(
-        child: Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 920),
-            child: Padding(
-              padding: const EdgeInsets.all(20),
-              child: masaustu
-                  ? _ozetKartlari()
-                  : ListView(children: [_ozetKartlari()]),
+  Future<void> _varsayilanBilgileriYukle() async {
+    final SiparisOzetiIslemSonucu sonuc = await widget.viewModel
+        .varsayilanBilgileriYukle();
+    if (!mounted) {
+      return;
+    }
+
+    if (!sonuc.basarili) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(sonuc.mesaj)));
+      return;
+    }
+
+    _adresDenetleyici.text = widget.viewModel.adresMetni;
+    _teslimatNotuDenetleyici.text = widget.viewModel.teslimatNotu;
+  }
+
+  void _adresDegisimiDinle() {
+    widget.viewModel.adresDegisti(_adresDenetleyici.text);
+  }
+
+  void _teslimatNotuDegisimiDinle() {
+    widget.viewModel.teslimatNotuDegisti(_teslimatNotuDenetleyici.text);
+  }
+
+  Future<void> _siparisiOnayla() async {
+    final SiparisOzetiIslemSonucu sonuc = await widget.viewModel
+        .siparisiOnayla();
+    if (!mounted) {
+      return;
+    }
+
+    if (!sonuc.basarili ||
+        sonuc.siparis == null ||
+        sonuc.yazdirmaSonucu == null) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(sonuc.mesaj)));
+      return;
+    }
+
+    final SiparisVarligi kaydedilenSiparis = sonuc.siparis!;
+    final yazdirmaSonucu = sonuc.yazdirmaSonucu!;
+    await showDialog<void>(
+      context: context,
+      builder: (BuildContext context) {
+        return SuruklenebilirPopupSablonu(
+          materialKullan: false,
+          child: AlertDialog(
+            title: const Text('Siparis alindi'),
+            content: Text(
+              '${kaydedilenSiparis.siparisNo} numarali siparis kaydedildi. '
+              '${_siparisBilgisi(kaydedilenSiparis)}. '
+              '${yazdirmaSonucu.ozetMetni}. '
+              'Toplam ${kaydedilenSiparis.toplamTutar.toStringAsFixed(0)} TL.',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: const Text('Tamam'),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+
+    if (!mounted) {
+      return;
+    }
+    Navigator.of(context).pop(true);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: widget.viewModel,
+      builder: (BuildContext context, Widget? child) {
+        final bool masaustu = EkranBoyutu.masaustu(context);
+
+        return Scaffold(
+          backgroundColor: const Color(0xFF140B20),
+          appBar: AppBar(
+            backgroundColor: Colors.transparent,
+            foregroundColor: Colors.white,
+            title: const Text('Siparis Ozeti'),
+          ),
+          body: SafeArea(
+            child: Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 920),
+                child: Padding(
+                  padding: const EdgeInsets.all(20),
+                  child: masaustu
+                      ? _ozetKartlari()
+                      : ListView(children: [_ozetKartlari()]),
+                ),
+              ),
             ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 
@@ -237,14 +188,14 @@ class _SiparisOzetiSayfasiState extends State<SiparisOzetiSayfasi> {
             ),
             const SizedBox(height: 8),
             Text(
-              '${widget.sepet.toplamUrunAdedi} urun siparise hazir',
+              '${_sepet.toplamUrunAdedi} urun siparise hazir',
               style: TextStyle(
                 color: Colors.white.withValues(alpha: 0.72),
                 fontWeight: FontWeight.w600,
               ),
             ),
             const SizedBox(height: 18),
-            ...widget.sepet.kalemler.map(_kalemSatiri),
+            ..._sepet.kalemler.map(_kalemSatiri),
             const SizedBox(height: 20),
             Container(
               padding: const EdgeInsets.all(18),
@@ -256,16 +207,16 @@ class _SiparisOzetiSayfasiState extends State<SiparisOzetiSayfasi> {
                 spacing: 18,
                 runSpacing: 18,
                 children: [
-                  _ozetRakam('Ara toplam', _paraYaz(widget.sepet.araToplam)),
+                  _ozetRakam('Ara toplam', _paraYaz(_sepet.araToplam)),
                   _ozetRakam('Teslimat', _teslimatEtiketi),
                   if (_paketServisSeciliMi) _ozetRakam('Adres', _adresKisaOzet),
-                  if (widget.qrBaglami?.masaNo != null)
-                    _ozetRakam('Masa', widget.qrBaglami!.masaNo!),
-                  if (widget.qrBaglami?.bolumAdi != null)
-                    _ozetRakam('Bolum', widget.qrBaglami!.bolumAdi!),
+                  if (_qrBaglami?.masaNo != null)
+                    _ozetRakam('Masa', _qrBaglami!.masaNo!),
+                  if (_qrBaglami?.bolumAdi != null)
+                    _ozetRakam('Bolum', _qrBaglami!.bolumAdi!),
                   _ozetRakam(
                     'Genel toplam',
-                    _paraYaz(widget.sepet.araToplam),
+                    _paraYaz(_sepet.araToplam),
                     vurgu: true,
                   ),
                 ],
@@ -292,7 +243,7 @@ class _SiparisOzetiSayfasiState extends State<SiparisOzetiSayfasi> {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    widget.qrBaglami?.masaNo != null
+                    _qrBaglami?.masaNo != null
                         ? 'QR ile acilan masa baglami bulundu. Siparis varsayilan misafir kaydi ile dogrudan olusturulur ve masa bilgisi siparise eklenir.'
                         : 'Misafir siparisi icin gel al veya paket servis sec. Paket servis secilirse adres ve teslimat notu siparise eklenir.',
                     style: TextStyle(
@@ -300,7 +251,7 @@ class _SiparisOzetiSayfasiState extends State<SiparisOzetiSayfasi> {
                       height: 1.45,
                     ),
                   ),
-                  if (widget.qrBaglami?.masaNo == null) ...[
+                  if (_qrBaglami?.masaNo == null) ...[
                     const SizedBox(height: 18),
                     Wrap(
                       spacing: 10,
@@ -354,7 +305,7 @@ class _SiparisOzetiSayfasiState extends State<SiparisOzetiSayfasi> {
                               child: CircularProgressIndicator(strokeWidth: 2),
                             )
                           : Text(
-                              '${_paraYaz(widget.sepet.araToplam)} ile siparisi tamamla',
+                              '${_paraYaz(_sepet.araToplam)} ile siparisi tamamla',
                             ),
                     ),
                   ),
@@ -475,11 +426,7 @@ class _SiparisOzetiSayfasiState extends State<SiparisOzetiSayfasi> {
     return ChoiceChip(
       selected: secili,
       label: Text(etiket),
-      onSelected: (_) {
-        setState(() {
-          _seciliTeslimatTipi = teslimatTipi;
-        });
-      },
+      onSelected: (_) => widget.viewModel.teslimatTipiSec(teslimatTipi),
       labelStyle: TextStyle(
         color: secili ? const Color(0xFF140B20) : Colors.white,
         fontWeight: FontWeight.w800,
@@ -490,40 +437,8 @@ class _SiparisOzetiSayfasiState extends State<SiparisOzetiSayfasi> {
     );
   }
 
-  String get _teslimatEtiketi {
-    switch (_seciliTeslimatTipi) {
-      case TeslimatTipi.restorandaYe:
-        return 'Restoranda ye';
-      case TeslimatTipi.gelAl:
-        return 'Gel al';
-      case TeslimatTipi.paketServis:
-        return 'Paket servis';
-    }
-  }
-
-  String _siparisBilgisi(SiparisVarligi siparis) {
-    if (siparis.masaNo != null && siparis.masaNo!.isNotEmpty) {
-      return 'Masa ${siparis.masaNo} icin kaydedildi';
-    }
-    if (siparis.teslimatTipi == TeslimatTipi.paketServis) {
-      return 'Paket siparis ${siparis.adresMetni ?? 'adrese'} yonlendirildi';
-    }
-    return 'Siparis kaydedildi';
-  }
-
-  bool get _paketServisSeciliMi =>
-      _seciliTeslimatTipi == TeslimatTipi.paketServis;
-
-  String get _adresKisaOzet {
-    final String adres = _adresDenetleyici.text.trim();
-    if (adres.isEmpty) {
-      return 'Adres bekleniyor';
-    }
-    if (adres.length <= 26) {
-      return adres;
-    }
-    return '${adres.substring(0, 26)}...';
-  }
+  String _siparisBilgisi(SiparisVarligi siparis) =>
+      widget.viewModel.siparisBilgisi(siparis);
 }
 
 String _paraYaz(double tutar) {

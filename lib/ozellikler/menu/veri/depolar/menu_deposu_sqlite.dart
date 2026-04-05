@@ -16,7 +16,9 @@ class MenuDeposuSqlite implements MenuDeposu {
   @override
   Future<List<KategoriVarligi>> kategorileriGetir() async {
     await _seedEminOl();
-    final kayitlar = await _veritabani.select(_veritabani.kategoriKayitlari).get();
+    final kayitlar = await _veritabani
+        .select(_veritabani.kategoriKayitlari)
+        .get();
     return kayitlar
         .map(
           (kayit) => KategoriVarligi(
@@ -31,14 +33,20 @@ class MenuDeposuSqlite implements MenuDeposu {
 
   @override
   Future<void> kategoriEkle(KategoriVarligi kategori) async {
-    await _veritabani.into(_veritabani.kategoriKayitlari).insertOnConflictUpdate(
-      KategoriKayitlariCompanion(
-        id: Value(kategori.id),
-        ad: Value(kategori.ad),
-        sira: Value(kategori.sira),
-        acikMi: Value(kategori.acikMi),
-      ),
+    final String kategoriId = await _veritabani.numerikKimlikCozumle(
+      tabloAdi: 'kategori_kayitlari',
+      adayKimlik: kategori.id,
     );
+    await _veritabani
+        .into(_veritabani.kategoriKayitlari)
+        .insertOnConflictUpdate(
+          KategoriKayitlariCompanion(
+            id: Value(kategoriId),
+            ad: Value(kategori.ad),
+            sira: Value(kategori.sira),
+            acikMi: Value(kategori.acikMi),
+          ),
+        );
   }
 
   @override
@@ -48,9 +56,9 @@ class MenuDeposuSqlite implements MenuDeposu {
 
   @override
   Future<void> kategoriSil(String kategoriId) async {
-    await (_veritabani.delete(_veritabani.kategoriKayitlari)
-          ..where((tbl) => tbl.id.equals(kategoriId)))
-        .go();
+    await (_veritabani.delete(
+      _veritabani.kategoriKayitlari,
+    )..where((tbl) => tbl.id.equals(kategoriId))).go();
   }
 
   @override
@@ -62,19 +70,25 @@ class MenuDeposuSqlite implements MenuDeposu {
 
   @override
   Future<void> urunEkle(UrunVarligi urun) async {
-    await _veritabani.into(_veritabani.urunKayitlari).insertOnConflictUpdate(
-      UrunKayitlariCompanion(
-        id: Value(urun.id),
-        kategoriId: Value(urun.kategoriId),
-        ad: Value(urun.ad),
-        aciklama: Value(urun.aciklama),
-        fiyat: Value(urun.fiyat),
-        gorselUrl: Value(urun.gorselUrl),
-        stoktaMi: Value(urun.stoktaMi),
-        oneCikanMi: Value(urun.oneCikanMi),
-        seceneklerJson: Value(_secenekleriJson(urun.secenekler)),
-      ),
+    final String urunId = await _veritabani.numerikKimlikCozumle(
+      tabloAdi: 'urun_kayitlari',
+      adayKimlik: urun.id,
     );
+    await _veritabani
+        .into(_veritabani.urunKayitlari)
+        .insertOnConflictUpdate(
+          UrunKayitlariCompanion(
+            id: Value(urunId),
+            kategoriId: Value(urun.kategoriId),
+            ad: Value(urun.ad),
+            aciklama: Value(urun.aciklama),
+            fiyat: Value(urun.fiyat),
+            gorselUrl: Value(urun.gorselUrl),
+            stoktaMi: Value(urun.stoktaMi),
+            oneCikanMi: Value(urun.oneCikanMi),
+            seceneklerJson: Value(_secenekleriJson(urun.secenekler)),
+          ),
+        );
   }
 
   @override
@@ -84,9 +98,9 @@ class MenuDeposuSqlite implements MenuDeposu {
 
   @override
   Future<void> urunSil(String urunId) async {
-    await (_veritabani.delete(_veritabani.urunKayitlari)
-          ..where((tbl) => tbl.id.equals(urunId)))
-        .go();
+    await (_veritabani.delete(
+      _veritabani.urunKayitlari,
+    )..where((tbl) => tbl.id.equals(urunId))).go();
   }
 
   @override
@@ -94,18 +108,18 @@ class MenuDeposuSqlite implements MenuDeposu {
     String kategoriId,
   ) async {
     await _seedEminOl();
-    final kayitlar = await (_veritabani.select(_veritabani.urunKayitlari)
-          ..where((tbl) => tbl.kategoriId.equals(kategoriId)))
-        .get();
+    final kayitlar = await (_veritabani.select(
+      _veritabani.urunKayitlari,
+    )..where((tbl) => tbl.kategoriId.equals(kategoriId))).get();
     return kayitlar.map(_urunCoz).toList();
   }
 
   @override
   Future<UrunVarligi?> urunGetir(String urunId) async {
     await _seedEminOl();
-    final kayit = await (_veritabani.select(_veritabani.urunKayitlari)
-          ..where((tbl) => tbl.id.equals(urunId)))
-        .getSingleOrNull();
+    final kayit = await (_veritabani.select(
+      _veritabani.urunKayitlari,
+    )..where((tbl) => tbl.id.equals(urunId))).getSingleOrNull();
     return kayit == null ? null : _urunCoz(kayit);
   }
 
@@ -161,14 +175,21 @@ class MenuDeposuSqlite implements MenuDeposu {
       _seedKontrolEdildi = true;
       return;
     }
-    final List<KategoriVarligi> kategoriler =
-        await _seedSaglayici.kategorileriGetir();
+    final List<KategoriVarligi> kategoriler = await _seedSaglayici
+        .kategorileriGetir();
     final List<UrunVarligi> urunler = await _seedSaglayici.urunleriGetir();
+    final Map<String, String> kategoriIdHaritasi = <String, String>{};
     await _veritabani.transaction(() async {
       for (final kategori in kategoriler) {
-        await _veritabani.into(_veritabani.kategoriKayitlari).insert(
+        final String kategoriId = await _veritabani.sonrakiNumerikKimlikGetir(
+          tabloAdi: 'kategori_kayitlari',
+        );
+        kategoriIdHaritasi[kategori.id] = kategoriId;
+        await _veritabani
+            .into(_veritabani.kategoriKayitlari)
+            .insert(
               KategoriKayitlariCompanion(
-                id: Value(kategori.id),
+                id: Value(kategoriId),
                 ad: Value(kategori.ad),
                 sira: Value(kategori.sira),
                 acikMi: Value(kategori.acikMi),
@@ -176,10 +197,19 @@ class MenuDeposuSqlite implements MenuDeposu {
             );
       }
       for (final urun in urunler) {
-        await _veritabani.into(_veritabani.urunKayitlari).insert(
+        final String? kategoriId = kategoriIdHaritasi[urun.kategoriId];
+        if (kategoriId == null) {
+          continue;
+        }
+        final String urunId = await _veritabani.sonrakiNumerikKimlikGetir(
+          tabloAdi: 'urun_kayitlari',
+        );
+        await _veritabani
+            .into(_veritabani.urunKayitlari)
+            .insert(
               UrunKayitlariCompanion(
-                id: Value(urun.id),
-                kategoriId: Value(urun.kategoriId),
+                id: Value(urunId),
+                kategoriId: Value(kategoriId),
                 ad: Value(urun.ad),
                 aciklama: Value(urun.aciklama),
                 fiyat: Value(urun.fiyat),
