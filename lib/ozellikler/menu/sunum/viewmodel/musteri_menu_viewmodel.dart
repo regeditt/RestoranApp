@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:restoran_app/bagimlilik_enjeksiyonu/servis_kaydi.dart';
 import 'package:restoran_app/ozellikler/menu/alan/varliklar/kategori_varligi.dart';
+import 'package:restoran_app/ozellikler/menu/alan/varliklar/pos_masa_urun_baglami_varligi.dart';
 import 'package:restoran_app/ozellikler/menu/alan/varliklar/qr_menu_baglami_varligi.dart';
 import 'package:restoran_app/ozellikler/menu/alan/varliklar/urun_varligi.dart';
 import 'package:restoran_app/ozellikler/menu/uygulama/use_case/kategoriye_gore_urunleri_getir_use_case.dart';
@@ -113,17 +114,22 @@ class MusteriMenuViewModel extends ChangeNotifier {
 
   bool get posMasaSeciliMi => seciliSalonBolumu != null && seciliMasa != null;
 
-  QrMenuBaglamiVarligi? get posBaglami {
+  PosMasaUrunBaglamiVarligi? get posMasaUrunBaglami {
     final SalonBolumuVarligi? bolum = seciliSalonBolumu;
     final MasaTanimiVarligi? masa = seciliMasa;
     if (bolum == null || masa == null) {
       return null;
     }
-    return QrMenuBaglamiVarligi(
-      masaNo: masa.ad,
-      bolumAdi: bolum.ad,
-      kaynak: 'POS',
+    return PosMasaUrunBaglamiVarligi(
+      salonBolumu: bolum,
+      masa: masa,
+      urunler: _urunler,
+      seciliKategori: seciliKategori,
     );
+  }
+
+  QrMenuBaglamiVarligi? get posBaglami {
+    return posMasaUrunBaglami?.qrBaglami;
   }
 
   String get seciliKategoriAdi {
@@ -135,15 +141,29 @@ class MusteriMenuViewModel extends ChangeNotifier {
     return 'Tum urunler';
   }
 
+  KategoriVarligi? get seciliKategori {
+    final String? kategoriId = _seciliKategoriId;
+    if (kategoriId == null) {
+      return null;
+    }
+    for (final KategoriVarligi kategori in _kategoriler) {
+      if (kategori.id == kategoriId) {
+        return kategori;
+      }
+    }
+    return null;
+  }
+
   Future<MusteriMenuIslemSonucu> verileriYukle() async {
     _yukleniyor = true;
     notifyListeners();
     try {
-      final List<Object> yuklenenler = await Future.wait<Object>(<Future<Object>>[
-        _kategorileriGetirUseCase(),
-        _sepetiGetirUseCase(),
-        _salonBolumleriniGetirUseCase(),
-      ]);
+      final List<Object> yuklenenler =
+          await Future.wait<Object>(<Future<Object>>[
+            _kategorileriGetirUseCase(),
+            _sepetiGetirUseCase(),
+            _salonBolumleriniGetirUseCase(),
+          ]);
       final List<KategoriVarligi> kategoriler =
           yuklenenler[0] as List<KategoriVarligi>;
       final SepetVarligi sepet = yuklenenler[1] as SepetVarligi;
@@ -163,7 +183,9 @@ class MusteriMenuViewModel extends ChangeNotifier {
       String? seciliSalonBolumuId = _seciliSalonBolumuId;
       if (salonBolumleri.isNotEmpty &&
           (seciliSalonBolumuId == null ||
-              salonBolumleri.every((bolum) => bolum.id != seciliSalonBolumuId))) {
+              salonBolumleri.every(
+                (bolum) => bolum.id != seciliSalonBolumuId,
+              ))) {
         seciliSalonBolumuId = salonBolumleri.first.id;
       }
       final SalonBolumuVarligi? seciliSalonBolumu = _salonBolumuBul(
@@ -250,10 +272,7 @@ class MusteriMenuViewModel extends ChangeNotifier {
   }
 
   void salonBolumuSec(String bolumId) {
-    final SalonBolumuVarligi? bolum = _salonBolumuBul(
-      _salonBolumleri,
-      bolumId,
-    );
+    final SalonBolumuVarligi? bolum = _salonBolumuBul(_salonBolumleri, bolumId);
     if (bolum == null) {
       return;
     }

@@ -1,9 +1,12 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:restoran_app/bagimlilik_enjeksiyonu/servis_kaydi.dart';
 import 'package:restoran_app/ozellikler/kimlik/sunum/sayfalar/giris_secim_sayfasi.dart';
 import 'package:restoran_app/ozellikler/kimlik/sunum/viewmodel/giris_secim_viewmodel.dart';
 import 'package:restoran_app/ozellikler/kimlik/alan/varliklar/misafir_bilgisi_varligi.dart';
+import 'package:restoran_app/ozellikler/menu/sunum/sayfalar/musteri_menu_sayfasi.dart';
+import 'package:restoran_app/ozellikler/menu/sunum/viewmodel/musteri_menu_viewmodel.dart';
 import 'package:restoran_app/ozellikler/menu/alan/varliklar/urun_varligi.dart';
 import 'package:restoran_app/ozellikler/sepet/alan/varliklar/sepet_kalemi_varligi.dart';
 import 'package:restoran_app/ozellikler/sepet/alan/varliklar/sepet_varligi.dart';
@@ -24,6 +27,7 @@ import 'package:restoran_app/ozellikler/yonetim/sunum/bilesenler/masa_plani_kart
 import 'package:restoran_app/ozellikler/yonetim/sunum/bilesenler/paket_servis_operasyon_karti.dart';
 import 'package:restoran_app/ozellikler/yonetim/sunum/bilesenler/personel_yonetimi_karti.dart';
 import 'package:restoran_app/ozellikler/yonetim/sunum/bilesenler/yonetim_analiz_kartlari.dart';
+import 'package:restoran_app/ortak/yonlendirme/rota_yapisi.dart';
 import 'package:restoran_app/ortak/veri/veri_kaynagi_tipi.dart';
 import 'package:restoran_app/uygulama_kabugu/uygulama_kabugu.dart';
 import 'test_destegi.dart';
@@ -41,6 +45,25 @@ void main() {
     expect(find.text('Musteri girisi'), findsNothing);
     expect(find.text('Musteri olarak devam et'), findsNothing);
     expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('QR menu ekranindan POS ekranina gecis gorunur', (
+    WidgetTester tester,
+  ) async {
+    await tester.pumpWidget(
+      const UygulamaKabugu(veriKaynagi: VeriKaynagiTipi.mock),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('POS ekrani'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  test('Windows acilis rotasi POS olur', () {
+    expect(
+      baslangicRotasiBelirle(webMu: false, platform: TargetPlatform.windows),
+      RotaYapisi.pos,
+    );
   });
 
   testWidgets('Personel girisi ekrani ayri olarak gosterilir', (
@@ -132,6 +155,51 @@ void main() {
     expect(find.text('Aktif is'), findsOneWidget);
     expect(find.text('Yeni'), findsOneWidget);
     expect(find.text('Salon'), findsWidgets);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('POS ekrani salon masa ve urun baglamini gosterir', (
+    WidgetTester tester,
+  ) async {
+    await tester.pumpWidget(
+      testUygulamasi(
+        child: MusteriMenuSayfasi(
+          viewModel: MusteriMenuViewModel.servisKaydindan(ServisKaydi.mock()),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Salon ve Masa Secimi'), findsOneWidget);
+    expect(find.text('Salon / Masa 1'), findsOneWidget);
+    expect(find.text('Salon varligi: Salon'), findsOneWidget);
+    expect(find.text('Masa varligi: Masa 1 · 4 kisilik'), findsOneWidget);
+    expect(find.textContaining('Urun varliklari:'), findsOneWidget);
+    expect(find.textContaining('Tum urunler kategorisinde'), findsOneWidget);
+    expect(find.text('Salon'), findsWidgets);
+    expect(find.text('Masa 1'), findsWidgets);
+    expect(find.text('5 urun'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('POS ekrani 1280x720 boyutunda kompakt yerlesime duser', (
+    WidgetTester tester,
+  ) async {
+    addTearDown(() async {
+      await tester.binding.setSurfaceSize(null);
+    });
+
+    await tester.binding.setSurfaceSize(const Size(1280, 720));
+    await tester.pumpWidget(
+      testUygulamasi(
+        child: MusteriMenuSayfasi(
+          viewModel: MusteriMenuViewModel.servisKaydindan(ServisKaydi.mock()),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Salon ve Masa Secimi'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 

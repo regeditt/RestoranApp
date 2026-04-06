@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:restoran_app/ortak/responsive/ekran_boyutu.dart';
 import 'package:restoran_app/ortak/yonlendirme/rota_yapisi.dart';
 import 'package:restoran_app/ozellikler/menu/alan/varliklar/kategori_varligi.dart';
+import 'package:restoran_app/ozellikler/menu/alan/varliklar/pos_masa_urun_baglami_varligi.dart';
 import 'package:restoran_app/ozellikler/menu/alan/varliklar/qr_menu_baglami_varligi.dart';
 import 'package:restoran_app/ozellikler/menu/alan/varliklar/urun_secenegi_varligi.dart';
 import 'package:restoran_app/ozellikler/menu/alan/varliklar/urun_varligi.dart';
@@ -185,7 +186,7 @@ class _MusteriMenuSayfasiState extends State<MusteriMenuSayfasi> {
     if (widget.qrModu) {
       return widget.qrBaglami;
     }
-    return widget.viewModel.posBaglami;
+    return widget.viewModel.posMasaUrunBaglami?.qrBaglami;
   }
 
   void _bilgiBildir(String mesaj) {
@@ -261,10 +262,16 @@ class _MusteriMenuSayfasiState extends State<MusteriMenuSayfasi> {
     return AnimatedBuilder(
       animation: widget.viewModel,
       builder: (BuildContext context, _) {
+        final Size ekranBoyutu = MediaQuery.sizeOf(context);
         final bool masaustu = EkranBoyutu.masaustu(context);
-        final bool tablet = EkranBoyutu.tablet(context);
+        final bool genisMasaustu =
+            masaustu && ekranBoyutu.width >= 1360 && ekranBoyutu.height >= 820;
+        final bool tablet = !genisMasaustu && EkranBoyutu.tablet(context);
         final MusteriMenuViewModel viewModel = widget.viewModel;
         final QrMenuBaglamiVarligi? aktifBaglam = _aktifSiparisBaglami();
+        final PosMasaUrunBaglamiVarligi? posBaglami = widget.qrModu
+            ? null
+            : viewModel.posMasaUrunBaglami;
 
         return Scaffold(
           backgroundColor: const Color(0xFF12081F),
@@ -287,7 +294,7 @@ class _MusteriMenuSayfasiState extends State<MusteriMenuSayfasi> {
                       child: ConstrainedBox(
                         constraints: const BoxConstraints(maxWidth: 1540),
                         child: Padding(
-                          padding: EdgeInsets.all(masaustu ? 18 : 12),
+                          padding: EdgeInsets.all(genisMasaustu ? 18 : 12),
                           child: Container(
                             decoration: BoxDecoration(
                               color: const Color(
@@ -305,7 +312,7 @@ class _MusteriMenuSayfasiState extends State<MusteriMenuSayfasi> {
                                 ),
                               ],
                             ),
-                            child: masaustu
+                            child: genisMasaustu
                                 ? Column(
                                     children: [
                                       MusteriMenuUstCubugu(
@@ -332,11 +339,23 @@ class _MusteriMenuSayfasiState extends State<MusteriMenuSayfasi> {
                                                 viewModel.salonBolumleri,
                                             seciliSalonBolumuId:
                                                 viewModel.seciliSalonBolumuId,
-                                            seciliMasaId: viewModel.seciliMasaId,
+                                            seciliMasaId:
+                                                viewModel.seciliMasaId,
                                             salonBolumuSec: _salonBolumuSec,
                                             masaSec: _masaSec,
                                           ),
                                         ),
+                                        if (posBaglami != null) ...[
+                                          const SizedBox(height: 12),
+                                          Padding(
+                                            padding: const EdgeInsets.symmetric(
+                                              horizontal: 14,
+                                            ),
+                                            child: _PosBaglamDurumKarti(
+                                              baglam: posBaglami,
+                                            ),
+                                          ),
+                                        ],
                                       ],
                                       Expanded(
                                         child: Padding(
@@ -436,6 +455,12 @@ class _MusteriMenuSayfasiState extends State<MusteriMenuSayfasi> {
                                           salonBolumuSec: _salonBolumuSec,
                                           masaSec: _masaSec,
                                         ),
+                                        if (posBaglami != null) ...[
+                                          const SizedBox(height: 12),
+                                          _PosBaglamDurumKarti(
+                                            baglam: posBaglami,
+                                          ),
+                                        ],
                                       ],
                                       const SizedBox(height: 12),
                                       _HizliIslemSeridi(
@@ -571,7 +596,10 @@ class _PosSalonMasaPaneli extends StatelessWidget {
           if (masalar.isEmpty)
             const Text(
               'Bu bolumde masa yok.',
-              style: TextStyle(color: Colors.white70, fontWeight: FontWeight.w600),
+              style: TextStyle(
+                color: Colors.white70,
+                fontWeight: FontWeight.w600,
+              ),
             )
           else
             Wrap(
@@ -598,6 +626,166 @@ class _PosSalonMasaPaneli extends StatelessWidget {
       }
     }
     return salonBolumleri.first;
+  }
+}
+
+class _PosBaglamDurumKarti extends StatelessWidget {
+  const _PosBaglamDurumKarti({required this.baglam});
+
+  final PosMasaUrunBaglamiVarligi baglam;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: const Color(0xFFE94274).withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.10)),
+      ),
+      child: Wrap(
+        spacing: 16,
+        runSpacing: 12,
+        crossAxisAlignment: WrapCrossAlignment.center,
+        children: [
+          Container(
+            width: 46,
+            height: 46,
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: const Icon(Icons.point_of_sale_rounded, color: Colors.white),
+          ),
+          ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 520),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  baglam.baslik,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  baglam.ozetMetni,
+                  style: TextStyle(
+                    color: Colors.white.withValues(alpha: 0.78),
+                    fontWeight: FontWeight.w600,
+                    height: 1.35,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                _PosVarlikSatiri(
+                  etiket: 'Salon varligi',
+                  deger: baglam.salonBolumu.ad,
+                ),
+                const SizedBox(height: 6),
+                _PosVarlikSatiri(
+                  etiket: 'Masa varligi',
+                  deger:
+                      'Masa ${baglam.masa.ad} · ${baglam.masa.kapasite} kisilik',
+                ),
+                const SizedBox(height: 6),
+                _PosVarlikSatiri(
+                  etiket: 'Urun varliklari',
+                  deger: _urunOzetiniHazirla(baglam.urunler),
+                ),
+              ],
+            ),
+          ),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              _PosDurumRozeti(
+                ikon: Icons.room_service_outlined,
+                etiket: baglam.salonBolumu.ad,
+              ),
+              _PosDurumRozeti(
+                ikon: Icons.table_restaurant_rounded,
+                etiket: 'Masa ${baglam.masa.ad}',
+              ),
+              _PosDurumRozeti(
+                ikon: Icons.restaurant_menu_rounded,
+                etiket: '${baglam.toplamUrunSayisi} urun',
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _urunOzetiniHazirla(List<UrunVarligi> urunler) {
+    if (urunler.isEmpty) {
+      return 'Urun bulunamadi';
+    }
+    final List<String> etiketler = urunler
+        .take(3)
+        .map((UrunVarligi urun) => urun.ad)
+        .toList();
+    if (urunler.length > 3) {
+      etiketler.add('+${urunler.length - 3} urun');
+    }
+    return etiketler.join(', ');
+  }
+}
+
+class _PosDurumRozeti extends StatelessWidget {
+  const _PosDurumRozeti({required this.ikon, required this.etiket});
+
+  final IconData ikon;
+  final String etiket;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(ikon, size: 14, color: const Color(0xFFFFC8D9)),
+          const SizedBox(width: 6),
+          Text(
+            etiket,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _PosVarlikSatiri extends StatelessWidget {
+  const _PosVarlikSatiri({required this.etiket, required this.deger});
+
+  final String etiket;
+  final String deger;
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      '$etiket: $deger',
+      style: TextStyle(
+        color: Colors.white.withValues(alpha: 0.9),
+        fontWeight: FontWeight.w700,
+        height: 1.35,
+      ),
+    );
   }
 }
 
@@ -628,7 +816,10 @@ class _SalonButonu extends StatelessWidget {
         ),
         child: Text(
           etiket,
-          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700),
+          style: const TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.w700,
+          ),
         ),
       ),
     );

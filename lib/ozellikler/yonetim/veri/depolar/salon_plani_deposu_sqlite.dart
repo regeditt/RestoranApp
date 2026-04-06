@@ -9,6 +9,7 @@ class SalonPlaniDeposuSqlite implements SalonPlaniDeposu {
 
   final UygulamaVeritabani _veritabani;
   final SalonPlaniDeposuMock _seedDeposu = SalonPlaniDeposuMock();
+  static const String _seedAnahtari = 'salon_plani_seeded';
   bool _seedKontrolEdildi = false;
 
   @override
@@ -128,12 +129,30 @@ class SalonPlaniDeposuSqlite implements SalonPlaniDeposu {
     if (_seedKontrolEdildi) {
       return;
     }
-    final mevcutBolumler = await _veritabani
+    final List<SalonBolumKayitlariData> mevcutBolumler = await _veritabani
         .select(_veritabani.salonBolumKayitlari)
         .get();
-    if (mevcutBolumler.isNotEmpty) {
+    final List<MasaKayitlariData> mevcutMasalar = await _veritabani
+        .select(_veritabani.masaKayitlari)
+        .get();
+    final String? seedDurumu = await _veritabani.ayarOku(_seedAnahtari);
+
+    if (seedDurumu == 'true') {
       _seedKontrolEdildi = true;
       return;
+    }
+
+    if (mevcutBolumler.isNotEmpty && mevcutMasalar.isNotEmpty) {
+      await _veritabani.ayarYaz(_seedAnahtari, 'true');
+      _seedKontrolEdildi = true;
+      return;
+    }
+
+    if (mevcutBolumler.isNotEmpty || mevcutMasalar.isNotEmpty) {
+      await _veritabani.transaction(() async {
+        await _veritabani.delete(_veritabani.masaKayitlari).go();
+        await _veritabani.delete(_veritabani.salonBolumKayitlari).go();
+      });
     }
 
     final List<SalonBolumuVarligi> bolumler = await _seedDeposu
@@ -169,6 +188,7 @@ class SalonPlaniDeposuSqlite implements SalonPlaniDeposu {
         }
       }
     });
+    await _veritabani.ayarYaz(_seedAnahtari, 'true');
     _seedKontrolEdildi = true;
   }
 

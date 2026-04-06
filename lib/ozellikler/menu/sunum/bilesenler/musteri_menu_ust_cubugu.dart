@@ -43,10 +43,8 @@ class MusteriMenuUstCubugu extends StatelessWidget {
                   crossAxisAlignment: WrapCrossAlignment.center,
                   children: [_uyariButonu(kompakt: true)],
                 ),
-                if (!qrModu) ...[
-                  const SizedBox(height: 10),
-                  _modulGecisleri(context, mobil: true),
-                ],
+                const SizedBox(height: 10),
+                _modulGecisleri(context, mobil: true),
                 if (qrModu && qrBaglami?.rozetler.isNotEmpty == true) ...[
                   const SizedBox(height: 10),
                   QrRozetleri(rozetler: qrBaglami!.rozetler),
@@ -66,10 +64,8 @@ class MusteriMenuUstCubugu extends StatelessWidget {
                 ],
                 const SizedBox(width: 10),
                 _personelGirisiButonu(context),
-                if (!qrModu) ...[
-                  const SizedBox(width: 10),
-                  _modulGecisleri(context),
-                ],
+                const SizedBox(width: 10),
+                _modulGecisleri(context),
                 const SizedBox(width: 12),
                 _aramaKutusu(false),
               ],
@@ -203,6 +199,47 @@ class MusteriMenuUstCubugu extends StatelessWidget {
   }
 
   Widget _modulGecisleri(BuildContext context, {bool mobil = false}) {
+    if (qrModu) {
+      return Wrap(
+        spacing: 8,
+        runSpacing: 8,
+        children: [
+          FilledButton.tonalIcon(
+            onPressed: () {
+              Navigator.of(context).pushReplacementNamed(RotaYapisi.pos);
+            },
+            style: FilledButton.styleFrom(
+              foregroundColor: Colors.white,
+              backgroundColor: Colors.white.withValues(alpha: 0.14),
+              padding: EdgeInsets.symmetric(
+                horizontal: mobil ? 12 : 14,
+                vertical: 12,
+              ),
+            ),
+            icon: const Icon(Icons.point_of_sale_rounded, size: 18),
+            label: const Text('POS ekrani'),
+          ),
+          OutlinedButton.icon(
+            onPressed: () {
+              Navigator.of(
+                context,
+              ).pushReplacementNamed(RotaYapisi.yonetimPaneli);
+            },
+            style: OutlinedButton.styleFrom(
+              foregroundColor: Colors.white,
+              side: BorderSide(color: Colors.white.withValues(alpha: 0.2)),
+              padding: EdgeInsets.symmetric(
+                horizontal: mobil ? 12 : 14,
+                vertical: 12,
+              ),
+            ),
+            icon: const Icon(Icons.dashboard_customize_rounded, size: 18),
+            label: const Text('Yonetim paneli'),
+          ),
+        ],
+      );
+    }
+
     return Wrap(
       spacing: 8,
       runSpacing: 8,
