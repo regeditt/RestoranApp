@@ -219,6 +219,7 @@ class ReceteKalemKayitlari extends Table {
 class UygulamaVeritabani extends _$UygulamaVeritabani
     implements VeriKaynagiBaslatma {
   UygulamaVeritabani() : super(_baglanti());
+  UygulamaVeritabani.test(super.baglanti);
   static final RegExp _sayisalKimlikDeseni = RegExp(r'^\d+$');
 
   @override

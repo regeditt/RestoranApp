@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:restoran_app/bagimlilik_enjeksiyonu/servis_kaydi.dart';
@@ -33,7 +32,7 @@ import 'package:restoran_app/uygulama_kabugu/uygulama_kabugu.dart';
 import 'test_destegi.dart';
 
 void main() {
-  testWidgets('RestoranApp acilista qr menu ekranini gosterir', (
+  testWidgets('RestoranApp acilista ana sayfayi gosterir', (
     WidgetTester tester,
   ) async {
     await tester.pumpWidget(
@@ -41,28 +40,34 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('Personel girisi'), findsWidgets);
-    expect(find.text('Musteri girisi'), findsNothing);
-    expect(find.text('Musteri olarak devam et'), findsNothing);
+    expect(find.text('GUNCEL KURLAR'), findsOneWidget);
+    expect(find.text('Urunler'), findsOneWidget);
+    expect(find.text('Ayarlar'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('QR menu ekranindan POS ekranina gecis gorunur', (
+  testWidgets('Ana sayfada POS kutucuklari gorunur', (
     WidgetTester tester,
   ) async {
+    addTearDown(() async {
+      await tester.binding.setSurfaceSize(null);
+    });
+
+    await tester.binding.setSurfaceSize(const Size(1400, 900));
     await tester.pumpWidget(
       const UygulamaKabugu(veriKaynagi: VeriKaynagiTipi.mock),
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('POS ekrani'), findsOneWidget);
+    expect(find.text('Urunler'), findsOneWidget);
+    expect(find.text('Hizli Satis'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 
-  test('Windows acilis rotasi POS olur', () {
+  test('Windows acilis rotasi ana sayfa olur', () {
     expect(
       baslangicRotasiBelirle(webMu: false, platform: TargetPlatform.windows),
-      RotaYapisi.pos,
+      RotaYapisi.anaSayfa,
     );
   });
 
@@ -84,7 +89,22 @@ void main() {
     expect(find.text('QR menuye don'), findsOneWidget);
   });
 
-  testWidgets('Acilistan personel girisine gidilebilir', (
+  testWidgets('Acilista ayarlar aksiyonu gorunur', (WidgetTester tester) async {
+    addTearDown(() async {
+      await tester.binding.setSurfaceSize(null);
+    });
+
+    await tester.binding.setSurfaceSize(const Size(1400, 900));
+    await tester.pumpWidget(
+      const UygulamaKabugu(veriKaynagi: VeriKaynagiTipi.mock),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Ayarlar'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('Acilis ana sayfada temel kutucuklari gosterir', (
     WidgetTester tester,
   ) async {
     await tester.pumpWidget(
@@ -92,29 +112,12 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('Personel girisi').first);
-    await tester.pumpAndSettle();
-
-    expect(find.text('Personel girisi'), findsWidgets);
-    expect(find.text('Garson girisi'), findsWidgets);
-    expect(find.text('Yonetici girisi'), findsWidgets);
-    expect(find.text('QR menuye don'), findsOneWidget);
+    expect(find.text('Musteri Hizmetleri'), findsOneWidget);
+    expect(find.text('Siparisler'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('Acilis qr menu ekraninda personel girisi tek kez gorunur', (
-    WidgetTester tester,
-  ) async {
-    await tester.pumpWidget(
-      const UygulamaKabugu(veriKaynagi: VeriKaynagiTipi.mock),
-    );
-    await tester.pumpAndSettle();
-
-    expect(find.text('Personel girisi'), findsOneWidget);
-    expect(tester.takeException(), isNull);
-  });
-
-  testWidgets('RestoranApp qr menu ekrani dar genislikte de gosterir', (
+  testWidgets('RestoranApp ana sayfasi dar genislikte de gosterir', (
     WidgetTester tester,
   ) async {
     addTearDown(() async {
@@ -127,7 +130,7 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('Personel girisi'), findsWidgets);
+    expect(find.text('GUNCEL KURLAR'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 

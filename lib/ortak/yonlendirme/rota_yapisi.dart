@@ -35,7 +35,7 @@ class RotaYapisi {
     switch (ayarlar.name) {
       case anaSayfa:
         return MaterialPageRoute<void>(
-          builder: (_) => const QrMenuSayfasi(),
+          builder: (_) => const AnaSayfa(),
           settings: ayarlar,
         );
       case personelGiris:

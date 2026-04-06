@@ -4,6 +4,10 @@ import 'package:restoran_app/ozellikler/kimlik/uygulama/use_case/aktif_kullanici
 import 'package:restoran_app/ozellikler/kimlik/uygulama/use_case/cikis_yap_use_case.dart';
 import 'package:restoran_app/ozellikler/kimlik/uygulama/use_case/giris_yap_use_case.dart';
 import 'package:restoran_app/ozellikler/kimlik/uygulama/use_case/misafir_olustur_use_case.dart';
+import 'package:restoran_app/ozellikler/lisans/alan/depolar/lisans_deposu.dart';
+import 'package:restoran_app/ozellikler/lisans/uygulama/servisler/lisans_anahtari_dogrulayici.dart';
+import 'package:restoran_app/ozellikler/lisans/uygulama/use_case/lisans_aktif_et_use_case.dart';
+import 'package:restoran_app/ozellikler/lisans/uygulama/use_case/lisans_durumu_getir_use_case.dart';
 import 'package:restoran_app/ozellikler/menu/alan/depolar/menu_deposu.dart';
 import 'package:restoran_app/ozellikler/menu/uygulama/use_case/kategori_ekle_use_case.dart';
 import 'package:restoran_app/ozellikler/menu/uygulama/use_case/kategori_guncelle_use_case.dart';
@@ -55,6 +59,7 @@ import 'package:restoran_app/ortak/veri/veri_kaynagi_tipi.dart';
 
 class ServisKaydi {
   ServisKaydi._(ServisBagimlilikleri bagimlilikler) {
+    _lisansDeposu = bagimlilikler.lisansDeposu;
     _menuDeposu = bagimlilikler.menuDeposu;
     _kimlikDeposu = bagimlilikler.kimlikDeposu;
     _sepetDeposu = bagimlilikler.sepetDeposu;
@@ -64,6 +69,16 @@ class ServisKaydi {
     _salonPlaniDeposu = bagimlilikler.salonPlaniDeposu;
     _stokDeposu = bagimlilikler.stokDeposu;
 
+    const LisansAnahtariDogrulayici lisansDogrulayici =
+        LisansAnahtariDogrulayici();
+    lisansDurumuGetirUseCase = LisansDurumuGetirUseCase(
+      _lisansDeposu,
+      lisansDogrulayici,
+    );
+    lisansAktifEtUseCase = LisansAktifEtUseCase(
+      _lisansDeposu,
+      lisansDogrulayici,
+    );
     aktifKullaniciGetirUseCase = AktifKullaniciGetirUseCase(_kimlikDeposu);
     girisYapUseCase = GirisYapUseCase(_kimlikDeposu);
     cikisYapUseCase = CikisYapUseCase(_kimlikDeposu);
@@ -120,8 +135,7 @@ class ServisKaydi {
     sipariseGoreStokDusUseCase = SipariseGoreStokDusUseCase(_stokDeposu);
   }
 
-  static final ServisKaydi ortak =
-      ServisKaydi._(ServisBagimlilikleri.gercek());
+  static final ServisKaydi ortak = ServisKaydi._(ServisBagimlilikleri.gercek());
 
   factory ServisKaydi.mock() {
     return ServisKaydi._(ServisBagimlilikleri.mock());
@@ -143,6 +157,7 @@ class ServisKaydi {
     return ServisKaydi._(ServisBagimlilikleri.olustur(tip));
   }
 
+  late final LisansDeposu _lisansDeposu;
   late final KimlikDeposu _kimlikDeposu;
   late final MenuDeposu _menuDeposu;
   late final SepetDeposu _sepetDeposu;
@@ -152,6 +167,8 @@ class ServisKaydi {
   late final SalonPlaniDeposu _salonPlaniDeposu;
   late final StokDeposu _stokDeposu;
 
+  late final LisansDurumuGetirUseCase lisansDurumuGetirUseCase;
+  late final LisansAktifEtUseCase lisansAktifEtUseCase;
   late final AktifKullaniciGetirUseCase aktifKullaniciGetirUseCase;
   late final GirisYapUseCase girisYapUseCase;
   late final CikisYapUseCase cikisYapUseCase;

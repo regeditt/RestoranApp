@@ -2,6 +2,11 @@ import 'package:restoran_app/ozellikler/kimlik/alan/depolar/kimlik_deposu.dart';
 import 'package:restoran_app/ozellikler/kimlik/veri/depolar/kimlik_deposu_gercek.dart';
 import 'package:restoran_app/ozellikler/kimlik/veri/depolar/kimlik_deposu_mock.dart';
 import 'package:restoran_app/ozellikler/kimlik/veri/depolar/kimlik_deposu_sqlite.dart';
+import 'package:restoran_app/ozellikler/lisans/alan/depolar/lisans_deposu.dart';
+import 'package:restoran_app/ozellikler/lisans/uygulama/servisler/lisans_anahtari_dogrulayici.dart';
+import 'package:restoran_app/ozellikler/lisans/veri/depolar/lisans_deposu_gercek.dart';
+import 'package:restoran_app/ozellikler/lisans/veri/depolar/lisans_deposu_mock.dart';
+import 'package:restoran_app/ozellikler/lisans/veri/depolar/lisans_deposu_sqlite.dart';
 import 'package:restoran_app/ozellikler/menu/alan/depolar/menu_deposu.dart';
 import 'package:restoran_app/ozellikler/menu/veri/depolar/menu_deposu_gercek.dart';
 import 'package:restoran_app/ozellikler/menu/veri/depolar/menu_deposu_mock.dart';
@@ -35,6 +40,7 @@ import 'package:restoran_app/ortak/veri/veritabani.dart';
 
 class ServisBagimlilikleri {
   const ServisBagimlilikleri({
+    required this.lisansDeposu,
     required this.kimlikDeposu,
     required this.menuDeposu,
     required this.sepetDeposu,
@@ -45,6 +51,7 @@ class ServisBagimlilikleri {
     required this.stokDeposu,
   });
 
+  final LisansDeposu lisansDeposu;
   final KimlikDeposu kimlikDeposu;
   final MenuDeposu menuDeposu;
   final SepetDeposu sepetDeposu;
@@ -55,10 +62,17 @@ class ServisBagimlilikleri {
   final StokDeposu stokDeposu;
 
   static final UygulamaVeritabani _sqliteVeritabani = UygulamaVeritabani();
+  static final LisansAnahtariDogrulayici _lisansDogrulayici =
+      const LisansAnahtariDogrulayici();
 
   factory ServisBagimlilikleri.mock() {
     final MenuDeposu menuDeposu = MenuDeposuMock();
     return ServisBagimlilikleri(
+      lisansDeposu: LisansDeposuMock(
+        baslangicLisansAnahtari: _lisansDogrulayici.lisansAnahtariOlustur(
+          DateTime.now().add(const Duration(days: 365)),
+        ),
+      ),
       kimlikDeposu: KimlikDeposuMock(),
       menuDeposu: menuDeposu,
       sepetDeposu: SepetDeposuMock(menuDeposu),
@@ -73,6 +87,7 @@ class ServisBagimlilikleri {
   factory ServisBagimlilikleri.gercek() {
     final MenuDeposu menuDeposu = MenuDeposuGercek();
     return ServisBagimlilikleri(
+      lisansDeposu: LisansDeposuGercek(),
       kimlikDeposu: KimlikDeposuGercek(),
       menuDeposu: menuDeposu,
       sepetDeposu: SepetDeposuGercek(menuDeposu),
@@ -87,6 +102,7 @@ class ServisBagimlilikleri {
   factory ServisBagimlilikleri.sqlite() {
     final MenuDeposu menuDeposu = MenuDeposuSqlite(_sqliteVeritabani);
     return ServisBagimlilikleri(
+      lisansDeposu: LisansDeposuSqlite(_sqliteVeritabani),
       kimlikDeposu: KimlikDeposuSqlite(_sqliteVeritabani),
       menuDeposu: menuDeposu,
       sepetDeposu: SepetDeposuSqlite(_sqliteVeritabani, menuDeposu),
