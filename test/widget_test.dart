@@ -206,6 +206,29 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
+  testWidgets('POS ekrani 1920x1080 boyutunda gorunur kalir', (
+    WidgetTester tester,
+  ) async {
+    addTearDown(() async {
+      await tester.binding.setSurfaceSize(null);
+    });
+
+    await tester.binding.setSurfaceSize(const Size(1920, 1080));
+    await tester.pumpWidget(
+      testUygulamasi(
+        child: MusteriMenuSayfasi(
+          viewModel: MusteriMenuViewModel.servisKaydindan(ServisKaydi.mock()),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('POS OPERASYON'), findsOneWidget);
+    expect(find.text('Tum urunler Secimleri'), findsOneWidget);
+    expect(find.text('Yeni'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('Siparis ozeti paket servis secimini gosterir', (
     WidgetTester tester,
   ) async {

@@ -264,260 +264,685 @@ class _MusteriMenuSayfasiState extends State<MusteriMenuSayfasi> {
       builder: (BuildContext context, _) {
         final Size ekranBoyutu = MediaQuery.sizeOf(context);
         final bool masaustu = EkranBoyutu.masaustu(context);
-        final bool genisMasaustu =
-            masaustu && ekranBoyutu.width >= 1360 && ekranBoyutu.height >= 820;
-        final bool tablet = !genisMasaustu && EkranBoyutu.tablet(context);
+        final bool genisMasaustu = masaustu;
+        final bool ferahMasaustu =
+            masaustu && ekranBoyutu.width >= 1500 && ekranBoyutu.height >= 860;
+        final bool tablet = !masaustu && EkranBoyutu.tablet(context);
         final MusteriMenuViewModel viewModel = widget.viewModel;
         final QrMenuBaglamiVarligi? aktifBaglam = _aktifSiparisBaglami();
         final PosMasaUrunBaglamiVarligi? posBaglami = widget.qrModu
             ? null
             : viewModel.posMasaUrunBaglami;
+        final Widget adisyonPaneli = _AdisyonPaneli(
+          sepet: viewModel.sepet,
+          islemedeMi: viewModel.yukleniyor,
+          seciliBolumAdi:
+              aktifBaglam?.bolumAdi ?? viewModel.seciliSalonBolumu?.ad,
+          seciliMasaAdi: aktifBaglam?.masaNo ?? viewModel.seciliMasa?.ad,
+          siparisiHazirla: _siparisiHazirla,
+          kalemAdediniGuncelle: _kalemAdediniGuncelle,
+          kalemiSil: _kalemiSil,
+        );
+        final Widget salonMasaPaneli = widget.qrModu
+            ? const SizedBox.shrink()
+            : _PosSalonMasaPaneli(
+                salonBolumleri: viewModel.salonBolumleri,
+                seciliSalonBolumuId: viewModel.seciliSalonBolumuId,
+                seciliMasaId: viewModel.seciliMasaId,
+                salonBolumuSec: _salonBolumuSec,
+                masaSec: _masaSec,
+              );
+        final Widget? baglamPaneli = widget.qrModu
+            ? (widget.qrBaglami != null
+                  ? QrBaglamDurumKarti(qrBaglami: widget.qrBaglami!)
+                  : null)
+            : (posBaglami != null
+                  ? _PosBaglamDurumKarti(baglam: posBaglami)
+                  : null);
 
         return Scaffold(
           backgroundColor: const Color(0xFF12081F),
-          body: DecoratedBox(
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  Color(0xFF3E1A64),
-                  Color(0xFF26113E),
-                  Color(0xFF17091F),
-                ],
+          body: Stack(
+            children: [
+              const Positioned.fill(
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        Color(0xFF371453),
+                        Color(0xFF211231),
+                        Color(0xFF12081F),
+                      ],
+                    ),
+                  ),
+                ),
               ),
-            ),
-            child: SafeArea(
-              child: viewModel.yukleniyor && viewModel.kategoriler.isEmpty
-                  ? const Center(child: CircularProgressIndicator())
-                  : Center(
-                      child: ConstrainedBox(
-                        constraints: const BoxConstraints(maxWidth: 1540),
-                        child: Padding(
-                          padding: EdgeInsets.all(genisMasaustu ? 18 : 12),
-                          child: Container(
-                            decoration: BoxDecoration(
-                              color: const Color(
-                                0xFF2B1243,
-                              ).withValues(alpha: 0.7),
-                              borderRadius: BorderRadius.circular(28),
-                              border: Border.all(
-                                color: Colors.white.withValues(alpha: 0.08),
-                              ),
-                              boxShadow: const [
-                                BoxShadow(
-                                  color: Color(0x40000000),
-                                  blurRadius: 44,
-                                  offset: Offset(0, 24),
+              Positioned(
+                top: -110,
+                left: -80,
+                child: _PosParlama(
+                  cap: 320,
+                  renk: const Color(0xFFE85C8C).withValues(alpha: 0.16),
+                ),
+              ),
+              Positioned(
+                top: 90,
+                right: -30,
+                child: _PosParlama(
+                  cap: 260,
+                  renk: const Color(0xFF8D53E9).withValues(alpha: 0.14),
+                ),
+              ),
+              Positioned(
+                bottom: -120,
+                left: MediaQuery.sizeOf(context).width * 0.18,
+                child: _PosParlama(
+                  cap: 300,
+                  renk: const Color(0xFFFF8A63).withValues(alpha: 0.10),
+                ),
+              ),
+              SafeArea(
+                child: viewModel.yukleniyor && viewModel.kategoriler.isEmpty
+                    ? const Center(child: CircularProgressIndicator())
+                    : Center(
+                        child: ConstrainedBox(
+                          constraints: const BoxConstraints(maxWidth: 1540),
+                          child: Padding(
+                            padding: EdgeInsets.all(genisMasaustu ? 18 : 12),
+                            child: Container(
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                  colors: [
+                                    const Color(
+                                      0xFF231332,
+                                    ).withValues(alpha: 0.96),
+                                    const Color(
+                                      0xFF1B102A,
+                                    ).withValues(alpha: 0.96),
+                                  ],
                                 ),
-                              ],
-                            ),
-                            child: genisMasaustu
-                                ? Column(
-                                    children: [
-                                      MusteriMenuUstCubugu(
-                                        seciliKategoriAdi:
-                                            viewModel.seciliKategoriAdi,
+                                borderRadius: BorderRadius.circular(34),
+                                border: Border.all(
+                                  color: Colors.white.withValues(alpha: 0.08),
+                                ),
+                                boxShadow: [
+                                  const BoxShadow(
+                                    color: Color(0x55000000),
+                                    blurRadius: 44,
+                                    offset: Offset(0, 24),
+                                  ),
+                                ],
+                              ),
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(34),
+                                child: genisMasaustu
+                                    ? _PosMasaustuYerlesim(
                                         qrModu: widget.qrModu,
-                                        qrBaglami: aktifBaglam,
-                                      ),
-                                      if (widget.qrModu &&
-                                          widget.qrBaglami != null) ...[
-                                        const SizedBox(height: 12),
-                                        QrBaglamDurumKarti(
-                                          qrBaglami: widget.qrBaglami!,
-                                        ),
-                                      ],
-                                      if (!widget.qrModu) ...[
-                                        const SizedBox(height: 12),
-                                        Padding(
-                                          padding: const EdgeInsets.symmetric(
-                                            horizontal: 14,
-                                          ),
-                                          child: _PosSalonMasaPaneli(
-                                            salonBolumleri:
-                                                viewModel.salonBolumleri,
-                                            seciliSalonBolumuId:
-                                                viewModel.seciliSalonBolumuId,
-                                            seciliMasaId:
-                                                viewModel.seciliMasaId,
-                                            salonBolumuSec: _salonBolumuSec,
-                                            masaSec: _masaSec,
-                                          ),
-                                        ),
-                                        if (posBaglami != null) ...[
-                                          const SizedBox(height: 12),
-                                          Padding(
-                                            padding: const EdgeInsets.symmetric(
-                                              horizontal: 14,
-                                            ),
-                                            child: _PosBaglamDurumKarti(
-                                              baglam: posBaglami,
-                                            ),
-                                          ),
-                                        ],
-                                      ],
-                                      Expanded(
-                                        child: Padding(
-                                          padding: const EdgeInsets.all(14),
-                                          child: Row(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.stretch,
-                                            children: [
-                                              SizedBox(
-                                                width: 94,
-                                                child: _HizliIslemSeridi(
-                                                  siparisAdedi: viewModel
-                                                      .sepet
-                                                      .toplamUrunAdedi,
-                                                ),
-                                              ),
-                                              const SizedBox(width: 14),
-                                              SizedBox(
-                                                width: 330,
-                                                child: _AdisyonPaneli(
-                                                  sepet: viewModel.sepet,
-                                                  islemedeMi:
-                                                      viewModel.yukleniyor,
-                                                  seciliBolumAdi:
-                                                      aktifBaglam?.bolumAdi ??
-                                                      viewModel
-                                                          .seciliSalonBolumu
-                                                          ?.ad,
-                                                  seciliMasaAdi:
-                                                      aktifBaglam?.masaNo ??
-                                                      viewModel.seciliMasa?.ad,
-                                                  siparisiHazirla:
-                                                      _siparisiHazirla,
-                                                  kalemAdediniGuncelle:
-                                                      _kalemAdediniGuncelle,
-                                                  kalemiSil: _kalemiSil,
-                                                ),
-                                              ),
-                                              const SizedBox(width: 14),
-                                              Expanded(
-                                                child: _UrunMerkezi(
-                                                  urunler: viewModel.urunler,
-                                                  seciliKategoriAdi: viewModel
-                                                      .seciliKategoriAdi,
-                                                  masaustu: true,
-                                                  urunDetayiAc: _urunDetayiniAc,
-                                                  islemedeMi:
-                                                      viewModel.yukleniyor,
-                                                  toplamUrunAdedi: viewModel
-                                                      .sepet
-                                                      .toplamUrunAdedi,
-                                                ),
-                                              ),
-                                              const SizedBox(width: 14),
-                                              SizedBox(
-                                                width: 150,
-                                                child: _KategoriPaneli(
-                                                  kategoriler:
-                                                      viewModel.kategoriler,
-                                                  seciliKategoriId: viewModel
-                                                      .seciliKategoriId,
-                                                  kategoriSec: _kategoriSec,
-                                                  tumunuSec:
-                                                      _tumKategorileriGoster,
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  )
-                                : ListView(
-                                    padding: const EdgeInsets.all(12),
-                                    children: [
-                                      MusteriMenuUstCubugu(
+                                        ferahMod: ferahMasaustu,
                                         seciliKategoriAdi:
                                             viewModel.seciliKategoriAdi,
-                                        qrModu: widget.qrModu,
-                                        qrBaglami: aktifBaglam,
-                                      ),
-                                      if (widget.qrModu &&
-                                          widget.qrBaglami != null) ...[
-                                        const SizedBox(height: 12),
-                                        QrBaglamDurumKarti(
-                                          qrBaglami: widget.qrBaglami!,
-                                        ),
-                                      ],
-                                      if (!widget.qrModu) ...[
-                                        const SizedBox(height: 12),
-                                        _PosSalonMasaPaneli(
-                                          salonBolumleri:
-                                              viewModel.salonBolumleri,
-                                          seciliSalonBolumuId:
-                                              viewModel.seciliSalonBolumuId,
-                                          seciliMasaId: viewModel.seciliMasaId,
-                                          salonBolumuSec: _salonBolumuSec,
-                                          masaSec: _masaSec,
-                                        ),
-                                        if (posBaglami != null) ...[
-                                          const SizedBox(height: 12),
-                                          _PosBaglamDurumKarti(
-                                            baglam: posBaglami,
-                                          ),
-                                        ],
-                                      ],
-                                      const SizedBox(height: 12),
-                                      _HizliIslemSeridi(
-                                        siparisAdedi:
-                                            viewModel.sepet.toplamUrunAdedi,
-                                        yatay: true,
-                                      ),
-                                      const SizedBox(height: 12),
-                                      _KategoriPaneli(
-                                        kategoriler: viewModel.kategoriler,
-                                        seciliKategoriId:
-                                            viewModel.seciliKategoriId,
-                                        kategoriSec: _kategoriSec,
-                                        tumunuSec: _tumKategorileriGoster,
-                                        yatay: true,
-                                      ),
-                                      const SizedBox(height: 12),
-                                      _UrunMerkezi(
-                                        urunler: viewModel.urunler,
-                                        seciliKategoriAdi:
-                                            viewModel.seciliKategoriAdi,
-                                        masaustu: false,
-                                        urunDetayiAc: _urunDetayiniAc,
-                                        islemedeMi: viewModel.yukleniyor,
                                         toplamUrunAdedi:
                                             viewModel.sepet.toplamUrunAdedi,
-                                        tablet: tablet,
-                                        mobilYukseklik: tablet ? 760 : 620,
-                                      ),
-                                      const SizedBox(height: 12),
-                                      SizedBox(
-                                        height: 420,
-                                        child: _AdisyonPaneli(
-                                          sepet: viewModel.sepet,
+                                        salonMasaPaneli: salonMasaPaneli,
+                                        baglamPaneli: baglamPaneli,
+                                        hizliIslemSeridi: _HizliIslemSeridi(
+                                          siparisAdedi:
+                                              viewModel.sepet.toplamUrunAdedi,
+                                          yatay: true,
+                                          satiraSar: true,
+                                          mikroKart: !ferahMasaustu,
+                                        ),
+                                        adisyonPaneli: adisyonPaneli,
+                                        urunMerkezi: _UrunMerkezi(
+                                          urunler: viewModel.urunler,
+                                          seciliKategoriAdi:
+                                              viewModel.seciliKategoriAdi,
+                                          masaustu: true,
+                                          urunDetayiAc: _urunDetayiniAc,
                                           islemedeMi: viewModel.yukleniyor,
-                                          seciliBolumAdi:
-                                              aktifBaglam?.bolumAdi ??
-                                              viewModel.seciliSalonBolumu?.ad,
-                                          seciliMasaAdi:
-                                              aktifBaglam?.masaNo ??
-                                              viewModel.seciliMasa?.ad,
-                                          siparisiHazirla: _siparisiHazirla,
-                                          kalemAdediniGuncelle:
-                                              _kalemAdediniGuncelle,
-                                          kalemiSil: _kalemiSil,
+                                          toplamUrunAdedi:
+                                              viewModel.sepet.toplamUrunAdedi,
+                                        ),
+                                        kategoriPaneli: _KategoriPaneli(
+                                          kategoriler: viewModel.kategoriler,
+                                          seciliKategoriId:
+                                              viewModel.seciliKategoriId,
+                                          kategoriSec: _kategoriSec,
+                                          tumunuSec: _tumKategorileriGoster,
+                                        ),
+                                      )
+                                    : _PosMobilYerlesim(
+                                        qrModu: widget.qrModu,
+                                        seciliKategoriAdi:
+                                            viewModel.seciliKategoriAdi,
+                                        toplamUrunAdedi:
+                                            viewModel.sepet.toplamUrunAdedi,
+                                        baglamPaneli: baglamPaneli,
+                                        salonMasaPaneli: salonMasaPaneli,
+                                        hizliIslemSeridi: _HizliIslemSeridi(
+                                          siparisAdedi:
+                                              viewModel.sepet.toplamUrunAdedi,
+                                          yatay: true,
+                                        ),
+                                        kategoriPaneli: _KategoriPaneli(
+                                          kategoriler: viewModel.kategoriler,
+                                          seciliKategoriId:
+                                              viewModel.seciliKategoriId,
+                                          kategoriSec: _kategoriSec,
+                                          tumunuSec: _tumKategorileriGoster,
+                                          yatay: true,
+                                        ),
+                                        urunMerkezi: _UrunMerkezi(
+                                          urunler: viewModel.urunler,
+                                          seciliKategoriAdi:
+                                              viewModel.seciliKategoriAdi,
+                                          masaustu: false,
+                                          urunDetayiAc: _urunDetayiniAc,
+                                          islemedeMi: viewModel.yukleniyor,
+                                          toplamUrunAdedi:
+                                              viewModel.sepet.toplamUrunAdedi,
+                                          tablet: tablet,
+                                          mobilYukseklik: tablet ? 760 : 620,
+                                        ),
+                                        adisyonPaneli: SizedBox(
+                                          height: 420,
+                                          child: adisyonPaneli,
                                         ),
                                       ),
-                                    ],
-                                  ),
+                              ),
+                            ),
                           ),
                         ),
                       ),
-                    ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _PosParlama extends StatelessWidget {
+  const _PosParlama({required this.cap, required this.renk});
+
+  final double cap;
+  final Color renk;
+
+  @override
+  Widget build(BuildContext context) {
+    return IgnorePointer(
+      child: Container(
+        width: cap,
+        height: cap,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          gradient: RadialGradient(colors: [renk, renk.withValues(alpha: 0)]),
+        ),
+      ),
+    );
+  }
+}
+
+class _PosMasaustuYerlesim extends StatelessWidget {
+  const _PosMasaustuYerlesim({
+    required this.qrModu,
+    required this.ferahMod,
+    required this.seciliKategoriAdi,
+    required this.toplamUrunAdedi,
+    required this.salonMasaPaneli,
+    required this.baglamPaneli,
+    required this.hizliIslemSeridi,
+    required this.adisyonPaneli,
+    required this.urunMerkezi,
+    required this.kategoriPaneli,
+  });
+
+  final bool qrModu;
+  final bool ferahMod;
+  final String seciliKategoriAdi;
+  final int toplamUrunAdedi;
+  final Widget salonMasaPaneli;
+  final Widget? baglamPaneli;
+  final Widget hizliIslemSeridi;
+  final Widget adisyonPaneli;
+  final Widget urunMerkezi;
+  final Widget kategoriPaneli;
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, kisit) {
+        final double solGenislik = (kisit.maxWidth * (ferahMod ? 0.33 : 0.36))
+            .clamp(400.0, 540.0);
+        return Padding(
+          padding: EdgeInsets.all(ferahMod ? 16 : 12),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              SizedBox(
+                width: solGenislik,
+                child: _PosSolPanel(
+                  qrModu: qrModu,
+                  seciliKategoriAdi: seciliKategoriAdi,
+                  toplamUrunAdedi: toplamUrunAdedi,
+                  salonMasaPaneli: salonMasaPaneli,
+                  baglamPaneli: baglamPaneli,
+                  hizliIslemSeridi: hizliIslemSeridi,
+                  adisyonPaneli: adisyonPaneli,
+                ),
+              ),
+              SizedBox(width: ferahMod ? 16 : 12),
+              Expanded(
+                child: _PosSagPanel(
+                  seciliKategoriAdi: seciliKategoriAdi,
+                  toplamUrunAdedi: toplamUrunAdedi,
+                  urunMerkezi: urunMerkezi,
+                  kategoriPaneli: kategoriPaneli,
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _PosMobilYerlesim extends StatelessWidget {
+  const _PosMobilYerlesim({
+    required this.qrModu,
+    required this.seciliKategoriAdi,
+    required this.toplamUrunAdedi,
+    required this.baglamPaneli,
+    required this.salonMasaPaneli,
+    required this.hizliIslemSeridi,
+    required this.kategoriPaneli,
+    required this.urunMerkezi,
+    required this.adisyonPaneli,
+  });
+
+  final bool qrModu;
+  final String seciliKategoriAdi;
+  final int toplamUrunAdedi;
+  final Widget? baglamPaneli;
+  final Widget salonMasaPaneli;
+  final Widget hizliIslemSeridi;
+  final Widget kategoriPaneli;
+  final Widget urunMerkezi;
+  final Widget adisyonPaneli;
+
+  @override
+  Widget build(BuildContext context) {
+    return ListView(
+      padding: const EdgeInsets.all(12),
+      children: [
+        _PosMobilUstKart(
+          qrModu: qrModu,
+          seciliKategoriAdi: seciliKategoriAdi,
+          toplamUrunAdedi: toplamUrunAdedi,
+        ),
+        const SizedBox(height: 12),
+        if (!qrModu) ...[salonMasaPaneli, const SizedBox(height: 12)],
+        if (baglamPaneli != null) ...[
+          baglamPaneli!,
+          const SizedBox(height: 12),
+        ],
+        hizliIslemSeridi,
+        const SizedBox(height: 12),
+        kategoriPaneli,
+        const SizedBox(height: 12),
+        urunMerkezi,
+        const SizedBox(height: 12),
+        adisyonPaneli,
+      ],
+    );
+  }
+}
+
+class _PosSolPanel extends StatelessWidget {
+  const _PosSolPanel({
+    required this.qrModu,
+    required this.seciliKategoriAdi,
+    required this.toplamUrunAdedi,
+    required this.salonMasaPaneli,
+    required this.baglamPaneli,
+    required this.hizliIslemSeridi,
+    required this.adisyonPaneli,
+  });
+
+  final bool qrModu;
+  final String seciliKategoriAdi;
+  final int toplamUrunAdedi;
+  final Widget salonMasaPaneli;
+  final Widget? baglamPaneli;
+  final Widget hizliIslemSeridi;
+  final Widget adisyonPaneli;
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (BuildContext context, BoxConstraints kisitlar) {
+        final double adisyonYuksekligi = math.min(
+          qrModu ? 360 : 420,
+          math.max(qrModu ? 260 : 300, kisitlar.maxHeight * 0.34),
+        );
+
+        return DecoratedBox(
+          decoration: BoxDecoration(
+            color: Colors.white.withValues(alpha: 0.05),
+            borderRadius: BorderRadius.circular(28),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+          ),
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.fromLTRB(20, 20, 20, 18),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  qrModu ? 'QR MENU AKISI' : 'POS OPERASYON',
+                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  '$seciliKategoriAdi kategorisinde $toplamUrunAdedi urun aktif.',
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: Colors.white60,
+                    height: 1.35,
+                  ),
+                ),
+                const SizedBox(height: 18),
+                _PosSolBilgiRozetleri(
+                  qrModu: qrModu,
+                  toplamUrunAdedi: toplamUrunAdedi,
+                ),
+                const SizedBox(height: 18),
+                if (!qrModu) ...[salonMasaPaneli, const SizedBox(height: 14)],
+                if (baglamPaneli != null) ...[
+                  baglamPaneli!,
+                  const SizedBox(height: 14),
+                ],
+                hizliIslemSeridi,
+                const SizedBox(height: 14),
+                SizedBox(height: adisyonYuksekligi, child: adisyonPaneli),
+              ],
             ),
           ),
         );
       },
+    );
+  }
+}
+
+class _PosSagPanel extends StatelessWidget {
+  const _PosSagPanel({
+    required this.seciliKategoriAdi,
+    required this.toplamUrunAdedi,
+    required this.urunMerkezi,
+    required this.kategoriPaneli,
+  });
+
+  final String seciliKategoriAdi;
+  final int toplamUrunAdedi;
+  final Widget urunMerkezi;
+  final Widget kategoriPaneli;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        _PosUstKart(
+          seciliKategoriAdi: seciliKategoriAdi,
+          toplamUrunAdedi: toplamUrunAdedi,
+        ),
+        const SizedBox(height: 14),
+        Expanded(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Expanded(child: urunMerkezi),
+              const SizedBox(width: 14),
+              SizedBox(width: 176, child: kategoriPaneli),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _PosUstKart extends StatelessWidget {
+  const _PosUstKart({
+    required this.seciliKategoriAdi,
+    required this.toplamUrunAdedi,
+  });
+
+  final String seciliKategoriAdi;
+  final int toplamUrunAdedi;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.06),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 44,
+            height: 44,
+            decoration: BoxDecoration(
+              color: const Color(0xFFE85C8C).withValues(alpha: 0.16),
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: const Icon(
+              Icons.restaurant_menu_rounded,
+              color: Colors.white,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Mutfak ve servis icin sade POS akisi',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  '$seciliKategoriAdi secili. Operasyonda $toplamUrunAdedi urun izleniyor.',
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodySmall?.copyWith(color: Colors.white60),
+                ),
+              ],
+            ),
+          ),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              _PosUstAksiyon(
+                ikon: Icons.dashboard_customize_rounded,
+                etiket: 'Yonetim',
+                tikla: () =>
+                    Navigator.of(context).pushNamed(RotaYapisi.yonetimPaneli),
+              ),
+              _PosUstAksiyon(
+                ikon: Icons.badge_outlined,
+                etiket: 'Personel',
+                tikla: () =>
+                    Navigator.of(context).pushNamed(RotaYapisi.personelGiris),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _PosMobilUstKart extends StatelessWidget {
+  const _PosMobilUstKart({
+    required this.qrModu,
+    required this.seciliKategoriAdi,
+    required this.toplamUrunAdedi,
+  });
+
+  final bool qrModu;
+  final String seciliKategoriAdi;
+  final int toplamUrunAdedi;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.05),
+        borderRadius: BorderRadius.circular(26),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            qrModu ? 'QR MENU AKISI' : 'POS OPERASYON',
+            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+              color: Colors.white,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            '$seciliKategoriAdi secili. $toplamUrunAdedi urun aktif.',
+            style: Theme.of(
+              context,
+            ).textTheme.bodyMedium?.copyWith(color: Colors.white60),
+          ),
+          const SizedBox(height: 16),
+          _PosSolBilgiRozetleri(
+            qrModu: qrModu,
+            toplamUrunAdedi: toplamUrunAdedi,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _PosSolBilgiRozetleri extends StatelessWidget {
+  const _PosSolBilgiRozetleri({
+    required this.qrModu,
+    required this.toplamUrunAdedi,
+  });
+
+  final bool qrModu;
+  final int toplamUrunAdedi;
+
+  @override
+  Widget build(BuildContext context) {
+    return Wrap(
+      spacing: 10,
+      runSpacing: 10,
+      children: [
+        _PosBilgiRozeti(
+          ikon: qrModu ? Icons.qr_code_2_rounded : Icons.point_of_sale_rounded,
+          etiket: qrModu ? 'QR mod' : 'POS aktif',
+        ),
+        _PosBilgiRozeti(
+          ikon: Icons.shopping_bag_outlined,
+          etiket: '$toplamUrunAdedi urun',
+        ),
+      ],
+    );
+  }
+}
+
+class _PosBilgiRozeti extends StatelessWidget {
+  const _PosBilgiRozeti({required this.ikon, required this.etiket});
+
+  final IconData ikon;
+  final String etiket;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.10)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(ikon, color: Colors.white, size: 16),
+          const SizedBox(width: 8),
+          Text(
+            etiket,
+            style: const TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _PosUstAksiyon extends StatelessWidget {
+  const _PosUstAksiyon({
+    required this.ikon,
+    required this.etiket,
+    required this.tikla,
+  });
+
+  final IconData ikon;
+  final String etiket;
+  final VoidCallback tikla;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: tikla,
+      borderRadius: BorderRadius.circular(16),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.08),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(ikon, color: Colors.white70, size: 16),
+            const SizedBox(width: 8),
+            Text(
+              etiket,
+              style: const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
@@ -561,22 +986,62 @@ class _PosSalonMasaPaneli extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(20),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            const Color(0xFF372044).withValues(alpha: 0.88),
+            const Color(0xFF23152E).withValues(alpha: 0.92),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(24),
         border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Salon ve Masa Secimi',
-            style: TextStyle(
-              color: Colors.white,
-              fontWeight: FontWeight.w800,
-              fontSize: 15,
-            ),
+          Row(
+            children: [
+              Container(
+                width: 42,
+                height: 42,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFE85C8C).withValues(alpha: 0.18),
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: const Icon(
+                  Icons.table_restaurant_rounded,
+                  color: Colors.white,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Salon ve Masa Secimi',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w800,
+                        fontSize: 15,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    const Text(
+                      'Siparis acmadan once aktif bolum ve masayi belirle.',
+                      style: TextStyle(
+                        color: Colors.white70,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 14),
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
             child: Row(
@@ -640,8 +1105,15 @@ class _PosBaglamDurumKarti extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xFFE94274).withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(20),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            const Color(0xFF5B2247).withValues(alpha: 0.88),
+            const Color(0xFF2B1736).withValues(alpha: 0.96),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(24),
         border: Border.all(color: Colors.white.withValues(alpha: 0.10)),
       ),
       child: Wrap(
@@ -808,10 +1280,13 @@ class _SalonButonu extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
         decoration: BoxDecoration(
-          color: seciliMi
-              ? const Color(0xFFE94274)
-              : Colors.white.withValues(alpha: 0.08),
-          borderRadius: BorderRadius.circular(14),
+          gradient: seciliMi
+              ? const LinearGradient(
+                  colors: [Color(0xFFE35383), Color(0xFFB93E87)],
+                )
+              : null,
+          color: seciliMi ? null : Colors.white.withValues(alpha: 0.08),
+          borderRadius: BorderRadius.circular(16),
           border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
         ),
         child: Text(
@@ -843,12 +1318,17 @@ class _MasaButonu extends StatelessWidget {
   Widget build(BuildContext context) {
     return InkWell(
       onTap: tikla,
-      borderRadius: BorderRadius.circular(14),
+      borderRadius: BorderRadius.circular(16),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
         decoration: BoxDecoration(
-          color: seciliMi ? Colors.white : Colors.white.withValues(alpha: 0.08),
-          borderRadius: BorderRadius.circular(14),
+          gradient: seciliMi
+              ? const LinearGradient(
+                  colors: [Color(0xFFF6E7F4), Color(0xFFFFFFFF)],
+                )
+              : null,
+          color: seciliMi ? null : Colors.white.withValues(alpha: 0.08),
+          borderRadius: BorderRadius.circular(16),
           border: Border.all(
             color: seciliMi
                 ? Colors.white
@@ -897,10 +1377,17 @@ class _MasaButonu extends StatelessWidget {
 }
 
 class _HizliIslemSeridi extends StatelessWidget {
-  const _HizliIslemSeridi({required this.siparisAdedi, this.yatay = false});
+  const _HizliIslemSeridi({
+    required this.siparisAdedi,
+    this.yatay = false,
+    this.satiraSar = false,
+    this.mikroKart = false,
+  });
 
   final int siparisAdedi;
   final bool yatay;
+  final bool satiraSar;
+  final bool mikroKart;
 
   @override
   Widget build(BuildContext context) {
@@ -913,7 +1400,30 @@ class _HizliIslemSeridi extends StatelessWidget {
       const _HizliIslem(Icons.cancel, 'Iptal'),
     ];
 
-    final Widget icerik = yatay
+    final Widget icerik = satiraSar
+        ? LayoutBuilder(
+            builder: (BuildContext context, BoxConstraints kisitlar) {
+              final double kutuGenisligi = (kisitlar.maxWidth - 20) / 3;
+              return Wrap(
+                spacing: 10,
+                runSpacing: 10,
+                children: islemler
+                    .map(
+                      (_HizliIslem islem) => SizedBox(
+                        width: kutuGenisligi,
+                        child: _HizliIslemKutusu(
+                          islem: islem,
+                          seciliMi: islem.baslik.startsWith('Salon'),
+                          kompakt: true,
+                          mikro: mikroKart,
+                        ),
+                      ),
+                    )
+                    .toList(),
+              );
+            },
+          )
+        : yatay
         ? SingleChildScrollView(
             scrollDirection: Axis.horizontal,
             child: Row(
@@ -925,6 +1435,7 @@ class _HizliIslemSeridi extends StatelessWidget {
                         islem: islem,
                         seciliMi: islem.baslik.startsWith('Salon'),
                         yatay: true,
+                        mikro: mikroKart,
                       ),
                     ),
                   )
@@ -940,6 +1451,7 @@ class _HizliIslemSeridi extends StatelessWidget {
                       child: _HizliIslemKutusu(
                         islem: islem,
                         seciliMi: islem.baslik.startsWith('Salon'),
+                        mikro: mikroKart,
                       ),
                     ),
                   )
@@ -950,8 +1462,16 @@ class _HizliIslemSeridi extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(8),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.06),
-        borderRadius: BorderRadius.circular(20),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            const Color(0xFF35203E).withValues(alpha: 0.92),
+            const Color(0xFF24172B).withValues(alpha: 0.96),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
       ),
       child: icerik,
     );
@@ -971,21 +1491,47 @@ class _HizliIslemKutusu extends StatelessWidget {
     required this.islem,
     required this.seciliMi,
     this.yatay = false,
+    this.kompakt = false,
+    this.mikro = false,
   });
 
   final _HizliIslem islem;
   final bool seciliMi;
   final bool yatay;
+  final bool kompakt;
+  final bool mikro;
 
   @override
   Widget build(BuildContext context) {
+    final bool kucukMod = kompakt || mikro;
+
     return Container(
-      width: yatay ? 96 : double.infinity,
-      height: yatay ? 92 : 84,
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
+      width: yatay ? (mikro ? 82 : 96) : double.infinity,
+      height: kucukMod ? 78 : (yatay ? 92 : 84),
+      padding: EdgeInsets.symmetric(
+        horizontal: mikro ? 4 : (kompakt ? 6 : 8),
+        vertical: mikro ? 6 : (kompakt ? 8 : 10),
+      ),
       decoration: BoxDecoration(
-        color: seciliMi ? const Color(0xFFE94274) : Colors.white,
-        borderRadius: BorderRadius.circular(18),
+        gradient: seciliMi
+            ? const LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [Color(0xFFE85D89), Color(0xFFB84286)],
+              )
+            : const LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [Color(0xFFFAF4FF), Color(0xFFF0E2F6)],
+              ),
+        borderRadius: BorderRadius.circular(mikro ? 18 : 20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: seciliMi ? 0.18 : 0.06),
+            blurRadius: mikro ? 8 : 12,
+            offset: Offset(0, mikro ? 5 : 8),
+          ),
+        ],
       ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -993,9 +1539,9 @@ class _HizliIslemKutusu extends StatelessWidget {
           Icon(
             islem.ikon,
             color: seciliMi ? Colors.white : const Color(0xFF8C5BA8),
-            size: 22,
+            size: mikro ? 15 : (kompakt ? 18 : 22),
           ),
-          const SizedBox(height: 6),
+          SizedBox(height: mikro ? 2 : (kompakt ? 4 : 6)),
           Flexible(
             child: FittedBox(
               fit: BoxFit.scaleDown,
@@ -1006,15 +1552,18 @@ class _HizliIslemKutusu extends StatelessWidget {
                 style: TextStyle(
                   color: seciliMi ? Colors.white : const Color(0xFF5D4D6C),
                   fontWeight: FontWeight.w700,
-                  fontSize: 13,
+                  fontSize: mikro ? 9.5 : (kompakt ? 11 : 13),
                 ),
               ),
             ),
           ),
           if (islem.rozet != null) ...[
-            const SizedBox(height: 4),
+            SizedBox(height: mikro ? 1 : (kompakt ? 2 : 4)),
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+              padding: EdgeInsets.symmetric(
+                horizontal: mikro ? 5 : (kompakt ? 6 : 8),
+                vertical: mikro ? 1 : 2,
+              ),
               decoration: BoxDecoration(
                 color: seciliMi
                     ? Colors.white.withValues(alpha: 0.18)
@@ -1026,7 +1575,7 @@ class _HizliIslemKutusu extends StatelessWidget {
                 style: TextStyle(
                   color: seciliMi ? Colors.white : const Color(0xFF8C5BA8),
                   fontWeight: FontWeight.w800,
-                  fontSize: 11,
+                  fontSize: mikro ? 8.5 : (kompakt ? 10 : 11),
                 ),
               ),
             ),
@@ -1064,8 +1613,13 @@ class _AdisyonPaneli extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: const Color(0xFFF8F5FB),
-        borderRadius: BorderRadius.circular(24),
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Color(0xFF24192F), Color(0xFF1A1222)],
+        ),
+        borderRadius: BorderRadius.circular(28),
+        border: Border.all(color: Colors.white24),
       ),
       child: Column(
         children: [
@@ -1073,12 +1627,25 @@ class _AdisyonPaneli extends StatelessWidget {
             padding: const EdgeInsets.fromLTRB(18, 18, 18, 12),
             child: Row(
               children: [
+                Container(
+                  width: 42,
+                  height: 42,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFE85C8C).withValues(alpha: 0.16),
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  child: const Icon(
+                    Icons.receipt_long_rounded,
+                    color: Colors.white,
+                  ),
+                ),
+                const SizedBox(width: 12),
                 Expanded(
                   child: Text(
                     seciliBolumAdi ?? 'Salon secilmedi',
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      color: const Color(0xFF4A295F),
-                    ),
+                    style: Theme.of(
+                      context,
+                    ).textTheme.titleLarge?.copyWith(color: Colors.white),
                   ),
                 ),
                 Container(
@@ -1087,13 +1654,13 @@ class _AdisyonPaneli extends StatelessWidget {
                     vertical: 8,
                   ),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFFFE2EB),
+                    color: const Color(0xFFE85C8C).withValues(alpha: 0.16),
                     borderRadius: BorderRadius.circular(999),
                   ),
                   child: Text(
                     seciliMasaAdi != null ? 'Masa $seciliMasaAdi' : 'Masa sec',
                     style: const TextStyle(
-                      color: Color(0xFFE04374),
+                      color: Color(0xFFFFC6D8),
                       fontWeight: FontWeight.w700,
                     ),
                   ),
@@ -1101,7 +1668,7 @@ class _AdisyonPaneli extends StatelessWidget {
               ],
             ),
           ),
-          const Divider(height: 1),
+          Divider(height: 1, color: Colors.white.withValues(alpha: 0.08)),
           Expanded(
             child: Padding(
               padding: const EdgeInsets.all(14),
@@ -1149,15 +1716,15 @@ class _AdisyonPaneli extends StatelessWidget {
                   children: [
                     Text(
                       'Ara toplam',
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        color: const Color(0xFF7A678A),
-                      ),
+                      style: Theme.of(
+                        context,
+                      ).textTheme.titleMedium?.copyWith(color: Colors.white70),
                     ),
                     const Spacer(),
                     Text(
                       _paraYaz(sepet.araToplam),
                       style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        color: const Color(0xFF4A295F),
+                        color: Colors.white,
                         fontWeight: FontWeight.w900,
                       ),
                     ),
@@ -1240,6 +1807,7 @@ class _AdisyonOzetKutusu extends StatelessWidget {
       decoration: BoxDecoration(
         color: vurguRengi.withValues(alpha: 0.10),
         borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: vurguRengi.withValues(alpha: 0.20)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1256,7 +1824,7 @@ class _AdisyonOzetKutusu extends StatelessWidget {
           Text(
             deger,
             style: const TextStyle(
-              color: Color(0xFF4A295F),
+              color: Colors.white,
               fontWeight: FontWeight.w900,
             ),
           ),
@@ -1273,9 +1841,9 @@ class _BosAdisyonDurumu extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Colors.white.withValues(alpha: 0.06),
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: const Color(0xFFEAE2F1)),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
       ),
       padding: const EdgeInsets.all(18),
       child: Column(
@@ -1290,7 +1858,7 @@ class _BosAdisyonDurumu extends StatelessWidget {
             ),
             child: const Icon(
               Icons.receipt_long_outlined,
-              color: Color(0xFFE04374),
+              color: Color(0xFFFF9AB9),
             ),
           ),
           const SizedBox(height: 14),
@@ -1298,7 +1866,7 @@ class _BosAdisyonDurumu extends StatelessWidget {
             'Adisyon henuz bos',
             style: Theme.of(
               context,
-            ).textTheme.titleMedium?.copyWith(color: const Color(0xFF4A295F)),
+            ).textTheme.titleMedium?.copyWith(color: Colors.white),
           ),
           const SizedBox(height: 8),
           Text(
@@ -1306,7 +1874,7 @@ class _BosAdisyonDurumu extends StatelessWidget {
             textAlign: TextAlign.center,
             style: Theme.of(
               context,
-            ).textTheme.bodyMedium?.copyWith(color: const Color(0xFF7A678A)),
+            ).textTheme.bodyMedium?.copyWith(color: Colors.white70),
           ),
         ],
       ),
@@ -1334,9 +1902,9 @@ class _AdisyonSatiri extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Colors.white.withValues(alpha: 0.06),
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: const Color(0xFFEDE4F2)),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
       ),
       child: Column(
         children: [
@@ -1345,7 +1913,7 @@ class _AdisyonSatiri extends StatelessWidget {
               Text(
                 '${kalem.adet}x',
                 style: const TextStyle(
-                  color: Color(0xFFE04374),
+                  color: Color(0xFFFF8FB1),
                   fontWeight: FontWeight.w900,
                 ),
               ),
@@ -1356,16 +1924,16 @@ class _AdisyonSatiri extends StatelessWidget {
                   children: [
                     Text(
                       kalem.urun.ad,
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        color: const Color(0xFF4A295F),
-                      ),
+                      style: Theme.of(
+                        context,
+                      ).textTheme.titleMedium?.copyWith(color: Colors.white),
                     ),
                     if ((kalem.secenekAdi ?? '').isNotEmpty) ...[
                       const SizedBox(height: 4),
                       Text(
                         kalem.secenekAdi!,
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: const Color(0xFFE04374),
+                          color: const Color(0xFFFF9AB9),
                           fontWeight: FontWeight.w700,
                         ),
                       ),
@@ -1374,9 +1942,9 @@ class _AdisyonSatiri extends StatelessWidget {
                       const SizedBox(height: 4),
                       Text(
                         kalem.notMetni!,
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: const Color(0xFF8D7A9D),
-                        ),
+                        style: Theme.of(
+                          context,
+                        ).textTheme.bodySmall?.copyWith(color: Colors.white60),
                       ),
                     ],
                   ],
@@ -1385,7 +1953,7 @@ class _AdisyonSatiri extends StatelessWidget {
               Text(
                 _paraYaz(kalem.araToplam),
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  color: const Color(0xFF4A295F),
+                  color: Colors.white,
                   fontWeight: FontWeight.w800,
                 ),
               ),
@@ -1405,7 +1973,7 @@ class _AdisyonSatiri extends StatelessWidget {
                 child: Text(
                   '${kalem.adet}',
                   style: const TextStyle(
-                    color: Color(0xFF4A295F),
+                    color: Colors.white,
                     fontWeight: FontWeight.w900,
                     fontSize: 18,
                   ),
@@ -1450,12 +2018,14 @@ class _AdisyonAksiyonButonu extends StatelessWidget {
         width: 42,
         height: 42,
         decoration: BoxDecoration(
-          color: etkinMi ? const Color(0xFFF7D9E4) : const Color(0xFFF0EAF5),
+          color: etkinMi
+              ? const Color(0xFFE85C8C).withValues(alpha: 0.20)
+              : Colors.white.withValues(alpha: 0.06),
           borderRadius: BorderRadius.circular(14),
         ),
         child: Icon(
           ikon,
-          color: etkinMi ? const Color(0xFFE04374) : const Color(0xFFAD9DBA),
+          color: etkinMi ? const Color(0xFFFFA1BE) : const Color(0xFFAD9DBA),
         ),
       ),
     );
@@ -1489,8 +2059,13 @@ class _UrunMerkezi extends StatelessWidget {
 
     return Container(
       decoration: BoxDecoration(
-        color: const Color(0xFFF4F0F8),
-        borderRadius: BorderRadius.circular(24),
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Color(0xFF2A1E36), Color(0xFF1D1425)],
+        ),
+        borderRadius: BorderRadius.circular(28),
+        border: Border.all(color: Colors.white24),
       ),
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -1499,21 +2074,42 @@ class _UrunMerkezi extends StatelessWidget {
           children: [
             Row(
               children: [
+                Container(
+                  width: 46,
+                  height: 46,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFE85C8C).withValues(alpha: 0.16),
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: const Icon(
+                    Icons.restaurant_menu_rounded,
+                    color: Colors.white,
+                  ),
+                ),
+                const SizedBox(width: 12),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
                         'Menuler  /  $seciliKategoriAdi',
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: const Color(0xFF8B789A),
-                        ),
+                        style: Theme.of(
+                          context,
+                        ).textTheme.bodyMedium?.copyWith(color: Colors.white60),
                       ),
                       const SizedBox(height: 6),
                       Text(
                         '$seciliKategoriAdi Secimleri',
-                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          color: const Color(0xFF412454),
+                        style: Theme.of(
+                          context,
+                        ).textTheme.titleLarge?.copyWith(color: Colors.white),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        'Aktif secimde servis ekibine uygun hizli urun akislari.',
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: Colors.white54,
+                          height: 1.3,
                         ),
                       ),
                     ],
@@ -1525,7 +2121,7 @@ class _UrunMerkezi extends StatelessWidget {
                     vertical: 10,
                   ),
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: Colors.white.withValues(alpha: 0.08),
                     borderRadius: BorderRadius.circular(16),
                   ),
                   child: Row(
@@ -1539,7 +2135,7 @@ class _UrunMerkezi extends StatelessWidget {
                       Text(
                         '$toplamUrunAdedi urun',
                         style: const TextStyle(
-                          color: Color(0xFF412454),
+                          color: Colors.white,
                           fontWeight: FontWeight.w700,
                         ),
                       ),
@@ -1601,8 +2197,10 @@ class _UrunKarti extends StatelessWidget {
     final bool kompaktKart = MediaQuery.sizeOf(context).width < 480;
 
     return Material(
-      color: urun.stoktaMi ? Colors.white : const Color(0xFFF2ECF5),
+      color: urun.stoktaMi ? const Color(0xFF22172C) : const Color(0xFF1A1320),
       borderRadius: BorderRadius.circular(18),
+      shadowColor: Colors.black.withValues(alpha: 0.16),
+      elevation: 6,
       child: InkWell(
         borderRadius: BorderRadius.circular(18),
         onTap: etkilesimeAcik ? () => urunDetayiAc(urun) : null,
@@ -1628,6 +2226,67 @@ class _UrunKarti extends StatelessWidget {
                         painter: _TabakDeseniPainter(renk: Colors.white),
                       ),
                     ),
+                    Positioned(
+                      top: 10,
+                      right: 10,
+                      child: Container(
+                        width: 34,
+                        height: 34,
+                        decoration: BoxDecoration(
+                          color: Colors.black.withValues(alpha: 0.18),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: Colors.white.withValues(alpha: 0.14),
+                          ),
+                        ),
+                        child: Icon(
+                          _kategoriIkonu(urun.ad),
+                          color: Colors.white.withValues(alpha: 0.88),
+                          size: 20,
+                        ),
+                      ),
+                    ),
+                    if (urun.oneCikanMi)
+                      Positioned(
+                        left: 10,
+                        bottom: 10,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 6,
+                          ),
+                          decoration: BoxDecoration(
+                            color: const Color(
+                              0xFFFFD36A,
+                            ).withValues(alpha: 0.18),
+                            borderRadius: BorderRadius.circular(999),
+                            border: Border.all(
+                              color: const Color(
+                                0xFFFFD36A,
+                              ).withValues(alpha: 0.28),
+                            ),
+                          ),
+                          child: const Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.local_fire_department,
+                                color: Color(0xFFFFD36A),
+                                size: 14,
+                              ),
+                              SizedBox(width: 4),
+                              Text(
+                                'One cikan',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
                     if (!urun.stoktaMi)
                       Positioned(
                         top: 10,
@@ -1651,17 +2310,6 @@ class _UrunKarti extends StatelessWidget {
                           ),
                         ),
                       ),
-                    Align(
-                      alignment: Alignment.bottomRight,
-                      child: Padding(
-                        padding: const EdgeInsets.all(10),
-                        child: Icon(
-                          _kategoriIkonu(urun.ad),
-                          color: Colors.white.withValues(alpha: 0.88),
-                          size: 28,
-                        ),
-                      ),
-                    ),
                   ],
                 ),
               ),
@@ -1671,9 +2319,7 @@ class _UrunKarti extends StatelessWidget {
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  color: urun.stoktaMi
-                      ? const Color(0xFF412454)
-                      : const Color(0xFF8D7C9A),
+                  color: urun.stoktaMi ? Colors.white : const Color(0xFFB8A8C5),
                   fontWeight: FontWeight.w800,
                 ),
               ),
@@ -1686,8 +2332,8 @@ class _UrunKarti extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
                     color: urun.stoktaMi
-                        ? const Color(0xFF887694)
-                        : const Color(0xFFA89AB2),
+                        ? Colors.white70
+                        : const Color(0xFF9989A6),
                     height: 1.35,
                   ),
                 ),
@@ -1714,27 +2360,20 @@ class _UrunKarti extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(width: 6),
-                  if (urun.oneCikanMi)
-                    const Icon(
-                      Icons.local_fire_department,
-                      color: Color(0xFFFF7A59),
-                      size: 18,
-                    ),
-                  const SizedBox(width: 6),
                   Container(
-                    width: 28,
-                    height: 28,
+                    width: 34,
+                    height: 34,
                     decoration: BoxDecoration(
                       color: urun.stoktaMi
-                          ? const Color(0xFFFFE2EB)
-                          : const Color(0xFFE2D9E8),
-                      borderRadius: BorderRadius.circular(10),
+                          ? const Color(0xFFE85C8C).withValues(alpha: 0.16)
+                          : Colors.white.withValues(alpha: 0.08),
+                      borderRadius: BorderRadius.circular(12),
                     ),
                     child: Icon(
-                      Icons.add,
-                      size: 18,
+                      etkilesimeAcik ? Icons.add_rounded : Icons.block_rounded,
+                      size: 20,
                       color: urun.stoktaMi
-                          ? const Color(0xFFE04374)
+                          ? const Color(0xFFFFA0BE)
                           : const Color(0xFF8D7C9A),
                     ),
                   ),
@@ -2110,8 +2749,13 @@ class _KategoriPaneli extends StatelessWidget {
       return Container(
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.08),
-          borderRadius: BorderRadius.circular(20),
+          gradient: const LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [Color(0xFF261A31), Color(0xFF1A1222)],
+          ),
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
         ),
         child: Wrap(
           spacing: 10,
@@ -2137,20 +2781,51 @@ class _KategoriPaneli extends StatelessWidget {
 
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(24),
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Color(0xFF261A31), Color(0xFF1A1222)],
+        ),
+        borderRadius: BorderRadius.circular(28),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
       ),
       padding: const EdgeInsets.all(12),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text(
-            'MENU',
-            textAlign: TextAlign.center,
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-              color: Colors.white,
-              letterSpacing: 1.2,
-            ),
+          Row(
+            children: [
+              Container(
+                width: 38,
+                height: 38,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFE85C8C).withValues(alpha: 0.16),
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: const Icon(Icons.tune_rounded, color: Colors.white),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'MENU',
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        color: Colors.white,
+                        letterSpacing: 1.2,
+                      ),
+                    ),
+                    Text(
+                      'Kategori secimi',
+                      style: Theme.of(
+                        context,
+                      ).textTheme.bodySmall?.copyWith(color: Colors.white54),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
           const SizedBox(height: 12),
           _TumKategoriButonu(
@@ -2201,7 +2876,14 @@ class _TumKategoriButonu extends StatelessWidget {
           vertical: yatay ? 12 : 18,
         ),
         decoration: BoxDecoration(
-          color: seciliMi ? Colors.white : Colors.transparent,
+          gradient: seciliMi
+              ? const LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [Color(0xFFF6E5F0), Color(0xFFFFFFFF)],
+                )
+              : null,
+          color: seciliMi ? null : Colors.transparent,
           borderRadius: BorderRadius.circular(18),
           border: Border.all(
             color: seciliMi
@@ -2249,7 +2931,14 @@ class _KategoriButonu extends StatelessWidget {
           vertical: yatay ? 12 : 18,
         ),
         decoration: BoxDecoration(
-          color: seciliMi ? Colors.white : Colors.transparent,
+          gradient: seciliMi
+              ? const LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [Color(0xFFF6E5F0), Color(0xFFFFFFFF)],
+                )
+              : null,
+          color: seciliMi ? null : Colors.transparent,
           borderRadius: BorderRadius.circular(18),
           border: Border.all(
             color: seciliMi

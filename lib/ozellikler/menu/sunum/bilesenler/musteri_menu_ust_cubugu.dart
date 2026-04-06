@@ -27,9 +27,19 @@ class MusteriMenuUstCubugu extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
-          colors: [Color(0xFFE53D6F), Color(0xFF6C2FD2), Color(0xFF32185A)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Color(0xFFC24971), Color(0xFF6F38B8), Color(0xFF2C173F)],
         ),
-        borderRadius: BorderRadius.circular(22),
+        borderRadius: BorderRadius.circular(26),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.10)),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF000000).withValues(alpha: 0.18),
+            blurRadius: 18,
+            offset: const Offset(0, 12),
+          ),
+        ],
       ),
       child: mobil
           ? Column(
@@ -92,8 +102,18 @@ class MusteriMenuUstCubugu extends StatelessWidget {
                     width: 36,
                     height: 36,
                     decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.16),
+                      color: Colors.white.withValues(alpha: 0.14),
                       borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: Colors.white.withValues(alpha: 0.12),
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.12),
+                          blurRadius: 10,
+                          offset: const Offset(0, 6),
+                        ),
+                      ],
                     ),
                     child: IconButton(
                       onPressed: () => Navigator.of(context).maybePop(),
@@ -137,8 +157,9 @@ class MusteriMenuUstCubugu extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.12),
+              color: Colors.white.withValues(alpha: 0.10),
               borderRadius: BorderRadius.circular(999),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.10)),
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
@@ -175,21 +196,29 @@ class MusteriMenuUstCubugu extends StatelessWidget {
   Widget _aramaKutusu(bool mobil) {
     return Container(
       width: mobil ? double.infinity : 180,
-      height: 40,
-      padding: const EdgeInsets.symmetric(horizontal: 12),
+      height: 46,
+      padding: const EdgeInsets.symmetric(horizontal: 8),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.14),
+        color: Colors.white.withValues(alpha: 0.10),
         borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.10)),
       ),
       child: Row(
         children: [
-          const Icon(Icons.search, size: 18, color: Colors.white70),
+          Container(
+            width: 32,
+            height: 32,
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.10),
+              borderRadius: BorderRadius.circular(999),
+            ),
+            child: const Icon(Icons.search, size: 18, color: Colors.white70),
+          ),
           const SizedBox(width: 8),
           Text(
-            'Ara',
+            'Ara, kategori bul...',
             style: TextStyle(
-              color: Colors.white.withValues(alpha: 0.74),
+              color: Colors.white.withValues(alpha: 0.70),
               fontWeight: FontWeight.w600,
             ),
           ),
@@ -210,7 +239,11 @@ class MusteriMenuUstCubugu extends StatelessWidget {
             },
             style: FilledButton.styleFrom(
               foregroundColor: Colors.white,
-              backgroundColor: Colors.white.withValues(alpha: 0.14),
+              backgroundColor: Colors.white.withValues(alpha: 0.12),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+                side: BorderSide(color: Colors.white.withValues(alpha: 0.10)),
+              ),
               padding: EdgeInsets.symmetric(
                 horizontal: mobil ? 12 : 14,
                 vertical: 12,
@@ -228,6 +261,9 @@ class MusteriMenuUstCubugu extends StatelessWidget {
             style: OutlinedButton.styleFrom(
               foregroundColor: Colors.white,
               side: BorderSide(color: Colors.white.withValues(alpha: 0.2)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
               padding: EdgeInsets.symmetric(
                 horizontal: mobil ? 12 : 14,
                 vertical: 12,
@@ -252,7 +288,11 @@ class MusteriMenuUstCubugu extends StatelessWidget {
           },
           style: FilledButton.styleFrom(
             foregroundColor: Colors.white,
-            backgroundColor: Colors.white.withValues(alpha: 0.14),
+            backgroundColor: Colors.white.withValues(alpha: 0.12),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+              side: BorderSide(color: Colors.white.withValues(alpha: 0.10)),
+            ),
             padding: EdgeInsets.symmetric(
               horizontal: mobil ? 12 : 14,
               vertical: 12,
@@ -270,6 +310,9 @@ class MusteriMenuUstCubugu extends StatelessWidget {
           style: OutlinedButton.styleFrom(
             foregroundColor: Colors.white,
             side: BorderSide(color: Colors.white.withValues(alpha: 0.2)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
             padding: EdgeInsets.symmetric(
               horizontal: mobil ? 12 : 14,
               vertical: 12,
@@ -290,6 +333,7 @@ class MusteriMenuUstCubugu extends StatelessWidget {
       style: OutlinedButton.styleFrom(
         foregroundColor: Colors.white,
         side: BorderSide(color: Colors.white.withValues(alpha: 0.2)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         padding: EdgeInsets.symmetric(
           horizontal: kompakt ? 12 : 14,
           vertical: 12,
@@ -309,9 +353,16 @@ class MusteriMenuUstCubugu extends StatelessWidget {
           width: kompakt ? 40 : 42,
           height: kompakt ? 40 : 42,
           decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.14),
+            color: Colors.white.withValues(alpha: 0.12),
             borderRadius: BorderRadius.circular(12),
             border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.10),
+                blurRadius: 10,
+                offset: const Offset(0, 6),
+              ),
+            ],
           ),
           child: const Icon(
             Icons.notifications_active_rounded,

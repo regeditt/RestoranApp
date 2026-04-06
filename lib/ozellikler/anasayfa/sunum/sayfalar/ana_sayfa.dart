@@ -693,6 +693,7 @@ class _MenuKarti extends StatelessWidget {
         child: Padding(
           padding: const EdgeInsets.all(16),
           child: Stack(
+            alignment: Alignment.center,
             children: [
               if (veri.rozet != null)
                 Positioned(
@@ -707,12 +708,13 @@ class _MenuKarti extends StatelessWidget {
                   ),
                 ),
               Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.center,
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Container(
                     width: 72,
                     height: 72,
+                    alignment: Alignment.center,
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(20),
                       color: ikonArkaPlan.withValues(alpha: 0.22),
@@ -726,6 +728,7 @@ class _MenuKarti extends StatelessWidget {
                   const SizedBox(height: 16),
                   Text(
                     veri.baslik,
+                    textAlign: TextAlign.center,
                     style: temaVerisi.textTheme.titleLarge?.copyWith(
                       color: tema.metinBirincilAcik,
                       fontWeight: FontWeight.w700,
