@@ -5,12 +5,10 @@ import 'package:flutter_web_plugins/url_strategy.dart';
 import 'package:restoran_app/uygulama_kabugu/uygulama_kabugu.dart';
 
 void main() {
-  assert(() {
-    debugPaintBaselinesEnabled = false;
-    debugPaintSizeEnabled = false;
-    debugPaintPointersEnabled = false;
-    return true;
-  }());
+  // Keep debug overlay lines (baseline/size/pointer paints) disabled.
+  debugPaintBaselinesEnabled = false;
+  debugPaintSizeEnabled = false;
+  debugPaintPointersEnabled = false;
 
   if (kIsWeb) {
     usePathUrlStrategy();

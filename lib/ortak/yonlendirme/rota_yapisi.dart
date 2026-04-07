@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:restoran_app/bagimlilik_enjeksiyonu/servis_kaydi.dart';
 import 'package:restoran_app/ortak/bagimlilik/servis_saglayici.dart';
 import 'package:restoran_app/ozellikler/anasayfa/sunum/sayfalar/ana_sayfa.dart';
+import 'package:restoran_app/ozellikler/kimlik/alan/roller/kullanici_rolu.dart';
+import 'package:restoran_app/ozellikler/kimlik/alan/varliklar/kullanici_varligi.dart';
 import 'package:restoran_app/ozellikler/kimlik/sunum/sayfalar/giris_secim_sayfasi.dart';
 import 'package:restoran_app/ozellikler/kimlik/sunum/sayfalar/hesabim_sayfasi.dart';
 import 'package:restoran_app/ozellikler/kimlik/sunum/viewmodel/giris_secim_viewmodel.dart';
@@ -30,6 +33,47 @@ class RotaYapisi {
   static const String mutfak = '/mutfak';
   static const String siparisOzeti = '/siparis-ozeti';
   static const String yonetimPaneli = '/yonetim-paneli';
+
+  static const Map<String, _PersonelErisimKurali>
+  _personelErisimKurallari = <String, _PersonelErisimKurali>{
+    pos: _PersonelErisimKurali(
+      izinliRoller: <KullaniciRolu>[
+        KullaniciRolu.garson,
+        KullaniciRolu.yonetici,
+        KullaniciRolu.patron,
+      ],
+      baslik: 'POS erisimi icin personel girisi gerekli',
+      aciklama:
+          'Musteri akisi dogrudan QR menu ile acilir. POS yalnizca garson ve yonetici operasyonu icindir.',
+    ),
+    mutfak: _PersonelErisimKurali(
+      izinliRoller: <KullaniciRolu>[
+        KullaniciRolu.garson,
+        KullaniciRolu.yonetici,
+        KullaniciRolu.patron,
+      ],
+      baslik: 'Mutfak ekrani personel icindir',
+      aciklama:
+          'Bu operasyon ekrani mutfak ve servis ekipleri icin ayrildi. Musteri yolculugu QR menu uzerinden ilerler.',
+    ),
+    yonetimPaneli: _PersonelErisimKurali(
+      izinliRoller: <KullaniciRolu>[
+        KullaniciRolu.yonetici,
+        KullaniciRolu.patron,
+      ],
+      baslik: 'Yonetim paneli yalnizca yonetim icindir',
+      aciklama:
+          'Garson operasyonu POS uzerinden ilerler. Yonetim paneli icin yonetici rolu ile oturum acman gerekir.',
+    ),
+  };
+
+  static List<KullaniciRolu>? izinliRolleriGetir(String rota) {
+    final _PersonelErisimKurali? kural = _personelErisimKurallari[rota];
+    if (kural == null) {
+      return null;
+    }
+    return List<KullaniciRolu>.unmodifiable(kural.izinliRoller);
+  }
 
   static Route<dynamic> rotaOlustur(RouteSettings ayarlar) {
     switch (ayarlar.name) {
@@ -67,8 +111,12 @@ class RotaYapisi {
         return MaterialPageRoute<void>(
           builder: (context) {
             final servisKaydi = ServisSaglayici.of(context);
-            return MusteriMenuSayfasi(
-              viewModel: MusteriMenuViewModel.servisKaydindan(servisKaydi),
+            return _personelYetkiKorumaIle(
+              rota: pos,
+              servisKaydi: servisKaydi,
+              yetkiliSayfaOlustur: () => MusteriMenuSayfasi(
+                viewModel: MusteriMenuViewModel.servisKaydindan(servisKaydi),
+              ),
             );
           },
           settings: ayarlar,
@@ -77,8 +125,12 @@ class RotaYapisi {
         return MaterialPageRoute<void>(
           builder: (context) {
             final servisKaydi = ServisSaglayici.of(context);
-            return MutfakSiparisSayfasi(
-              viewModel: MutfakSiparisViewModel.servisKaydindan(servisKaydi),
+            return _personelYetkiKorumaIle(
+              rota: mutfak,
+              servisKaydi: servisKaydi,
+              yetkiliSayfaOlustur: () => MutfakSiparisSayfasi(
+                viewModel: MutfakSiparisViewModel.servisKaydindan(servisKaydi),
+              ),
             );
           },
           settings: ayarlar,
@@ -123,9 +175,13 @@ class RotaYapisi {
         return MaterialPageRoute<void>(
           builder: (context) {
             final servisKaydi = ServisSaglayici.of(context);
-            return YonetimPaneliSayfasi(
-              viewModel: YonetimPaneliViewModel.servisKaydindan(servisKaydi),
+            return _personelYetkiKorumaIle(
+              rota: yonetimPaneli,
               servisKaydi: servisKaydi,
+              yetkiliSayfaOlustur: () => YonetimPaneliSayfasi(
+                viewModel: YonetimPaneliViewModel.servisKaydindan(servisKaydi),
+                servisKaydi: servisKaydi,
+              ),
             );
           },
           settings: ayarlar,
@@ -136,5 +192,189 @@ class RotaYapisi {
           settings: ayarlar,
         );
     }
+  }
+
+  static Widget _personelYetkiKorumaIle({
+    required String rota,
+    required ServisKaydi servisKaydi,
+    required Widget Function() yetkiliSayfaOlustur,
+  }) {
+    final _PersonelErisimKurali? kural = _personelErisimKurallari[rota];
+    if (kural == null) {
+      return const QrMenuSayfasi();
+    }
+
+    return _PersonelYetkiKapisi(
+      servisKaydi: servisKaydi,
+      izinliRoller: kural.izinliRoller,
+      baslik: kural.baslik,
+      aciklama: kural.aciklama,
+      yetkiliSayfaOlustur: yetkiliSayfaOlustur,
+    );
+  }
+}
+
+class _PersonelErisimKurali {
+  const _PersonelErisimKurali({
+    required this.izinliRoller,
+    required this.baslik,
+    required this.aciklama,
+  });
+
+  final List<KullaniciRolu> izinliRoller;
+  final String baslik;
+  final String aciklama;
+}
+
+class _PersonelYetkiKapisi extends StatelessWidget {
+  const _PersonelYetkiKapisi({
+    required this.servisKaydi,
+    required this.izinliRoller,
+    required this.baslik,
+    required this.aciklama,
+    required this.yetkiliSayfaOlustur,
+  });
+
+  final ServisKaydi servisKaydi;
+  final List<KullaniciRolu> izinliRoller;
+  final String baslik;
+  final String aciklama;
+  final Widget Function() yetkiliSayfaOlustur;
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder<KullaniciVarligi?>(
+      future: servisKaydi.aktifKullaniciGetirUseCase(),
+      builder:
+          (BuildContext context, AsyncSnapshot<KullaniciVarligi?> snapshot) {
+            if (snapshot.connectionState != ConnectionState.done) {
+              return const Scaffold(
+                body: Center(child: CircularProgressIndicator()),
+              );
+            }
+
+            final KullaniciVarligi? kullanici = snapshot.data;
+            final bool yetkili =
+                kullanici != null &&
+                kullanici.aktifMi &&
+                izinliRoller.contains(kullanici.rol);
+            if (yetkili) {
+              return yetkiliSayfaOlustur();
+            }
+
+            return _YetkisizErisimSayfasi(
+              baslik: baslik,
+              aciklama: aciklama,
+              rolEtiketi: _rolEtiketi(kullanici?.rol),
+            );
+          },
+    );
+  }
+
+  String? _rolEtiketi(KullaniciRolu? rol) {
+    switch (rol) {
+      case null:
+        return null;
+      case KullaniciRolu.misafir:
+        return 'Misafir';
+      case KullaniciRolu.musteri:
+        return 'Musteri';
+      case KullaniciRolu.garson:
+        return 'Garson';
+      case KullaniciRolu.yonetici:
+        return 'Yonetici';
+      case KullaniciRolu.patron:
+        return 'Patron';
+    }
+  }
+}
+
+class _YetkisizErisimSayfasi extends StatelessWidget {
+  const _YetkisizErisimSayfasi({
+    required this.baslik,
+    required this.aciklama,
+    this.rolEtiketi,
+  });
+
+  final String baslik;
+  final String aciklama;
+  final String? rolEtiketi;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: SafeArea(
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 560),
+            child: Padding(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 72,
+                    height: 72,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFFF0F4),
+                      borderRadius: BorderRadius.circular(24),
+                    ),
+                    child: const Icon(
+                      Icons.lock_person_rounded,
+                      size: 36,
+                      color: Color(0xFFE53D6F),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  Text(
+                    baslik,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      fontSize: 28,
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  Text(
+                    aciklama,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      color: Color(0xFF6D6079),
+                      fontSize: 16,
+                    ),
+                  ),
+                  if (rolEtiketi != null) ...<Widget>[
+                    const SizedBox(height: 14),
+                    Chip(label: Text('Aktif rol: $rolEtiketi')),
+                  ],
+                  const SizedBox(height: 24),
+                  Wrap(
+                    spacing: 12,
+                    runSpacing: 12,
+                    alignment: WrapAlignment.center,
+                    children: [
+                      FilledButton.icon(
+                        onPressed: () => Navigator.of(
+                          context,
+                        ).pushReplacementNamed(RotaYapisi.personelGiris),
+                        icon: const Icon(Icons.badge_rounded),
+                        label: const Text('Personel girisine git'),
+                      ),
+                      OutlinedButton.icon(
+                        onPressed: () => Navigator.of(
+                          context,
+                        ).pushReplacementNamed(RotaYapisi.qrMenu),
+                        icon: const Icon(Icons.qr_code_2_rounded),
+                        label: const Text('QR menuye don'),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
   }
 }

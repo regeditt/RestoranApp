@@ -223,7 +223,7 @@ class UygulamaVeritabani extends _$UygulamaVeritabani
   static final RegExp _sayisalKimlikDeseni = RegExp(r'^\d+$');
 
   @override
-  int get schemaVersion => 6;
+  int get schemaVersion => 7;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -231,6 +231,8 @@ class UygulamaVeritabani extends _$UygulamaVeritabani
       await migrator.createAll();
       await _indeksleriOlustur();
       await _eskiJsonVerisiniYeniTablolaraTasi();
+      await _kullaniciKimlikTablosunuHazirla();
+      await _kullaniciKayitlariniTekillestirVeIndeksle();
     },
     onUpgrade: (migrator, from, to) async {
       await migrator.createAll();
@@ -240,6 +242,10 @@ class UygulamaVeritabani extends _$UygulamaVeritabani
       }
       if (from < 6) {
         await _tumKimlikleriNumeriklestir(migrator);
+      }
+      if (from < 7) {
+        await _kullaniciKimlikTablosunuHazirla();
+        await _kullaniciKayitlariniTekillestirVeIndeksle();
       }
     },
     beforeOpen: (details) async {
@@ -299,6 +305,77 @@ class UygulamaVeritabani extends _$UygulamaVeritabani
     );
   }
 
+  Future<void> tumKullanicilariPasifYap() async {
+    await update(
+      kullaniciKayitlari,
+    ).write(const KullaniciKayitlariCompanion(aktifMi: Value(false)));
+  }
+
+  Future<KullaniciVarligi?> kullaniciTelefonaGoreGetir(String telefon) async {
+    final List<KullaniciKayitlariData> kayitlar = await (select(
+      kullaniciKayitlari,
+    )..where((tbl) => tbl.telefon.equals(telefon.trim()))).get();
+    if (kayitlar.isEmpty) {
+      return null;
+    }
+    kayitlar.sort((KullaniciKayitlariData a, KullaniciKayitlariData b) {
+      if (a.aktifMi != b.aktifMi) {
+        return b.aktifMi ? 1 : -1;
+      }
+      return _kimlikKarsilastir(b.id, a.id);
+    });
+    final KullaniciKayitlariData kayit = kayitlar.first;
+    return KullaniciVarligi(
+      id: kayit.id,
+      adSoyad: kayit.adSoyad,
+      telefon: kayit.telefon,
+      eposta: kayit.eposta,
+      rol: KullaniciRolu.values[kayit.rol],
+      aktifMi: kayit.aktifMi,
+      adresMetni: kayit.adresMetni,
+    );
+  }
+
+  Future<void> kullaniciSifreBilgisiKaydet({
+    required String telefon,
+    required String sifreHash,
+    required String sifreTuz,
+  }) async {
+    await customStatement(
+      'INSERT INTO kullanici_giris_bilgileri '
+      '(telefon, sifre_hash, sifre_tuz, guncellenme_millis) '
+      'VALUES (?, ?, ?, ?) '
+      'ON CONFLICT(telefon) DO UPDATE SET '
+      'sifre_hash = excluded.sifre_hash, '
+      'sifre_tuz = excluded.sifre_tuz, '
+      'guncellenme_millis = excluded.guncellenme_millis',
+      <Object?>[
+        telefon.trim(),
+        sifreHash,
+        sifreTuz,
+        DateTime.now().millisecondsSinceEpoch,
+      ],
+    );
+  }
+
+  Future<({String sifreHash, String sifreTuz})?> kullaniciSifreBilgisiGetir(
+    String telefon,
+  ) async {
+    final List<QueryRow> sonuc = await customSelect(
+      'SELECT sifre_hash, sifre_tuz '
+      'FROM kullanici_giris_bilgileri '
+      'WHERE telefon = ?',
+      variables: <Variable<Object>>[Variable<String>(telefon.trim())],
+    ).get();
+    if (sonuc.isEmpty) {
+      return null;
+    }
+    return (
+      sifreHash: sonuc.first.read<String>('sifre_hash'),
+      sifreTuz: sonuc.first.read<String>('sifre_tuz'),
+    );
+  }
+
   Future<void> ayarYaz(String anahtar, String deger) async {
     await into(uygulamaAyarlar).insertOnConflictUpdate(
       UygulamaAyarlarCompanion(anahtar: Value(anahtar), deger: Value(deger)),
@@ -313,10 +390,21 @@ class UygulamaVeritabani extends _$UygulamaVeritabani
   }
 
   Future<KullaniciVarligi?> aktifKullaniciGetir() async {
-    final kayit = await (select(
+    final List<KullaniciKayitlariData> aktifKayitlar = await (select(
       kullaniciKayitlari,
-    )..orderBy([(tbl) => OrderingTerm.desc(tbl.aktifMi)])).getSingleOrNull();
-    if (kayit == null) return null;
+    )..where((tbl) => tbl.aktifMi.equals(true))).get();
+    if (aktifKayitlar.isEmpty) {
+      return null;
+    }
+    aktifKayitlar.sort((KullaniciKayitlariData a, KullaniciKayitlariData b) {
+      final int? aSayisal = int.tryParse(a.id);
+      final int? bSayisal = int.tryParse(b.id);
+      if (aSayisal != null && bSayisal != null) {
+        return bSayisal.compareTo(aSayisal);
+      }
+      return b.id.compareTo(a.id);
+    });
+    final KullaniciKayitlariData kayit = aktifKayitlar.first;
     return KullaniciVarligi(
       id: kayit.id,
       adSoyad: kayit.adSoyad,
@@ -349,6 +437,119 @@ class UygulamaVeritabani extends _$UygulamaVeritabani
   List<Map<String, Object?>> secenekleriCoz(String json) {
     final List<dynamic> ham = jsonDecode(json) as List<dynamic>;
     return ham.map((item) => Map<String, Object?>.from(item as Map)).toList();
+  }
+
+  Future<void> _kullaniciKimlikTablosunuHazirla() async {
+    await customStatement(
+      'CREATE TABLE IF NOT EXISTS kullanici_giris_bilgileri ('
+      'telefon TEXT NOT NULL PRIMARY KEY, '
+      'sifre_hash TEXT NOT NULL, '
+      'sifre_tuz TEXT NOT NULL, '
+      'guncellenme_millis INTEGER NOT NULL'
+      ')',
+    );
+    await customStatement(
+      'CREATE INDEX IF NOT EXISTS idx_kullanici_giris_bilgileri_telefon '
+      'ON kullanici_giris_bilgileri (telefon)',
+    );
+  }
+
+  Future<void> _kullaniciKayitlariniTekillestirVeIndeksle() async {
+    final List<QueryRow> satirlar = await customSelect(
+      'SELECT id, ad_soyad, telefon, eposta, rol, aktif_mi, adres_metni '
+      'FROM kullanici_kayitlari '
+      'ORDER BY aktif_mi DESC, '
+      "CASE WHEN id GLOB '[0-9]*' THEN CAST(id AS INTEGER) ELSE -1 END DESC, "
+      'id DESC',
+    ).get();
+
+    final Map<
+      String,
+      ({
+        String id,
+        String adSoyad,
+        String telefon,
+        String? eposta,
+        int rol,
+        bool aktifMi,
+        String? adresMetni,
+      })
+    >
+    tekilKayitlar =
+        <
+          String,
+          ({
+            String id,
+            String adSoyad,
+            String telefon,
+            String? eposta,
+            int rol,
+            bool aktifMi,
+            String? adresMetni,
+          })
+        >{};
+
+    for (final QueryRow satir in satirlar) {
+      final String telefon = satir.read<String>('telefon').trim();
+      if (telefon.isEmpty || tekilKayitlar.containsKey(telefon)) {
+        continue;
+      }
+      final Object? aktifMiHam = satir.data['aktif_mi'];
+      final bool aktifMi = switch (aktifMiHam) {
+        bool deger => deger,
+        int deger => deger == 1,
+        String deger => deger == '1' || deger.toLowerCase() == 'true',
+        _ => false,
+      };
+      final Object? rolHam = satir.data['rol'];
+      final int rol = switch (rolHam) {
+        int deger => deger,
+        String deger => int.tryParse(deger) ?? 0,
+        _ => 0,
+      };
+      tekilKayitlar[telefon] = (
+        id: satir.read<String>('id'),
+        adSoyad: satir.read<String>('ad_soyad'),
+        telefon: telefon,
+        eposta: satir.readNullable<String>('eposta'),
+        rol: rol,
+        aktifMi: aktifMi,
+        adresMetni: satir.readNullable<String>('adres_metni'),
+      );
+    }
+
+    await transaction(() async {
+      await customStatement('DELETE FROM kullanici_kayitlari');
+      for (final kayit in tekilKayitlar.values) {
+        await customStatement(
+          'INSERT INTO kullanici_kayitlari '
+          '(id, ad_soyad, telefon, eposta, rol, aktif_mi, adres_metni) '
+          'VALUES (?, ?, ?, ?, ?, ?, ?)',
+          <Object?>[
+            kayit.id,
+            kayit.adSoyad,
+            kayit.telefon,
+            kayit.eposta,
+            kayit.rol,
+            kayit.aktifMi ? 1 : 0,
+            kayit.adresMetni,
+          ],
+        );
+      }
+    });
+
+    await customStatement(
+      'CREATE UNIQUE INDEX IF NOT EXISTS idx_kullanici_kayitlari_telefon '
+      'ON kullanici_kayitlari (telefon)',
+    );
+    await customStatement(
+      'CREATE INDEX IF NOT EXISTS idx_kullanici_kayitlari_aktif_mi '
+      'ON kullanici_kayitlari (aktif_mi)',
+    );
+    await customStatement(
+      'DELETE FROM kullanici_giris_bilgileri '
+      'WHERE telefon NOT IN (SELECT telefon FROM kullanici_kayitlari)',
+    );
   }
 
   Future<void> _indeksleriOlustur() async {
@@ -950,6 +1151,21 @@ class UygulamaVeritabani extends _$UygulamaVeritabani
 
   String _kimlikHaritasiUygula(Map<String, String> harita, String kimlik) {
     return harita[kimlik] ?? kimlik;
+  }
+
+  int _kimlikKarsilastir(String sol, String sag) {
+    final int? solSayisal = int.tryParse(sol);
+    final int? sagSayisal = int.tryParse(sag);
+    if (solSayisal != null && sagSayisal != null) {
+      return solSayisal.compareTo(sagSayisal);
+    }
+    if (solSayisal != null) {
+      return -1;
+    }
+    if (sagSayisal != null) {
+      return 1;
+    }
+    return sol.compareTo(sag);
   }
 
   dynamic _guvenliJsonCoz(String jsonVeri) {

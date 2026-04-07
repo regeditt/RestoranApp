@@ -49,6 +49,12 @@ endfunction()
 set(FLUTTER_MANAGED_DIR "${CMAKE_CURRENT_SOURCE_DIR}/flutter")
 add_subdirectory(${FLUTTER_MANAGED_DIR})
 
+# Some plugins, such as `printing`, read FLUTTER_TARGET_PLATFORM from the
+# parent CMake scope. Ensure it is available here as well.
+if(NOT DEFINED FLUTTER_TARGET_PLATFORM OR "${FLUTTER_TARGET_PLATFORM}" STREQUAL "")
+  set(FLUTTER_TARGET_PLATFORM "windows-x64")
+endif()
+
 # Application build; see runner/CMakeLists.txt.
 add_subdirectory("runner")
 

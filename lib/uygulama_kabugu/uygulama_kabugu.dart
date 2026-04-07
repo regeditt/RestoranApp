@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:restoran_app/bagimlilik_enjeksiyonu/servis_kaydi.dart';
 import 'package:restoran_app/ortak/bagimlilik/servis_saglayici.dart';
 import 'package:restoran_app/ortak/tema/uygulama_tema.dart';
@@ -38,6 +39,11 @@ class _UygulamaKabuguState extends State<UygulamaKabugu> {
 
   @override
   Widget build(BuildContext context) {
+    // Force-disable debug paint overlays that reduce readability in UI.
+    debugPaintBaselinesEnabled = false;
+    debugPaintSizeEnabled = false;
+    debugPaintPointersEnabled = false;
+
     return ServisSaglayici(
       servis: _servisKaydi,
       child: MaterialApp(

@@ -611,12 +611,12 @@ class _MenuIzgarasi extends StatelessWidget {
       _AnaMenuKartVerisi(
         ikon: Icons.local_pizza_outlined,
         baslik: 'Urunler',
-        rota: RotaYapisi.pos,
+        rota: RotaYapisi.qrMenu,
       ),
       _AnaMenuKartVerisi(
         ikon: Icons.inventory_2_outlined,
         baslik: 'Stoklar',
-        rota: RotaYapisi.yonetimPaneli,
+        rota: RotaYapisi.personelGiris,
       ),
       _AnaMenuKartVerisi(
         ikon: Icons.badge_outlined,
@@ -626,30 +626,30 @@ class _MenuIzgarasi extends StatelessWidget {
       _AnaMenuKartVerisi(
         ikon: Icons.bar_chart_rounded,
         baslik: 'Raporlar',
-        rota: RotaYapisi.yonetimPaneli,
+        rota: RotaYapisi.personelGiris,
       ),
       _AnaMenuKartVerisi(
         ikon: Icons.room_service_outlined,
         baslik: 'Siparisler',
-        rota: RotaYapisi.mutfak,
+        rota: RotaYapisi.personelGiris,
         rozet: '7',
       ),
       _AnaMenuKartVerisi(
         ikon: Icons.shopping_basket_outlined,
         baslik: 'Hizli Satis',
-        rota: RotaYapisi.pos,
+        rota: RotaYapisi.personelGiris,
         rozet: '1',
       ),
       _AnaMenuKartVerisi(
         ikon: Icons.delivery_dining_rounded,
         baslik: 'Paketler',
-        rota: RotaYapisi.qrMenu,
+        rota: RotaYapisi.personelGiris,
         rozet: '0',
       ),
       _AnaMenuKartVerisi(
         ikon: Icons.soup_kitchen_outlined,
         baslik: 'Mutfak',
-        rota: RotaYapisi.mutfak,
+        rota: RotaYapisi.personelGiris,
         rozet: '0',
       ),
     ];
@@ -771,7 +771,7 @@ class _AltSatir extends StatelessWidget {
         ),
         FilledButton.icon(
           onPressed: () =>
-              Navigator.of(context).pushNamed(RotaYapisi.yonetimPaneli),
+              Navigator.of(context).pushNamed(RotaYapisi.personelGiris),
           icon: const Icon(Icons.settings_rounded),
           label: const Text('Ayarlar'),
           style: FilledButton.styleFrom(

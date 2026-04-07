@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:restoran_app/ortak/bilesenler/suruklenebilir_dialog_kapsayici.dart';
 import 'package:restoran_app/ozellikler/siparis/alan/varliklar/siparis_varligi.dart';
 import 'package:restoran_app/ozellikler/yonetim/alan/varliklar/yazici_is_kuyrugu_varligi.dart';
@@ -28,114 +29,126 @@ class YaziciYonetimiKarti extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    debugPaintBaselinesEnabled = false;
     final int bagliYaziciSayisi = yazicilar
         .where((yazici) => yazici.durum == YaziciBaglantiDurumu.bagli)
         .length;
     final List<YaziciIsKuyruguVarligi> kuyruk =
         YaziciIsKuyruguHesaplayici.kuyruguHazirla(siparisler);
 
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [Color(0xFF2D1B41), Color(0xFF4A2569)],
-        ),
-        borderRadius: BorderRadius.circular(28),
+    return DefaultTextStyle.merge(
+      style: const TextStyle(
+        decoration: TextDecoration.none,
+        decorationColor: Colors.transparent,
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Expanded(
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [Color(0xFF2D1B41), Color(0xFF4A2569)],
+          ),
+          borderRadius: BorderRadius.circular(28),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Yazici yonetimi',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 18,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        '$bagliYaziciSayisi / ${yazicilar.length} yazici bagli durumda. Mutfak, bar ve fis rollerini buradan takip et.',
+                        style: const TextStyle(
+                          color: Color(0xFFE8DDF0),
+                          fontSize: 14,
+                          height: 1.35,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Padding(
+                  padding: const EdgeInsets.only(right: 18),
+                  child: FilledButton.icon(
+                    onPressed: yaziciEkle,
+                    style: FilledButton.styleFrom(
+                      backgroundColor: Colors.white.withValues(alpha: 0.12),
+                      foregroundColor: Colors.white,
+                    ),
+                    icon: const Icon(Icons.add),
+                    label: const Text(
+                      'Yazici ekle',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 18),
+            if (kuyruk.isNotEmpty) ...[
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.08),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(
+                    color: Colors.white.withValues(alpha: 0.08),
+                  ),
+                ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const Text(
-                      'Yazici yonetimi',
+                      'Canli Yazici kuyrugu',
                       style: TextStyle(
                         color: Colors.white,
-                        fontSize: 18,
+                        fontSize: 15,
                         fontWeight: FontWeight.w800,
                       ),
                     ),
-                    const SizedBox(height: 6),
-                    Text(
-                      '$bagliYaziciSayisi / ${yazicilar.length} yazici bagli durumda. Mutfak, bar ve fis rollerini buradan takip et.',
-                      style: const TextStyle(
-                        color: Color(0xFFE8DDF0),
-                        fontSize: 14,
-                        height: 1.35,
+                    const SizedBox(height: 12),
+                    ...kuyruk.map(
+                      (isEmri) => Padding(
+                        padding: const EdgeInsets.only(bottom: 10),
+                        child: _YaziciKuyrukSatiri(isEmri: isEmri),
                       ),
                     ),
                   ],
                 ),
               ),
-              const SizedBox(width: 12),
-              Padding(
-                padding: const EdgeInsets.only(right: 18),
-                child: FilledButton.icon(
-                  onPressed: yaziciEkle,
-                  style: FilledButton.styleFrom(
-                    backgroundColor: Colors.white.withValues(alpha: 0.12),
-                    foregroundColor: Colors.white,
-                  ),
-                  icon: const Icon(Icons.add),
-                  label: const Text(
-                    'Yazici ekle',
-                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700),
-                  ),
+              const SizedBox(height: 14),
+            ],
+            ...yazicilar.map(
+              (YaziciDurumuVarligi yazici) => Padding(
+                padding: const EdgeInsets.only(bottom: 12),
+                child: _YaziciSatiri(
+                  yazici: yazici,
+                  yaziciSil: yaziciSil,
+                  yaziciGuncelle: yaziciGuncelle,
                 ),
               ),
-            ],
-          ),
-          const SizedBox(height: 18),
-          if (kuyruk.isNotEmpty) ...[
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.08),
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'Canli Yazici kuyrugu',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 15,
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  ...kuyruk.map(
-                    (isEmri) => Padding(
-                      padding: const EdgeInsets.only(bottom: 10),
-                      child: _YaziciKuyrukSatiri(isEmri: isEmri),
-                    ),
-                  ),
-                ],
-              ),
             ),
-            const SizedBox(height: 14),
           ],
-          ...yazicilar.map(
-            (YaziciDurumuVarligi yazici) => Padding(
-              padding: const EdgeInsets.only(bottom: 12),
-              child: _YaziciSatiri(
-                yazici: yazici,
-                yaziciSil: yaziciSil,
-                yaziciGuncelle: yaziciGuncelle,
-              ),
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }

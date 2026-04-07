@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:restoran_app/bagimlilik_enjeksiyonu/servis_kaydi.dart';
+import 'package:restoran_app/ortak/bagimlilik/servis_saglayici.dart';
+import 'package:restoran_app/ozellikler/kimlik/alan/roller/kullanici_rolu.dart';
 import 'package:restoran_app/ozellikler/kimlik/sunum/sayfalar/giris_secim_sayfasi.dart';
 import 'package:restoran_app/ozellikler/kimlik/sunum/viewmodel/giris_secim_viewmodel.dart';
 import 'package:restoran_app/ozellikler/kimlik/alan/varliklar/misafir_bilgisi_varligi.dart';
@@ -158,6 +160,58 @@ void main() {
     expect(find.text('Aktif is'), findsOneWidget);
     expect(find.text('Yeni'), findsOneWidget);
     expect(find.text('Salon'), findsWidgets);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('POS rotasi yetkisiz musteriyi personel girisine yonlendirir', (
+    WidgetTester tester,
+  ) async {
+    final ServisKaydi servisKaydi = ServisKaydi.mock();
+
+    await tester.pumpWidget(
+      ServisSaglayici(
+        servis: servisKaydi,
+        child: MaterialApp(
+          initialRoute: RotaYapisi.pos,
+          onGenerateRoute: RotaYapisi.rotaOlustur,
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(
+      find.text('POS erisimi icin personel girisi gerekli'),
+      findsOneWidget,
+    );
+    expect(find.text('Personel girisine git'), findsOneWidget);
+    expect(find.text('QR menuye don'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('Garson oturumu ile POS rotasi acilir', (
+    WidgetTester tester,
+  ) async {
+    final ServisKaydi servisKaydi = ServisKaydi.mock();
+    await servisKaydi.girisYapUseCase(
+      telefon: '5550000000',
+      sifre: '123456',
+      rol: KullaniciRolu.garson,
+      adSoyad: 'Deneme Garson',
+    );
+
+    await tester.pumpWidget(
+      ServisSaglayici(
+        servis: servisKaydi,
+        child: MaterialApp(
+          initialRoute: RotaYapisi.pos,
+          onGenerateRoute: RotaYapisi.rotaOlustur,
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Salon ve Masa Secimi'), findsOneWidget);
+    expect(find.text('POS OPERASYON'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 
@@ -502,12 +556,12 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('Masa plani'), findsOneWidget);
-    expect(find.text('Ana salon'), findsOneWidget);
-    expect(find.text('1/2 dolu'), findsOneWidget);
-    expect(find.text('Masa A1'), findsOneWidget);
-    expect(find.text('Masa A2'), findsOneWidget);
-    expect(find.text('Selin Aras - 1 kalem'), findsOneWidget);
+    expect(find.text('RESTORANAPP Pos'), findsOneWidget);
+    expect(find.text('Katlar  >  Salon'), findsOneWidget);
+    expect(find.text('1 dolu masa'), findsOneWidget);
+    expect(find.text('Salon A1'), findsWidgets);
+    expect(find.text('Salon A2'), findsOneWidget);
+    expect(find.text('Selin Aras - 360 TL'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 }

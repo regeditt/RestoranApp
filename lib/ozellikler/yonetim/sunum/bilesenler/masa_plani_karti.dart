@@ -480,25 +480,68 @@ class _SolAdisyonPaneli extends StatelessWidget {
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    child: Row(
-                      children: [
-                        const Text(
-                          'TOPLAM',
-                          style: TextStyle(
-                            color: Color(0xFF6C5F7C),
-                            fontWeight: FontWeight.w800,
-                          ),
-                        ),
-                        const Spacer(),
-                        Text(
-                          '${toplamTutar.toStringAsFixed(0)} TL',
-                          style: const TextStyle(
-                            color: Color(0xFF3A2057),
-                            fontSize: 28,
-                            fontWeight: FontWeight.w900,
-                          ),
-                        ),
-                      ],
+                    child: LayoutBuilder(
+                      builder:
+                          (BuildContext context, BoxConstraints constraints) {
+                            if (constraints.maxWidth < 260) {
+                              return Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Text(
+                                    'TOPLAM',
+                                    style: TextStyle(
+                                      color: Color(0xFF6C5F7C),
+                                      fontWeight: FontWeight.w800,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Align(
+                                    alignment: Alignment.centerRight,
+                                    child: FittedBox(
+                                      fit: BoxFit.scaleDown,
+                                      child: Text(
+                                        '${toplamTutar.toStringAsFixed(0)} TL',
+                                        style: const TextStyle(
+                                          color: Color(0xFF3A2057),
+                                          fontSize: 28,
+                                          fontWeight: FontWeight.w900,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              );
+                            }
+
+                            return Row(
+                              children: [
+                                const Text(
+                                  'TOPLAM',
+                                  style: TextStyle(
+                                    color: Color(0xFF6C5F7C),
+                                    fontWeight: FontWeight.w800,
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Align(
+                                    alignment: Alignment.centerRight,
+                                    child: FittedBox(
+                                      fit: BoxFit.scaleDown,
+                                      child: Text(
+                                        '${toplamTutar.toStringAsFixed(0)} TL',
+                                        style: const TextStyle(
+                                          color: Color(0xFF3A2057),
+                                          fontSize: 28,
+                                          fontWeight: FontWeight.w900,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            );
+                          },
                     ),
                   ),
                 ],

@@ -105,8 +105,10 @@ class GirisSecimViewModel extends ChangeNotifier {
       return GirisSecimIslemSonucu.basarili(
         hedef: hedef ?? _seciliMod.ilkHedef,
       );
+    } on StateError catch (hata) {
+      return GirisSecimIslemSonucu.hata(hata.message.toString());
     } catch (_) {
-      return const GirisSecimIslemSonucu.hata('Giris yapilamadi');
+      return const GirisSecimIslemSonucu.hata('Giris yapilamadi.');
     } finally {
       _islemde = false;
       notifyListeners();
