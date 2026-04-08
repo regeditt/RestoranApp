@@ -89,6 +89,35 @@ void main() {
     expect(find.text('Garson girisi'), findsWidgets);
     expect(find.text('Yonetici girisi'), findsWidgets);
     expect(find.text('QR menuye don'), findsOneWidget);
+    expect(find.text('Giris yap'), findsNothing);
+    expect(find.text('Hesap olustur'), findsNothing);
+  });
+
+  testWidgets('Personel girisinde hesap olustur modu ayni formda acilir', (
+    WidgetTester tester,
+  ) async {
+    await tester.pumpWidget(
+      testUygulamasi(
+        child: GirisSecimSayfasi(
+          viewModel: GirisSecimViewModel.servisKaydindan(ServisKaydi.mock()),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Yonetici girisi').first);
+    await tester.pumpAndSettle();
+
+    expect(find.text('Giris yap'), findsNothing);
+    expect(find.text('Hesap olustur'), findsOneWidget);
+
+    await tester.tap(find.text('Hesap olustur'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Girise don'), findsOneWidget);
+    expect(find.text('Ad soyad'), findsOneWidget);
+    expect(find.text('Kullanici adi / telefon'), findsOneWidget);
+    expect(find.textContaining('hesabi olustur'), findsOneWidget);
   });
 
   testWidgets('Acilista ayarlar aksiyonu gorunur', (WidgetTester tester) async {
@@ -464,6 +493,7 @@ void main() {
   ) async {
     const List<PersonelDurumuVarligi> personeller = <PersonelDurumuVarligi>[
       PersonelDurumuVarligi(
+        kimlik: 'per_1',
         adSoyad: 'Zeynep Demir',
         rolEtiketi: 'Garson',
         bolge: 'Salon',
@@ -471,6 +501,7 @@ void main() {
         durum: PersonelDurumu.aktif,
       ),
       PersonelDurumuVarligi(
+        kimlik: 'per_2',
         adSoyad: 'Ali Can',
         rolEtiketi: 'Komi',
         bolge: 'Teras',
@@ -493,6 +524,66 @@ void main() {
     expect(find.text('Aktif'), findsOneWidget);
     expect(find.text('Molada'), findsOneWidget);
     expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('Personel yonetimi karti sil aksiyonunu gosterir', (
+    WidgetTester tester,
+  ) async {
+    PersonelDurumuVarligi? silinen;
+    const PersonelDurumuVarligi personel = PersonelDurumuVarligi(
+      kimlik: 'per_9',
+      adSoyad: 'Mehmet Kaya',
+      rolEtiketi: 'Garson',
+      bolge: 'Salon',
+      aciklama: 'Aksam servisi',
+      durum: PersonelDurumu.aktif,
+    );
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: PersonelYonetimiKarti(
+            personeller: const <PersonelDurumuVarligi>[personel],
+            personelSil: (PersonelDurumuVarligi secilen) {
+              silinen = secilen;
+            },
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Sil'), findsOneWidget);
+    await tester.tap(find.text('Sil'));
+    await tester.pumpAndSettle();
+
+    expect(silinen?.kimlik, 'per_9');
+  });
+
+  testWidgets('Personel yonetimi karti garson ekle aksiyonunu gosterir', (
+    WidgetTester tester,
+  ) async {
+    bool eklendi = false;
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: PersonelYonetimiKarti(
+            personeller: const <PersonelDurumuVarligi>[],
+            personelEkle: () {
+              eklendi = true;
+            },
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Garson ekle'), findsOneWidget);
+    await tester.tap(find.text('Garson ekle'));
+    await tester.pumpAndSettle();
+
+    expect(eklendi, isTrue);
   });
 
   testWidgets('Masa plani karti dolu ve bos masalari gosterir', (

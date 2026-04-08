@@ -2,9 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:restoran_app/ozellikler/yonetim/alan/varliklar/personel_durumu_varligi.dart';
 
 class PersonelYonetimiKarti extends StatelessWidget {
-  const PersonelYonetimiKarti({super.key, required this.personeller});
+  const PersonelYonetimiKarti({
+    super.key,
+    required this.personeller,
+    this.personelEkle,
+    this.personelSil,
+  });
 
   final List<PersonelDurumuVarligi> personeller;
+  final VoidCallback? personelEkle;
+  final ValueChanged<PersonelDurumuVarligi>? personelSil;
 
   @override
   Widget build(BuildContext context) {
@@ -43,33 +50,48 @@ class PersonelYonetimiKarti extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 12),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 10,
-                ),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFF3EAF9),
-                  borderRadius: BorderRadius.circular(18),
-                ),
-                child: const Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      Icons.group_outlined,
-                      color: Color(0xFF7D5CFF),
-                      size: 16,
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 10,
                     ),
-                    SizedBox(width: 8),
-                    Text(
-                      'Vardiya listesi',
-                      style: TextStyle(
-                        color: Color(0xFF412454),
-                        fontWeight: FontWeight.w700,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF3EAF9),
+                      borderRadius: BorderRadius.circular(18),
+                    ),
+                    child: const Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.group_outlined,
+                          color: Color(0xFF7D5CFF),
+                          size: 16,
+                        ),
+                        SizedBox(width: 8),
+                        Text(
+                          'Vardiya listesi',
+                          style: TextStyle(
+                            color: Color(0xFF412454),
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  if (personelEkle != null)
+                    FilledButton.tonalIcon(
+                      onPressed: personelEkle,
+                      icon: const Icon(
+                        Icons.person_add_alt_1_rounded,
+                        size: 18,
                       ),
+                      label: const Text('Garson ekle'),
                     ),
-                  ],
-                ),
+                ],
               ),
             ],
           ),
@@ -77,7 +99,10 @@ class PersonelYonetimiKarti extends StatelessWidget {
           ...personeller.map(
             (PersonelDurumuVarligi personel) => Padding(
               padding: const EdgeInsets.only(bottom: 12),
-              child: _PersonelSatiri(personel: personel),
+              child: _PersonelSatiri(
+                personel: personel,
+                personelSil: personelSil,
+              ),
             ),
           ),
         ],
@@ -87,9 +112,10 @@ class PersonelYonetimiKarti extends StatelessWidget {
 }
 
 class _PersonelSatiri extends StatelessWidget {
-  const _PersonelSatiri({required this.personel});
+  const _PersonelSatiri({required this.personel, this.personelSil});
 
   final PersonelDurumuVarligi personel;
+  final ValueChanged<PersonelDurumuVarligi>? personelSil;
 
   @override
   Widget build(BuildContext context) {
@@ -190,6 +216,22 @@ class _PersonelSatiri extends StatelessWidget {
                 icon: const Icon(Icons.edit_calendar_outlined, size: 18),
                 label: const Text('Not'),
               ),
+              if (personelSil != null && personel.silinebilirMi) ...[
+                const SizedBox(width: 8),
+                TextButton.icon(
+                  onPressed: () => personelSil!(personel),
+                  style: TextButton.styleFrom(
+                    foregroundColor: const Color(0xFFB3261E),
+                    backgroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 12,
+                    ),
+                  ),
+                  icon: const Icon(Icons.delete_outline_rounded, size: 18),
+                  label: const Text('Sil'),
+                ),
+              ],
             ],
           ),
         ],

@@ -4,6 +4,7 @@ enum PersonelDurumu { aktif, mola, pasif }
 
 class PersonelDurumuVarligi {
   const PersonelDurumuVarligi({
+    this.kimlik = '',
     required this.adSoyad,
     required this.rolEtiketi,
     required this.bolge,
@@ -11,11 +12,14 @@ class PersonelDurumuVarligi {
     required this.durum,
   });
 
+  final String kimlik;
   final String adSoyad;
   final String rolEtiketi;
   final String bolge;
   final String aciklama;
   final PersonelDurumu durum;
+
+  bool get silinebilirMi => kimlik.isNotEmpty;
 
   String get kisaAd {
     final List<String> parcalar = adSoyad.split(' ');

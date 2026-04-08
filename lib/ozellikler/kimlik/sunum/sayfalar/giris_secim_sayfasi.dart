@@ -15,6 +15,7 @@ class GirisSecimSayfasi extends StatefulWidget {
 }
 
 class _GirisSecimSayfasiState extends State<GirisSecimSayfasi> {
+  final TextEditingController _adSoyadDenetleyici = TextEditingController();
   final TextEditingController _kullaniciAdiDenetleyici =
       TextEditingController();
   final TextEditingController _sifreDenetleyici = TextEditingController();
@@ -29,6 +30,7 @@ class _GirisSecimSayfasiState extends State<GirisSecimSayfasi> {
 
   @override
   void dispose() {
+    _adSoyadDenetleyici.dispose();
     _kullaniciAdiDenetleyici.dispose();
     _sifreDenetleyici.dispose();
     widget.viewModel.dispose();
@@ -37,6 +39,7 @@ class _GirisSecimSayfasiState extends State<GirisSecimSayfasi> {
 
   Future<void> _devamEt({_GirisHedefi hedef = _GirisHedefi.pos}) async {
     final GirisSecimIslemSonucu sonuc = await widget.viewModel.devamEt(
+      adSoyad: _adSoyadDenetleyici.text,
       kullaniciAdi: _kullaniciAdiDenetleyici.text,
       sifre: _sifreDenetleyici.text,
       hedef: hedef,
@@ -70,6 +73,7 @@ class _GirisSecimSayfasiState extends State<GirisSecimSayfasi> {
         final bool mobil = MediaQuery.sizeOf(context).width < 760;
         final bool islemde = widget.viewModel.islemde;
         final _PersonelGirisModu seciliMod = widget.viewModel.seciliMod;
+        final bool hesapOlusturmaModu = widget.viewModel.hesapOlusturmaModu;
 
         return Scaffold(
           body: DecoratedBox(
@@ -170,8 +174,41 @@ class _GirisSecimSayfasiState extends State<GirisSecimSayfasi> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
+                              if (widget
+                                      .viewModel
+                                      .kullanilabilirEkranModlari
+                                      .length >
+                                  1) ...[
+                                Wrap(
+                                  spacing: 10,
+                                  runSpacing: 10,
+                                  children: widget
+                                      .viewModel
+                                      .kullanilabilirEkranModlari
+                                      .where(
+                                        (KimlikEkranModu mod) =>
+                                            mod != widget.viewModel.ekranModu,
+                                      )
+                                      .map(
+                                        (KimlikEkranModu mod) => ChoiceChip(
+                                          label: Text(
+                                            mod == KimlikEkranModu.girisYap
+                                                ? 'Girise don'
+                                                : mod.baslik,
+                                          ),
+                                          selected: false,
+                                          onSelected: islemde
+                                              ? null
+                                              : (_) => widget.viewModel
+                                                    .ekranModuSec(mod),
+                                        ),
+                                      )
+                                      .toList(),
+                                ),
+                                const SizedBox(height: 16),
+                              ],
                               Text(
-                                seciliMod.baslik,
+                                widget.viewModel.formBaslik,
                                 style: const TextStyle(
                                   fontSize: 24,
                                   fontWeight: FontWeight.w900,
@@ -179,16 +216,25 @@ class _GirisSecimSayfasiState extends State<GirisSecimSayfasi> {
                               ),
                               const SizedBox(height: 6),
                               Text(
-                                seciliMod.aciklama,
+                                widget.viewModel.formAciklama,
                                 style: const TextStyle(
                                   color: Color(0xFF6D6079),
                                 ),
                               ),
                               const SizedBox(height: 18),
+                              if (hesapOlusturmaModu) ...[
+                                TextField(
+                                  controller: _adSoyadDenetleyici,
+                                  decoration: const InputDecoration(
+                                    labelText: 'Ad soyad',
+                                  ),
+                                ),
+                                const SizedBox(height: 12),
+                              ],
                               TextField(
                                 controller: _kullaniciAdiDenetleyici,
                                 decoration: const InputDecoration(
-                                  labelText: 'Kullanici adi',
+                                  labelText: 'Kullanici adi / telefon',
                                 ),
                               ),
                               const SizedBox(height: 12),
@@ -217,7 +263,7 @@ class _GirisSecimSayfasiState extends State<GirisSecimSayfasi> {
                                   child: Text(
                                     islemde
                                         ? 'Hazirlaniyor...'
-                                        : seciliMod.butonMetni,
+                                        : widget.viewModel.anaAksiyonMetni,
                                   ),
                                 ),
                               ),

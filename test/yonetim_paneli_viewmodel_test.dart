@@ -45,4 +45,54 @@ void main() {
       );
     },
   );
+
+  test(
+    'YonetimPaneliViewModel personel silme sonrasi listeyi gunceller',
+    () async {
+      final YonetimPaneliViewModel viewModel =
+          YonetimPaneliViewModel.servisKaydindan(ServisKaydi.mock());
+      await viewModel.yukle();
+      final silinecek = viewModel.personeller.first;
+
+      final YonetimPaneliIslemSonucu sonuc = await viewModel.personelSil(
+        silinecek,
+      );
+
+      expect(sonuc.basarili, isTrue);
+      expect(
+        viewModel.personeller.any(
+          (personel) => personel.kimlik == silinecek.kimlik,
+        ),
+        isFalse,
+      );
+    },
+  );
+
+  test(
+    'YonetimPaneliViewModel garson hesabi olusturup personel listesine ekler',
+    () async {
+      final YonetimPaneliViewModel viewModel =
+          YonetimPaneliViewModel.servisKaydindan(ServisKaydi.mock());
+      await viewModel.yukle();
+      final int oncekiSayi = viewModel.personeller.length;
+
+      final YonetimPaneliIslemSonucu sonuc = await viewModel
+          .garsonHesabiOlustur(
+            adSoyad: 'Yeni Garson',
+            kullaniciAdi: 'garson_yeni',
+            sifre: '123456',
+          );
+
+      expect(sonuc.basarili, isTrue);
+      expect(viewModel.personeller.length, oncekiSayi + 1);
+      expect(
+        viewModel.personeller.any(
+          (personel) =>
+              personel.adSoyad == 'Yeni Garson' &&
+              personel.rolEtiketi == 'Garson',
+        ),
+        isTrue,
+      );
+    },
+  );
 }

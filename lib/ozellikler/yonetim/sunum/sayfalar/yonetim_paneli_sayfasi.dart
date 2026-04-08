@@ -167,6 +167,69 @@ class _YonetimPaneliSayfasiState extends State<YonetimPaneliSayfasi> {
     ).showSnackBar(SnackBar(content: Text(sonuc.mesaj)));
   }
 
+  Future<void> _personelSil(PersonelDurumuVarligi personel) async {
+    final bool? onay = await showDialog<bool>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Personeli sil'),
+          content: Text(
+            '${personel.adSoyad} kaydi kaldirilsin mi? Bagli giris hesabi varsa o da silinecek.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: const Text('Vazgec'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              child: const Text('Sil'),
+            ),
+          ],
+        );
+      },
+    );
+    if (onay != true) {
+      return;
+    }
+
+    final YonetimPaneliIslemSonucu sonuc = await widget.viewModel.personelSil(
+      personel,
+    );
+    if (!mounted) {
+      return;
+    }
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(sonuc.mesaj)));
+  }
+
+  Future<void> _garsonEkle() async {
+    final _GarsonHesapFormSonucu? formSonucu =
+        await showDialog<_GarsonHesapFormSonucu>(
+          context: context,
+          builder: (BuildContext context) {
+            return const _GarsonHesapFormDialog();
+          },
+        );
+    if (formSonucu == null) {
+      return;
+    }
+
+    final YonetimPaneliIslemSonucu sonuc = await widget.viewModel
+        .garsonHesabiOlustur(
+          adSoyad: formSonucu.adSoyad,
+          kullaniciAdi: formSonucu.kullaniciAdi,
+          sifre: formSonucu.sifre,
+        );
+    if (!mounted) {
+      return;
+    }
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(sonuc.mesaj)));
+  }
+
   Future<void> _yonetimAyarlariniAc([int baslangicSekmesi = 0]) async {
     final YonetimPaneliViewModel viewModel = widget.viewModel;
     await showDialog<void>(
@@ -271,6 +334,8 @@ class _YonetimPaneliSayfasiState extends State<YonetimPaneliSayfasi> {
                                               yaziciEkle: _yaziciEkle,
                                               yaziciSil: _yaziciSil,
                                               yaziciGuncelle: _yaziciGuncelle,
+                                              personelEkle: _garsonEkle,
+                                              personelSil: _personelSil,
                                               personeller:
                                                   viewModel.personeller,
                                             ),
@@ -297,6 +362,8 @@ class _YonetimPaneliSayfasiState extends State<YonetimPaneliSayfasi> {
                                             yaziciEkle: _yaziciEkle,
                                             yaziciSil: _yaziciSil,
                                             yaziciGuncelle: _yaziciGuncelle,
+                                            personelEkle: _garsonEkle,
+                                            personelSil: _personelSil,
                                             personeller: viewModel.personeller,
                                           ),
                                         ],
@@ -923,6 +990,8 @@ class _YanPanel extends StatelessWidget {
     required this.yaziciEkle,
     required this.yaziciSil,
     required this.yaziciGuncelle,
+    required this.personelEkle,
+    required this.personelSil,
     required this.personeller,
   });
 
@@ -939,6 +1008,8 @@ class _YanPanel extends StatelessWidget {
     YaziciBaglantiDurumu? durum,
   })
   yaziciGuncelle;
+  final Future<void> Function() personelEkle;
+  final Future<void> Function(PersonelDurumuVarligi personel) personelSil;
   final List<PersonelDurumuVarligi> personeller;
 
   @override
@@ -979,7 +1050,11 @@ class _YanPanel extends StatelessWidget {
             ),
             SizedBox(
               width: yariGenislik,
-              child: PersonelYonetimiKarti(personeller: personeller),
+              child: PersonelYonetimiKarti(
+                personeller: personeller,
+                personelEkle: personelEkle,
+                personelSil: personelSil,
+              ),
             ),
             SizedBox(
               width: genislik,
@@ -991,6 +1066,115 @@ class _YanPanel extends StatelessWidget {
           ],
         );
       },
+    );
+  }
+}
+
+class _GarsonHesapFormSonucu {
+  const _GarsonHesapFormSonucu({
+    required this.adSoyad,
+    required this.kullaniciAdi,
+    required this.sifre,
+  });
+
+  final String adSoyad;
+  final String kullaniciAdi;
+  final String sifre;
+}
+
+class _GarsonHesapFormDialog extends StatefulWidget {
+  const _GarsonHesapFormDialog();
+
+  @override
+  State<_GarsonHesapFormDialog> createState() => _GarsonHesapFormDialogState();
+}
+
+class _GarsonHesapFormDialogState extends State<_GarsonHesapFormDialog> {
+  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+  final TextEditingController _adSoyadDenetleyici = TextEditingController();
+  final TextEditingController _kullaniciAdiDenetleyici =
+      TextEditingController();
+  final TextEditingController _sifreDenetleyici = TextEditingController();
+
+  @override
+  void dispose() {
+    _adSoyadDenetleyici.dispose();
+    _kullaniciAdiDenetleyici.dispose();
+    _sifreDenetleyici.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('Garson hesabi olustur'),
+      content: Form(
+        key: _formKey,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextFormField(
+              controller: _adSoyadDenetleyici,
+              decoration: const InputDecoration(labelText: 'Ad soyad'),
+              validator: (String? deger) {
+                if (deger == null || deger.trim().isEmpty) {
+                  return 'Ad soyad gerekli';
+                }
+                return null;
+              },
+            ),
+            const SizedBox(height: 12),
+            TextFormField(
+              controller: _kullaniciAdiDenetleyici,
+              decoration: const InputDecoration(
+                labelText: 'Kullanici adi / telefon',
+              ),
+              validator: (String? deger) {
+                if (deger == null || deger.trim().isEmpty) {
+                  return 'Kullanici adi gerekli';
+                }
+                return null;
+              },
+            ),
+            const SizedBox(height: 12),
+            TextFormField(
+              controller: _sifreDenetleyici,
+              obscureText: true,
+              decoration: const InputDecoration(labelText: 'Sifre'),
+              validator: (String? deger) {
+                if (deger == null || deger.trim().isEmpty) {
+                  return 'Sifre gerekli';
+                }
+                if (deger.trim().length < 6) {
+                  return 'Sifre en az 6 karakter olmali';
+                }
+                return null;
+              },
+            ),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('Vazgec'),
+        ),
+        FilledButton(
+          onPressed: () {
+            if (!(_formKey.currentState?.validate() ?? false)) {
+              return;
+            }
+            Navigator.of(context).pop(
+              _GarsonHesapFormSonucu(
+                adSoyad: _adSoyadDenetleyici.text.trim(),
+                kullaniciAdi: _kullaniciAdiDenetleyici.text.trim(),
+                sifre: _sifreDenetleyici.text.trim(),
+              ),
+            );
+          },
+          child: const Text('Olustur'),
+        ),
+      ],
     );
   }
 }

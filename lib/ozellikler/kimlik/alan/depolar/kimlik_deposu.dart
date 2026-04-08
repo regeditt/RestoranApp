@@ -5,6 +5,15 @@ import 'package:restoran_app/ozellikler/kimlik/alan/varliklar/misafir_bilgisi_va
 abstract class KimlikDeposu {
   Future<KullaniciVarligi?> aktifKullaniciGetir();
 
+  Future<KullaniciVarligi> hesapOlustur({
+    required String telefon,
+    required String sifre,
+    required String adSoyad,
+    KullaniciRolu rol = KullaniciRolu.musteri,
+    String? adresMetni,
+    bool aktifYap = true,
+  });
+
   Future<KullaniciVarligi> girisYap({
     required String telefon,
     required String sifre,

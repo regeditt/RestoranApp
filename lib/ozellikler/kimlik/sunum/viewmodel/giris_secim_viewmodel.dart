@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:restoran_app/bagimlilik_enjeksiyonu/servis_kaydi.dart';
 import 'package:restoran_app/ozellikler/kimlik/alan/roller/kullanici_rolu.dart';
 import 'package:restoran_app/ozellikler/kimlik/uygulama/use_case/giris_yap_use_case.dart';
+import 'package:restoran_app/ozellikler/kimlik/uygulama/use_case/hesap_olustur_use_case.dart';
 
 enum GirisHedefi { pos, yonetim, mutfak }
 
@@ -32,6 +33,16 @@ enum PersonelGirisModu {
   final GirisHedefi ilkHedef;
 }
 
+enum KimlikEkranModu {
+  girisYap('Giris yap', 'Mevcut personel hesabi ile devam et.'),
+  hesapOlustur('Hesap olustur', 'Secili rol icin yeni personel hesabi ac.');
+
+  const KimlikEkranModu(this.baslik, this.aciklama);
+
+  final String baslik;
+  final String aciklama;
+}
+
 class GirisSecimIslemSonucu {
   const GirisSecimIslemSonucu._({
     required this.basarili,
@@ -51,32 +62,74 @@ class GirisSecimIslemSonucu {
 }
 
 class GirisSecimViewModel extends ChangeNotifier {
-  GirisSecimViewModel({required GirisYapUseCase girisYapUseCase})
-    : _girisYapUseCase = girisYapUseCase;
+  GirisSecimViewModel({
+    required GirisYapUseCase girisYapUseCase,
+    required HesapOlusturUseCase hesapOlusturUseCase,
+  }) : _girisYapUseCase = girisYapUseCase,
+       _hesapOlusturUseCase = hesapOlusturUseCase;
 
   factory GirisSecimViewModel.servisKaydindan(ServisKaydi servisKaydi) {
-    return GirisSecimViewModel(girisYapUseCase: servisKaydi.girisYapUseCase);
+    return GirisSecimViewModel(
+      girisYapUseCase: servisKaydi.girisYapUseCase,
+      hesapOlusturUseCase: servisKaydi.hesapOlusturUseCase,
+    );
   }
 
   final GirisYapUseCase _girisYapUseCase;
+  final HesapOlusturUseCase _hesapOlusturUseCase;
 
   PersonelGirisModu _seciliMod = PersonelGirisModu.garson;
+  KimlikEkranModu _ekranModu = KimlikEkranModu.girisYap;
   bool _islemde = false;
 
   PersonelGirisModu get seciliMod => _seciliMod;
+  KimlikEkranModu get ekranModu => _ekranModu;
   bool get islemde => _islemde;
+  bool get hesapOlusturmaModu => _ekranModu == KimlikEkranModu.hesapOlustur;
+  List<KimlikEkranModu> get kullanilabilirEkranModlari =>
+      _seciliMod == PersonelGirisModu.yonetici
+      ? KimlikEkranModu.values
+      : const <KimlikEkranModu>[KimlikEkranModu.girisYap];
+
+  String get formBaslik => hesapOlusturmaModu
+      ? '${_seciliMod.baslik} hesabi olustur'
+      : _seciliMod.baslik;
+
+  String get formAciklama => hesapOlusturmaModu
+      ? '${_seciliMod.aciklama} Yeni hesap olusturuldugunda oturum acilip ilgili ekrana gecilir.'
+      : _seciliMod.aciklama;
+
+  String get anaAksiyonMetni => hesapOlusturmaModu
+      ? '${_seciliMod.baslik} olustur'
+      : _seciliMod.butonMetni;
 
   void modSec(PersonelGirisModu mod) {
     if (_seciliMod == mod) {
       return;
     }
     _seciliMod = mod;
+    if (_seciliMod != PersonelGirisModu.yonetici &&
+        _ekranModu == KimlikEkranModu.hesapOlustur) {
+      _ekranModu = KimlikEkranModu.girisYap;
+    }
+    notifyListeners();
+  }
+
+  void ekranModuSec(KimlikEkranModu mod) {
+    if (!kullanilabilirEkranModlari.contains(mod)) {
+      return;
+    }
+    if (_ekranModu == mod) {
+      return;
+    }
+    _ekranModu = mod;
     notifyListeners();
   }
 
   Future<GirisSecimIslemSonucu> devamEt({
     required String kullaniciAdi,
     required String sifre,
+    String adSoyad = '',
     GirisHedefi? hedef,
   }) async {
     if (_islemde) {
@@ -90,18 +143,29 @@ class GirisSecimViewModel extends ChangeNotifier {
         'Kullanici adi ve sifre alanlarini doldur.',
       );
     }
+    final String temizAdSoyad = adSoyad.trim();
+    if (hesapOlusturmaModu && temizAdSoyad.isEmpty) {
+      return const GirisSecimIslemSonucu.hata('Ad soyad alanini doldur.');
+    }
 
     _islemde = true;
     notifyListeners();
     try {
-      await _girisYapUseCase(
-        telefon: temizKullaniciAdi,
-        sifre: temizSifre,
-        rol: _seciliMod == PersonelGirisModu.garson
-            ? KullaniciRolu.garson
-            : KullaniciRolu.yonetici,
-        adSoyad: temizKullaniciAdi,
-      );
+      if (hesapOlusturmaModu) {
+        await _hesapOlusturUseCase(
+          telefon: temizKullaniciAdi,
+          sifre: temizSifre,
+          adSoyad: temizAdSoyad,
+          rol: _seciliRol,
+        );
+      } else {
+        await _girisYapUseCase(
+          telefon: temizKullaniciAdi,
+          sifre: temizSifre,
+          rol: _seciliRol,
+          adSoyad: temizKullaniciAdi,
+        );
+      }
       return GirisSecimIslemSonucu.basarili(
         hedef: hedef ?? _seciliMod.ilkHedef,
       );
@@ -114,4 +178,8 @@ class GirisSecimViewModel extends ChangeNotifier {
       notifyListeners();
     }
   }
+
+  KullaniciRolu get _seciliRol => _seciliMod == PersonelGirisModu.garson
+      ? KullaniciRolu.garson
+      : KullaniciRolu.yonetici;
 }

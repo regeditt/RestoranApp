@@ -3,6 +3,7 @@ import 'package:restoran_app/ozellikler/kimlik/alan/depolar/kimlik_deposu.dart';
 import 'package:restoran_app/ozellikler/kimlik/uygulama/use_case/aktif_kullanici_getir_use_case.dart';
 import 'package:restoran_app/ozellikler/kimlik/uygulama/use_case/cikis_yap_use_case.dart';
 import 'package:restoran_app/ozellikler/kimlik/uygulama/use_case/giris_yap_use_case.dart';
+import 'package:restoran_app/ozellikler/kimlik/uygulama/use_case/hesap_olustur_use_case.dart';
 import 'package:restoran_app/ozellikler/kimlik/uygulama/use_case/misafir_olustur_use_case.dart';
 import 'package:restoran_app/ozellikler/lisans/alan/depolar/lisans_deposu.dart';
 import 'package:restoran_app/ozellikler/lisans/uygulama/servisler/lisans_anahtari_dogrulayici.dart';
@@ -45,6 +46,7 @@ import 'package:restoran_app/ozellikler/yonetim/uygulama/use_case/masa_ekle_use_
 import 'package:restoran_app/ozellikler/yonetim/uygulama/use_case/masa_guncelle_use_case.dart';
 import 'package:restoran_app/ozellikler/yonetim/uygulama/use_case/masa_sil_use_case.dart';
 import 'package:restoran_app/ozellikler/yonetim/uygulama/use_case/personelleri_getir_use_case.dart';
+import 'package:restoran_app/ozellikler/yonetim/uygulama/use_case/personel_sil_use_case.dart';
 import 'package:restoran_app/ozellikler/yonetim/uygulama/use_case/salon_bolumu_ekle_use_case.dart';
 import 'package:restoran_app/ozellikler/yonetim/uygulama/use_case/salon_bolumu_guncelle_use_case.dart';
 import 'package:restoran_app/ozellikler/yonetim/uygulama/use_case/salon_bolumu_sil_use_case.dart';
@@ -81,6 +83,7 @@ class ServisKaydi {
     );
     aktifKullaniciGetirUseCase = AktifKullaniciGetirUseCase(_kimlikDeposu);
     girisYapUseCase = GirisYapUseCase(_kimlikDeposu);
+    hesapOlusturUseCase = HesapOlusturUseCase(_kimlikDeposu);
     cikisYapUseCase = CikisYapUseCase(_kimlikDeposu);
     misafirOlusturUseCase = MisafirOlusturUseCase(_kimlikDeposu);
     kategorileriGetirUseCase = KategorileriGetirUseCase(_menuDeposu);
@@ -117,6 +120,7 @@ class ServisKaydi {
     yaziciSilUseCase = YaziciSilUseCase(_yaziciDeposu);
     sistemYazicilariniGetirUseCase = const SistemYazicilariniGetirUseCase();
     personelleriGetirUseCase = PersonelleriGetirUseCase(_personelDeposu);
+    personelSilUseCase = PersonelSilUseCase(_personelDeposu);
     salonBolumleriniGetirUseCase = SalonBolumleriniGetirUseCase(
       _salonPlaniDeposu,
     );
@@ -171,6 +175,7 @@ class ServisKaydi {
   late final LisansAktifEtUseCase lisansAktifEtUseCase;
   late final AktifKullaniciGetirUseCase aktifKullaniciGetirUseCase;
   late final GirisYapUseCase girisYapUseCase;
+  late final HesapOlusturUseCase hesapOlusturUseCase;
   late final CikisYapUseCase cikisYapUseCase;
   late final MisafirOlusturUseCase misafirOlusturUseCase;
   late final KategorileriGetirUseCase kategorileriGetirUseCase;
@@ -198,6 +203,7 @@ class ServisKaydi {
   late final YaziciSilUseCase yaziciSilUseCase;
   late final SistemYazicilariniGetirUseCase sistemYazicilariniGetirUseCase;
   late final PersonelleriGetirUseCase personelleriGetirUseCase;
+  late final PersonelSilUseCase personelSilUseCase;
   late final SalonBolumleriniGetirUseCase salonBolumleriniGetirUseCase;
   late final SalonBolumuEkleUseCase salonBolumuEkleUseCase;
   late final SalonBolumuGuncelleUseCase salonBolumuGuncelleUseCase;

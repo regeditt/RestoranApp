@@ -336,6 +336,24 @@ class UygulamaVeritabani extends _$UygulamaVeritabani
     );
   }
 
+  Future<KullaniciVarligi?> kullaniciKimligeGoreGetir(String kimlik) async {
+    final KullaniciKayitlariData? kayit = await (select(
+      kullaniciKayitlari,
+    )..where((tbl) => tbl.id.equals(kimlik.trim()))).getSingleOrNull();
+    if (kayit == null) {
+      return null;
+    }
+    return KullaniciVarligi(
+      id: kayit.id,
+      adSoyad: kayit.adSoyad,
+      telefon: kayit.telefon,
+      eposta: kayit.eposta,
+      rol: KullaniciRolu.values[kayit.rol],
+      aktifMi: kayit.aktifMi,
+      adresMetni: kayit.adresMetni,
+    );
+  }
+
   Future<void> kullaniciSifreBilgisiKaydet({
     required String telefon,
     required String sifreHash,
@@ -356,6 +374,17 @@ class UygulamaVeritabani extends _$UygulamaVeritabani
         DateTime.now().millisecondsSinceEpoch,
       ],
     );
+  }
+
+  Future<void> kullaniciSil({
+    required String id,
+    required String telefon,
+  }) async {
+    await customStatement(
+      'DELETE FROM kullanici_giris_bilgileri WHERE telefon = ?',
+      <Object?>[telefon.trim()],
+    );
+    await (delete(kullaniciKayitlari)..where((tbl) => tbl.id.equals(id))).go();
   }
 
   Future<({String sifreHash, String sifreTuz})?> kullaniciSifreBilgisiGetir(

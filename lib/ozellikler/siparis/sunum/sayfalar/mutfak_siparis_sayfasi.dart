@@ -150,65 +150,95 @@ class _MutfakSiparisSayfasiState extends State<MutfakSiparisSayfasi> {
                               ),
                               const SizedBox(height: 16),
                               Expanded(
-                                child: Scrollbar(
-                                  thumbVisibility: true,
-                                  controller: _yatayKaydirmaDenetleyicisi,
-                                  child: SingleChildScrollView(
-                                    controller: _yatayKaydirmaDenetleyicisi,
-                                    scrollDirection: Axis.horizontal,
-                                    child: Row(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        _DurumKolonu(
-                                          baslik: 'Yeni',
-                                          aciklama:
-                                              'Mutfaga yeni dusen siparisler',
-                                          bosDurumMetni:
-                                              'Bu filtrede yeni siparis yok',
-                                          vurguRengi: const Color(0xFFFF8A5B),
-                                          siparisler: yeniSiparisler,
-                                          aksiyonCalistir: _durumIlerle,
-                                          iptalCalistir: _siparisiIptalEt,
-                                        ),
-                                        const SizedBox(width: 14),
-                                        _DurumKolonu(
-                                          baslik: 'Hazirlaniyor',
-                                          aciklama: 'Aktif mutfak operasyonu',
-                                          bosDurumMetni:
-                                              'Su an mutfakta aktif siparis yok',
-                                          vurguRengi: const Color(0xFFFFC857),
-                                          siparisler: hazirlananlar,
-                                          aksiyonCalistir: _durumIlerle,
-                                          iptalCalistir: _siparisiIptalEt,
-                                        ),
-                                        const SizedBox(width: 14),
-                                        _DurumKolonu(
-                                          baslik: 'Hazir',
-                                          aciklama:
-                                              'Servis veya teslim bekleyenler',
-                                          bosDurumMetni:
-                                              'Bekleyen hazir siparis yok',
-                                          vurguRengi: const Color(0xFF30C48D),
-                                          siparisler: hazirlar,
-                                          aksiyonCalistir: _durumIlerle,
-                                          iptalCalistir: _siparisiIptalEt,
-                                        ),
-                                        const SizedBox(width: 14),
-                                        _DurumKolonu(
-                                          baslik: 'Kapanis',
-                                          aciklama:
-                                              'Dagitim ve teslim kapanisi',
-                                          bosDurumMetni:
-                                              'Kapanis akisinda siparis yok',
-                                          vurguRengi: const Color(0xFF7BA7FF),
-                                          siparisler: kapanisAkisi,
-                                          aksiyonCalistir: _durumIlerle,
-                                          iptalCalistir: _siparisiIptalEt,
-                                        ),
-                                      ],
-                                    ),
-                                  ),
+                                child: LayoutBuilder(
+                                  builder:
+                                      (
+                                        BuildContext context,
+                                        BoxConstraints constraints,
+                                      ) {
+                                        final double kolonYuksekligi =
+                                            constraints.maxHeight;
+
+                                        return Scrollbar(
+                                          thumbVisibility: true,
+                                          controller:
+                                              _yatayKaydirmaDenetleyicisi,
+                                          child: SingleChildScrollView(
+                                            controller:
+                                                _yatayKaydirmaDenetleyicisi,
+                                            scrollDirection: Axis.horizontal,
+                                            child: Row(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                              children: [
+                                                _DurumKolonu(
+                                                  baslik: 'Yeni',
+                                                  aciklama:
+                                                      'Mutfaga yeni dusen siparisler',
+                                                  bosDurumMetni:
+                                                      'Bu filtrede yeni siparis yok',
+                                                  vurguRengi: const Color(
+                                                    0xFFFF8A5B,
+                                                  ),
+                                                  siparisler: yeniSiparisler,
+                                                  aksiyonCalistir: _durumIlerle,
+                                                  iptalCalistir:
+                                                      _siparisiIptalEt,
+                                                  yukseklik: kolonYuksekligi,
+                                                ),
+                                                const SizedBox(width: 14),
+                                                _DurumKolonu(
+                                                  baslik: 'Hazirlaniyor',
+                                                  aciklama:
+                                                      'Aktif mutfak operasyonu',
+                                                  bosDurumMetni:
+                                                      'Su an mutfakta aktif siparis yok',
+                                                  vurguRengi: const Color(
+                                                    0xFFFFC857,
+                                                  ),
+                                                  siparisler: hazirlananlar,
+                                                  aksiyonCalistir: _durumIlerle,
+                                                  iptalCalistir:
+                                                      _siparisiIptalEt,
+                                                  yukseklik: kolonYuksekligi,
+                                                ),
+                                                const SizedBox(width: 14),
+                                                _DurumKolonu(
+                                                  baslik: 'Hazir',
+                                                  aciklama:
+                                                      'Servis veya teslim bekleyenler',
+                                                  bosDurumMetni:
+                                                      'Bekleyen hazir siparis yok',
+                                                  vurguRengi: const Color(
+                                                    0xFF30C48D,
+                                                  ),
+                                                  siparisler: hazirlar,
+                                                  aksiyonCalistir: _durumIlerle,
+                                                  iptalCalistir:
+                                                      _siparisiIptalEt,
+                                                  yukseklik: kolonYuksekligi,
+                                                ),
+                                                const SizedBox(width: 14),
+                                                _DurumKolonu(
+                                                  baslik: 'Kapanis',
+                                                  aciklama:
+                                                      'Dagitim ve teslim kapanisi',
+                                                  bosDurumMetni:
+                                                      'Kapanis akisinda siparis yok',
+                                                  vurguRengi: const Color(
+                                                    0xFF7BA7FF,
+                                                  ),
+                                                  siparisler: kapanisAkisi,
+                                                  aksiyonCalistir: _durumIlerle,
+                                                  iptalCalistir:
+                                                      _siparisiIptalEt,
+                                                  yukseklik: kolonYuksekligi,
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        );
+                                      },
                                 ),
                               ),
                             ],

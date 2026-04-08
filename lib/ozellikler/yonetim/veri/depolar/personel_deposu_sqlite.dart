@@ -1,4 +1,5 @@
 import 'package:drift/drift.dart';
+import 'package:restoran_app/ozellikler/kimlik/alan/varliklar/kullanici_varligi.dart';
 import 'package:restoran_app/ozellikler/yonetim/alan/depolar/personel_deposu.dart';
 import 'package:restoran_app/ozellikler/yonetim/alan/varliklar/personel_durumu_varligi.dart';
 import 'package:restoran_app/ozellikler/yonetim/veri/depolar/personel_deposu_mock.dart';
@@ -20,6 +21,7 @@ class PersonelDeposuSqlite implements PersonelDeposu {
     return kayitlar
         .map(
           (kayit) => PersonelDurumuVarligi(
+            kimlik: kayit.kimlik,
             adSoyad: kayit.adSoyad,
             rolEtiketi: kayit.rolEtiketi,
             bolge: kayit.bolge,
@@ -28,6 +30,30 @@ class PersonelDeposuSqlite implements PersonelDeposu {
           ),
         )
         .toList();
+  }
+
+  @override
+  Future<void> personelSil(String kimlik) async {
+    final KullaniciVarligi? aktifKullanici = await _veritabani
+        .aktifKullaniciGetir();
+    if (aktifKullanici?.id == kimlik) {
+      throw StateError('Aktif yonetici hesabi silinemez.');
+    }
+
+    final KullaniciVarligi? bagliKullanici = await _veritabani
+        .kullaniciKimligeGoreGetir(kimlik);
+
+    await _veritabani.transaction(() async {
+      await (_veritabani.delete(
+        _veritabani.personelKayitlari,
+      )..where((tbl) => tbl.kimlik.equals(kimlik))).go();
+      if (bagliKullanici != null) {
+        await _veritabani.kullaniciSil(
+          id: bagliKullanici.id,
+          telefon: bagliKullanici.telefon,
+        );
+      }
+    });
   }
 
   Future<void> _seedEminOl() async {

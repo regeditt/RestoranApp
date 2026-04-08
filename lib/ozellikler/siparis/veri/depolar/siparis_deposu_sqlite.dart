@@ -8,6 +8,7 @@ import 'package:restoran_app/ozellikler/siparis/alan/varliklar/siparis_kalemi_va
 import 'package:restoran_app/ozellikler/siparis/alan/varliklar/siparis_sahibi_varligi.dart';
 import 'package:restoran_app/ozellikler/siparis/alan/varliklar/siparis_varligi.dart';
 import 'package:restoran_app/ortak/veri/veritabani.dart';
+import 'package:restoran_app/ozellikler/siparis/veri/depolar/siparis_durumu_yardimcisi.dart';
 
 class SiparisDeposuSqlite implements SiparisDeposu {
   SiparisDeposuSqlite(this._veritabani);
@@ -110,9 +111,24 @@ class SiparisDeposuSqlite implements SiparisDeposu {
     String siparisId,
     SiparisDurumu yeniDurum,
   ) async {
-    await (_veritabani.update(_veritabani.siparisKayitlari)
-          ..where((tbl) => tbl.id.equals(siparisId)))
-        .write(SiparisKayitlariCompanion(durum: Value(yeniDurum.index)));
+    final SiparisVarligi? mevcutSiparis = await siparisGetir(siparisId);
+    if (mevcutSiparis == null) {
+      throw StateError('Siparis bulunamadi');
+    }
+    final PaketServisDurumGuncellemesi durumGuncellemesi =
+        paketServisDurumGuncellemesiniHesapla(mevcutSiparis, yeniDurum);
+
+    await (_veritabani.update(
+      _veritabani.siparisKayitlari,
+    )..where((tbl) => tbl.id.equals(siparisId))).write(
+      SiparisKayitlariCompanion(
+        durum: Value(yeniDurum.index),
+        kuryeAdi: Value(durumGuncellemesi.kuryeAdi),
+        paketTeslimatDurumu: Value(
+          durumGuncellemesi.paketTeslimatDurumu?.index,
+        ),
+      ),
+    );
     final SiparisVarligi? siparis = await siparisGetir(siparisId);
     if (siparis == null) {
       throw StateError('Siparis bulunamadi');

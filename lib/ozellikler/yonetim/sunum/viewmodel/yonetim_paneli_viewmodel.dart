@@ -4,6 +4,8 @@ import 'package:restoran_app/ozellikler/menu/alan/varliklar/kategori_varligi.dar
 import 'package:restoran_app/ozellikler/menu/alan/varliklar/urun_varligi.dart';
 import 'package:restoran_app/ozellikler/menu/uygulama/use_case/kategorileri_getir_use_case.dart';
 import 'package:restoran_app/ozellikler/menu/uygulama/use_case/urunleri_getir_use_case.dart';
+import 'package:restoran_app/ozellikler/kimlik/alan/roller/kullanici_rolu.dart';
+import 'package:restoran_app/ozellikler/kimlik/uygulama/use_case/hesap_olustur_use_case.dart';
 import 'package:restoran_app/ozellikler/siparis/alan/enumlar/siparis_durumu.dart';
 import 'package:restoran_app/ozellikler/siparis/alan/enumlar/teslimat_tipi.dart';
 import 'package:restoran_app/ozellikler/siparis/alan/varliklar/siparis_varligi.dart';
@@ -19,6 +21,7 @@ import 'package:restoran_app/ozellikler/yonetim/alan/varliklar/yonetim_paneli_oz
 import 'package:restoran_app/ozellikler/yonetim/sunum/bilesenler/yonetim_paneli_yardimcilari.dart';
 import 'package:restoran_app/ozellikler/yonetim/uygulama/servisler/yonetim_raporu_hesaplayici.dart';
 import 'package:restoran_app/ozellikler/yonetim/uygulama/use_case/personelleri_getir_use_case.dart';
+import 'package:restoran_app/ozellikler/yonetim/uygulama/use_case/personel_sil_use_case.dart';
 import 'package:restoran_app/ozellikler/yonetim/uygulama/use_case/salon_bolumlerini_getir_use_case.dart';
 import 'package:restoran_app/ozellikler/yonetim/uygulama/use_case/sistem_yazicilarini_getir_use_case.dart';
 import 'package:restoran_app/ozellikler/yonetim/uygulama/use_case/yazici_ekle_use_case.dart';
@@ -45,23 +48,27 @@ class YonetimPaneliViewModel extends ChangeNotifier {
   YonetimPaneliViewModel({
     required SiparisleriGetirUseCase siparisleriGetirUseCase,
     required PersonelleriGetirUseCase personelleriGetirUseCase,
+    required PersonelSilUseCase personelSilUseCase,
     required SistemYazicilariniGetirUseCase sistemYazicilariniGetirUseCase,
     required YazicilariGetirUseCase yazicilariGetirUseCase,
     required SalonBolumleriniGetirUseCase salonBolumleriniGetirUseCase,
     required KategorileriGetirUseCase kategorileriGetirUseCase,
     required UrunleriGetirUseCase urunleriGetirUseCase,
     required StokOzetiGetirUseCase stokOzetiGetirUseCase,
+    required HesapOlusturUseCase hesapOlusturUseCase,
     required YaziciEkleUseCase yaziciEkleUseCase,
     required YaziciGuncelleUseCase yaziciGuncelleUseCase,
     required YaziciSilUseCase yaziciSilUseCase,
   }) : _siparisleriGetirUseCase = siparisleriGetirUseCase,
        _personelleriGetirUseCase = personelleriGetirUseCase,
+       _personelSilUseCase = personelSilUseCase,
        _sistemYazicilariniGetirUseCase = sistemYazicilariniGetirUseCase,
        _yazicilariGetirUseCase = yazicilariGetirUseCase,
        _salonBolumleriniGetirUseCase = salonBolumleriniGetirUseCase,
        _kategorileriGetirUseCase = kategorileriGetirUseCase,
        _urunleriGetirUseCase = urunleriGetirUseCase,
        _stokOzetiGetirUseCase = stokOzetiGetirUseCase,
+       _hesapOlusturUseCase = hesapOlusturUseCase,
        _yaziciEkleUseCase = yaziciEkleUseCase,
        _yaziciGuncelleUseCase = yaziciGuncelleUseCase,
        _yaziciSilUseCase = yaziciSilUseCase;
@@ -70,6 +77,7 @@ class YonetimPaneliViewModel extends ChangeNotifier {
     return YonetimPaneliViewModel(
       siparisleriGetirUseCase: servisKaydi.siparisleriGetirUseCase,
       personelleriGetirUseCase: servisKaydi.personelleriGetirUseCase,
+      personelSilUseCase: servisKaydi.personelSilUseCase,
       sistemYazicilariniGetirUseCase:
           servisKaydi.sistemYazicilariniGetirUseCase,
       yazicilariGetirUseCase: servisKaydi.yazicilariGetirUseCase,
@@ -77,6 +85,7 @@ class YonetimPaneliViewModel extends ChangeNotifier {
       kategorileriGetirUseCase: servisKaydi.kategorileriGetirUseCase,
       urunleriGetirUseCase: servisKaydi.urunleriGetirUseCase,
       stokOzetiGetirUseCase: servisKaydi.stokOzetiGetirUseCase,
+      hesapOlusturUseCase: servisKaydi.hesapOlusturUseCase,
       yaziciEkleUseCase: servisKaydi.yaziciEkleUseCase,
       yaziciGuncelleUseCase: servisKaydi.yaziciGuncelleUseCase,
       yaziciSilUseCase: servisKaydi.yaziciSilUseCase,
@@ -85,12 +94,14 @@ class YonetimPaneliViewModel extends ChangeNotifier {
 
   final SiparisleriGetirUseCase _siparisleriGetirUseCase;
   final PersonelleriGetirUseCase _personelleriGetirUseCase;
+  final PersonelSilUseCase _personelSilUseCase;
   final SistemYazicilariniGetirUseCase _sistemYazicilariniGetirUseCase;
   final YazicilariGetirUseCase _yazicilariGetirUseCase;
   final SalonBolumleriniGetirUseCase _salonBolumleriniGetirUseCase;
   final KategorileriGetirUseCase _kategorileriGetirUseCase;
   final UrunleriGetirUseCase _urunleriGetirUseCase;
   final StokOzetiGetirUseCase _stokOzetiGetirUseCase;
+  final HesapOlusturUseCase _hesapOlusturUseCase;
   final YaziciEkleUseCase _yaziciEkleUseCase;
   final YaziciGuncelleUseCase _yaziciGuncelleUseCase;
   final YaziciSilUseCase _yaziciSilUseCase;
@@ -296,6 +307,50 @@ class YonetimPaneliViewModel extends ChangeNotifier {
       return const YonetimPaneliIslemSonucu.hata(
         'Yonetim verileri yenilenemedi',
       );
+    }
+  }
+
+  Future<YonetimPaneliIslemSonucu> garsonHesabiOlustur({
+    required String adSoyad,
+    required String kullaniciAdi,
+    required String sifre,
+  }) async {
+    try {
+      await _hesapOlusturUseCase(
+        telefon: kullaniciAdi.trim(),
+        sifre: sifre.trim(),
+        adSoyad: adSoyad.trim(),
+        rol: KullaniciRolu.garson,
+        aktifYap: false,
+      );
+      final List<PersonelDurumuVarligi> personeller =
+          await _personelleriGetirUseCase();
+      _personeller = personeller;
+      notifyListeners();
+      return YonetimPaneliIslemSonucu.basarili('${adSoyad.trim()} eklendi');
+    } on StateError catch (hata) {
+      return YonetimPaneliIslemSonucu.hata(hata.message.toString());
+    } catch (_) {
+      return const YonetimPaneliIslemSonucu.hata(
+        'Garson hesabi olusturulamadi',
+      );
+    }
+  }
+
+  Future<YonetimPaneliIslemSonucu> personelSil(
+    PersonelDurumuVarligi personel,
+  ) async {
+    try {
+      await _personelSilUseCase(personel.kimlik);
+      final List<PersonelDurumuVarligi> personeller =
+          await _personelleriGetirUseCase();
+      _personeller = personeller;
+      notifyListeners();
+      return YonetimPaneliIslemSonucu.basarili('${personel.adSoyad} silindi');
+    } on StateError catch (hata) {
+      return YonetimPaneliIslemSonucu.hata(hata.message.toString());
+    } catch (_) {
+      return const YonetimPaneliIslemSonucu.hata('Personel silinemedi');
     }
   }
 

@@ -1,8 +1,10 @@
+import 'package:drift/drift.dart';
 import 'package:restoran_app/ozellikler/kimlik/alan/depolar/kimlik_deposu.dart';
 import 'package:restoran_app/ozellikler/kimlik/alan/roller/kullanici_rolu.dart';
 import 'package:restoran_app/ozellikler/kimlik/alan/varliklar/kullanici_varligi.dart';
 import 'package:restoran_app/ozellikler/kimlik/alan/varliklar/misafir_bilgisi_varligi.dart';
 import 'package:restoran_app/ozellikler/kimlik/uygulama/servisler/sifre_ozetleyici.dart';
+import 'package:restoran_app/ozellikler/yonetim/alan/varliklar/personel_durumu_varligi.dart';
 import 'package:restoran_app/ortak/veri/veritabani.dart';
 
 class KimlikDeposuSqlite implements KimlikDeposu {
@@ -17,6 +19,59 @@ class KimlikDeposuSqlite implements KimlikDeposu {
   @override
   Future<KullaniciVarligi?> aktifKullaniciGetir() {
     return _veritabani.aktifKullaniciGetir();
+  }
+
+  @override
+  Future<KullaniciVarligi> hesapOlustur({
+    required String telefon,
+    required String sifre,
+    required String adSoyad,
+    KullaniciRolu rol = KullaniciRolu.musteri,
+    String? adresMetni,
+    bool aktifYap = true,
+  }) async {
+    final String temizTelefon = telefon.trim();
+    final String temizSifre = sifre.trim();
+    final String temizAdSoyad = adSoyad.trim();
+    if (temizTelefon.isEmpty || temizSifre.isEmpty || temizAdSoyad.isEmpty) {
+      throw StateError('Ad soyad, kullanici adi ve sifre bos olamaz.');
+    }
+
+    final KullaniciVarligi? mevcutKullanici = await _veritabani
+        .kullaniciTelefonaGoreGetir(temizTelefon);
+    if (mevcutKullanici != null) {
+      throw StateError('Bu kullanici adi zaten kayitli.');
+    }
+
+    final String kullaniciId = await _veritabani.sonrakiNumerikKimlikGetir(
+      tabloAdi: 'kullanici_kayitlari',
+    );
+    final KullaniciVarligi kullanici = KullaniciVarligi(
+      id: kullaniciId,
+      adSoyad: temizAdSoyad,
+      telefon: temizTelefon,
+      rol: rol,
+      aktifMi: aktifYap,
+      adresMetni: adresMetni?.trim().isEmpty ?? true
+          ? null
+          : adresMetni!.trim(),
+    );
+    final SifreOzeti sifreOzeti = _sifreOzetleyici.ozetOlustur(temizSifre);
+
+    await _veritabani.transaction(() async {
+      if (aktifYap) {
+        await _veritabani.tumKullanicilariPasifYap();
+      }
+      await _veritabani.kullaniciKaydet(kullanici);
+      await _veritabani.kullaniciSifreBilgisiKaydet(
+        telefon: temizTelefon,
+        sifreHash: sifreOzeti.hash,
+        sifreTuz: sifreOzeti.tuz,
+      );
+      await _personelKaydiVarsaEkle(kullanici);
+    });
+
+    return kullanici;
   }
 
   @override
@@ -105,5 +160,40 @@ class KimlikDeposuSqlite implements KimlikDeposu {
       adres: adres,
     );
     return _veritabani.misafirKaydet(misafir);
+  }
+
+  Future<void> _personelKaydiVarsaEkle(KullaniciVarligi kullanici) async {
+    final (String rolEtiketi, String bolge, String aciklama)? personelBilgisi =
+        switch (kullanici.rol) {
+          KullaniciRolu.garson => (
+            'Garson',
+            'Salon',
+            'Yeni olusturulan garson hesabi vardiyaya hazir.',
+          ),
+          KullaniciRolu.yonetici => (
+            'Yonetici',
+            'Yonetim',
+            'Panel ve operasyon akislarini yonetmek icin eklendi.',
+          ),
+          _ => null,
+        };
+
+    if (personelBilgisi == null) {
+      return;
+    }
+
+    await _veritabani
+        .into(_veritabani.personelKayitlari)
+        .insert(
+          PersonelKayitlariCompanion(
+            kimlik: Value(kullanici.id),
+            adSoyad: Value(kullanici.adSoyad),
+            rolEtiketi: Value(personelBilgisi.$1),
+            bolge: Value(personelBilgisi.$2),
+            aciklama: Value(personelBilgisi.$3),
+            durum: Value(PersonelDurumu.aktif.index),
+          ),
+          mode: InsertMode.insertOrReplace,
+        );
   }
 }

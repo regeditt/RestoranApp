@@ -1,4 +1,5 @@
 import 'package:restoran_app/ozellikler/kimlik/alan/depolar/kimlik_deposu.dart';
+import 'package:restoran_app/ozellikler/kimlik/alan/roller/kullanici_rolu.dart';
 import 'package:restoran_app/ozellikler/kimlik/veri/depolar/kimlik_deposu_gercek.dart';
 import 'package:restoran_app/ozellikler/kimlik/veri/depolar/kimlik_deposu_mock.dart';
 import 'package:restoran_app/ozellikler/kimlik/veri/depolar/kimlik_deposu_sqlite.dart';
@@ -37,6 +38,7 @@ import 'package:restoran_app/ozellikler/yonetim/veri/depolar/yazici_deposu_mock.
 import 'package:restoran_app/ozellikler/yonetim/veri/depolar/yazici_deposu_sqlite.dart';
 import 'package:restoran_app/ortak/veri/veri_kaynagi_tipi.dart';
 import 'package:restoran_app/ortak/veri/veritabani.dart';
+import 'package:restoran_app/ozellikler/yonetim/alan/varliklar/personel_durumu_varligi.dart';
 
 class ServisBagimlilikleri {
   const ServisBagimlilikleri({
@@ -67,18 +69,50 @@ class ServisBagimlilikleri {
 
   factory ServisBagimlilikleri.mock() {
     final MenuDeposu menuDeposu = MenuDeposuMock();
+    final KimlikDeposuMock kimlikDeposu = KimlikDeposuMock();
+    final PersonelDeposuMock personelDeposu = PersonelDeposuMock();
+    kimlikDeposu.hesapOlusturmaDinleyicisiAta((kullanici) {
+      final (String rolEtiketi, String bolge, String aciklama)?
+      personelBilgisi = switch (kullanici.rol) {
+        KullaniciRolu.garson => (
+          'Garson',
+          'Salon',
+          'Yeni olusturulan garson hesabi vardiyaya hazir.',
+        ),
+        KullaniciRolu.yonetici => (
+          'Yonetici',
+          'Yonetim',
+          'Panel ve operasyon akislarini yonetmek icin eklendi.',
+        ),
+        _ => null,
+      };
+      if (personelBilgisi == null) {
+        return;
+      }
+      personelDeposu.personelEkle(
+        PersonelDurumuVarligi(
+          kimlik: kullanici.id,
+          adSoyad: kullanici.adSoyad,
+          rolEtiketi: personelBilgisi.$1,
+          bolge: personelBilgisi.$2,
+          aciklama: personelBilgisi.$3,
+          durum: PersonelDurumu.aktif,
+        ),
+      );
+    });
+    personelDeposu.kimlikSiliciAta(kimlikDeposu.hesapSil);
     return ServisBagimlilikleri(
       lisansDeposu: LisansDeposuMock(
         baslangicLisansAnahtari: _lisansDogrulayici.lisansAnahtariOlustur(
           DateTime.now().add(const Duration(days: 365)),
         ),
       ),
-      kimlikDeposu: KimlikDeposuMock(),
+      kimlikDeposu: kimlikDeposu,
       menuDeposu: menuDeposu,
       sepetDeposu: SepetDeposuMock(menuDeposu),
       siparisDeposu: SiparisDeposuMock(),
       yaziciDeposu: YaziciDeposuMock(),
-      personelDeposu: PersonelDeposuMock(),
+      personelDeposu: personelDeposu,
       salonPlaniDeposu: SalonPlaniDeposuMock(),
       stokDeposu: StokDeposuMock(),
     );
