@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:restoran_app/ortak/bilesenler/ana_sayfaya_donus.dart';
 import 'package:restoran_app/ortak/yonlendirme/rota_yapisi.dart';
 import 'package:restoran_app/ozellikler/kimlik/sunum/viewmodel/giris_secim_viewmodel.dart';
 
@@ -123,6 +124,21 @@ class _GirisSecimSayfasiState extends State<GirisSecimSayfasi> {
                             runSpacing: 10,
                             alignment: WrapAlignment.center,
                             children: [
+                              FilledButton.tonalIcon(
+                                onPressed: () => anaSayfayaDon(context),
+                                style: FilledButton.styleFrom(
+                                  foregroundColor: Colors.white,
+                                  backgroundColor: Colors.white.withValues(
+                                    alpha: 0.14,
+                                  ),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 16,
+                                    vertical: 14,
+                                  ),
+                                ),
+                                icon: const Icon(Icons.home_rounded, size: 18),
+                                label: const Text('Ana sayfaya don'),
+                              ),
                               OutlinedButton.icon(
                                 onPressed: () {
                                   Navigator.of(

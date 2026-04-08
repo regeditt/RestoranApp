@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:restoran_app/ortak/bilesenler/ana_sayfaya_donus.dart';
 import 'package:restoran_app/ortak/responsive/ekran_boyutu.dart';
 import 'package:restoran_app/ortak/yonlendirme/rota_yapisi.dart';
 import 'package:restoran_app/ozellikler/siparis/alan/enumlar/paket_teslimat_durumu.dart';
@@ -354,6 +355,19 @@ class _MutfakNavigasyonSeridi extends StatelessWidget {
             spacing: 8,
             runSpacing: 8,
             children: [
+              FilledButton.tonalIcon(
+                onPressed: () => anaSayfayaDon(context),
+                style: FilledButton.styleFrom(
+                  foregroundColor: Colors.white,
+                  backgroundColor: Colors.white.withValues(alpha: 0.12),
+                  padding: EdgeInsets.symmetric(
+                    horizontal: mobil ? 12 : 14,
+                    vertical: 14,
+                  ),
+                ),
+                icon: const Icon(Icons.home_rounded, size: 18),
+                label: const Text('Ana sayfaya don'),
+              ),
               FilledButton.tonalIcon(
                 onPressed: () {
                   Navigator.of(context).pushReplacementNamed(RotaYapisi.pos);

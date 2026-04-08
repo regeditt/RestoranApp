@@ -626,7 +626,7 @@ class _MenuIzgarasi extends StatelessWidget {
       _AnaMenuKartVerisi(
         ikon: Icons.bar_chart_rounded,
         baslik: 'Raporlar',
-        rota: RotaYapisi.personelGiris,
+        rota: RotaYapisi.raporlar,
       ),
       _AnaMenuKartVerisi(
         ikon: Icons.room_service_outlined,

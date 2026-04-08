@@ -55,7 +55,7 @@ void main() {
       await tester.binding.setSurfaceSize(null);
     });
 
-    await tester.binding.setSurfaceSize(const Size(1400, 900));
+    await tester.binding.setSurfaceSize(const Size(1400, 1900));
     await tester.pumpWidget(
       const UygulamaKabugu(veriKaynagi: VeriKaynagiTipi.mock),
     );
@@ -89,8 +89,35 @@ void main() {
     expect(find.text('Garson girisi'), findsWidgets);
     expect(find.text('Yonetici girisi'), findsWidgets);
     expect(find.text('QR menuye don'), findsOneWidget);
+    expect(find.text('Ana sayfaya don'), findsOneWidget);
     expect(find.text('Giris yap'), findsNothing);
     expect(find.text('Hesap olustur'), findsNothing);
+  });
+
+  testWidgets('Ileri ekrandan ana sayfaya donus navigasyonu calisir', (
+    WidgetTester tester,
+  ) async {
+    final ServisKaydi servisKaydi = ServisKaydi.mock();
+    await tester.pumpWidget(
+      ServisSaglayici(
+        servis: servisKaydi,
+        child: MaterialApp(
+          initialRoute: RotaYapisi.personelGiris,
+          onGenerateRoute: RotaYapisi.rotaOlustur,
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Personel girisi'), findsOneWidget);
+    expect(find.text('Ana sayfaya don'), findsOneWidget);
+
+    await tester.tap(find.text('Ana sayfaya don'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('GUNCEL KURLAR'), findsOneWidget);
+    expect(find.text('Urunler'), findsOneWidget);
+    expect(tester.takeException(), isNull);
   });
 
   testWidgets('Personel girisinde hesap olustur modu ayni formda acilir', (
@@ -145,6 +172,84 @@ void main() {
 
     expect(find.text('Musteri Hizmetleri'), findsOneWidget);
     expect(find.text('Siparisler'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('Raporlar rotasi yetkisiz kullaniciyi engeller', (
+    WidgetTester tester,
+  ) async {
+    final ServisKaydi servisKaydi = ServisKaydi.mock();
+    await tester.pumpWidget(
+      ServisSaglayici(
+        servis: servisKaydi,
+        child: MaterialApp(
+          initialRoute: RotaYapisi.raporlar,
+          onGenerateRoute: RotaYapisi.rotaOlustur,
+        ),
+      ),
+    );
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 600));
+
+    expect(
+      find.text('Raporlar yalnizca yetkili kullanicilara acik'),
+      findsOneWidget,
+    );
+    expect(find.text('Personel girisine git'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('Yonetici oturumu ile raporlar rotasi acilir', (
+    WidgetTester tester,
+  ) async {
+    final ServisKaydi servisKaydi = ServisKaydi.mock();
+    await servisKaydi.girisYapUseCase(
+      telefon: '5551201200',
+      sifre: '123456',
+      rol: KullaniciRolu.yonetici,
+      adSoyad: 'Admin Kullanici',
+    );
+
+    await tester.pumpWidget(
+      ServisSaglayici(
+        servis: servisKaydi,
+        child: MaterialApp(
+          initialRoute: RotaYapisi.raporlar,
+          onGenerateRoute: RotaYapisi.rotaOlustur,
+        ),
+      ),
+    );
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 600));
+
+    expect(find.text('Rapor Merkezi'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('Izinli kullanici raporlar rotasina erisebilir', (
+    WidgetTester tester,
+  ) async {
+    final ServisKaydi servisKaydi = ServisKaydi.mock();
+    await servisKaydi.girisYapUseCase(
+      telefon: '5550000000',
+      sifre: '123456',
+      rol: KullaniciRolu.musteri,
+      adSoyad: 'Izinli Kullanici',
+    );
+
+    await tester.pumpWidget(
+      ServisSaglayici(
+        servis: servisKaydi,
+        child: MaterialApp(
+          initialRoute: RotaYapisi.raporlar,
+          onGenerateRoute: RotaYapisi.rotaOlustur,
+        ),
+      ),
+    );
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 600));
+
+    expect(find.text('Rapor Merkezi'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 
@@ -241,6 +346,7 @@ void main() {
 
     expect(find.text('Salon ve Masa Secimi'), findsOneWidget);
     expect(find.text('POS OPERASYON'), findsOneWidget);
+    expect(find.textContaining('Ana sayfa'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 

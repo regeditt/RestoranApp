@@ -13,4 +13,7 @@ class UygulamaSabitleri {
   static const String uygulamaAciklamasi =
       'Cok platformlu restoran yonetim ve siparis uygulamasi';
   static const String varsayilanQrTabanUrl = 'https://restoranapp.local';
+  static const Set<String> raporErisimIzinliKullaniciKimlikleri = <String>{};
+  static const Set<String> raporErisimIzinliTelefonlar = <String>{'5550000000'};
+  static const Set<String> raporErisimIzinliEpostalar = <String>{};
 }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:restoran_app/ortak/bilesenler/ana_sayfaya_donus.dart';
 import 'package:restoran_app/ortak/responsive/ekran_boyutu.dart';
 import 'package:restoran_app/ortak/sabitler/uygulama_sabitleri.dart';
 import 'package:restoran_app/ozellikler/kimlik/alan/roller/kullanici_rolu.dart';
@@ -243,9 +244,28 @@ class _HesabimSayfasiState extends State<HesabimSayfasi> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          IconButton.filledTonal(
-            onPressed: () => Navigator.of(context).maybePop(),
-            icon: const Icon(Icons.chevron_left_rounded),
+          Wrap(
+            spacing: 10,
+            runSpacing: 10,
+            children: [
+              IconButton.filledTonal(
+                onPressed: () => Navigator.of(context).maybePop(),
+                icon: const Icon(Icons.chevron_left_rounded),
+              ),
+              OutlinedButton.icon(
+                onPressed: () => anaSayfayaDon(context),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: Colors.white,
+                  side: BorderSide(color: Colors.white.withValues(alpha: 0.18)),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 14,
+                  ),
+                ),
+                icon: const Icon(Icons.home_rounded, size: 18),
+                label: const Text('Ana sayfa'),
+              ),
+            ],
           ),
           const SizedBox(height: 22),
           Text(

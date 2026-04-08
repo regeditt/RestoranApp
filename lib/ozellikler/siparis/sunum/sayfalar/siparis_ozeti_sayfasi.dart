@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:restoran_app/ortak/bilesenler/ana_sayfaya_donus.dart';
 import 'package:restoran_app/ortak/bilesenler/suruklenebilir_dialog_kapsayici.dart';
 import 'package:restoran_app/ortak/responsive/ekran_boyutu.dart';
 import 'package:restoran_app/ozellikler/menu/alan/varliklar/qr_menu_baglami_varligi.dart';
@@ -146,6 +147,13 @@ class _SiparisOzetiSayfasiState extends State<SiparisOzetiSayfasi> {
             backgroundColor: Colors.transparent,
             foregroundColor: Colors.white,
             title: const Text('Siparis Ozeti'),
+            actions: [
+              IconButton(
+                onPressed: () => anaSayfayaDon(context),
+                tooltip: 'Ana sayfaya don',
+                icon: const Icon(Icons.home_rounded),
+              ),
+            ],
           ),
           body: SafeArea(
             child: Center(

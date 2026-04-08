@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:restoran_app/ortak/bilesenler/ana_sayfaya_donus.dart';
 import 'package:restoran_app/ortak/responsive/ekran_boyutu.dart';
 import 'package:restoran_app/ortak/yonlendirme/rota_yapisi.dart';
 import 'package:restoran_app/ozellikler/menu/alan/varliklar/kategori_varligi.dart';
@@ -777,6 +778,11 @@ class _PosUstKart extends StatelessWidget {
             runSpacing: 8,
             children: [
               _PosUstAksiyon(
+                ikon: Icons.home_rounded,
+                etiket: 'Ana sayfa',
+                tikla: () => anaSayfayaDon(context),
+              ),
+              _PosUstAksiyon(
                 ikon: Icons.dashboard_customize_rounded,
                 etiket: 'Yonetim',
                 tikla: () =>
@@ -837,6 +843,40 @@ class _PosMobilUstKart extends StatelessWidget {
           _PosSolBilgiRozetleri(
             qrModu: qrModu,
             toplamUrunAdedi: toplamUrunAdedi,
+          ),
+          const SizedBox(height: 16),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              FilledButton.tonalIcon(
+                onPressed: () => anaSayfayaDon(context),
+                style: FilledButton.styleFrom(
+                  foregroundColor: Colors.white,
+                  backgroundColor: Colors.white.withValues(alpha: 0.12),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 12,
+                  ),
+                ),
+                icon: const Icon(Icons.home_rounded, size: 18),
+                label: const Text('Ana sayfaya don'),
+              ),
+              OutlinedButton.icon(
+                onPressed: () =>
+                    Navigator.of(context).pushNamed(RotaYapisi.personelGiris),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: Colors.white,
+                  side: BorderSide(color: Colors.white.withValues(alpha: 0.18)),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 12,
+                  ),
+                ),
+                icon: const Icon(Icons.badge_outlined, size: 18),
+                label: const Text('Personel girisi'),
+              ),
+            ],
           ),
         ],
       ),

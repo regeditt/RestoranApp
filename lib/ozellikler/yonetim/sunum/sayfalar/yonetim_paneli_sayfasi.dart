@@ -1,24 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:restoran_app/bagimlilik_enjeksiyonu/servis_kaydi.dart';
+import 'package:restoran_app/ortak/bilesenler/ana_sayfaya_donus.dart';
 import 'package:restoran_app/ortak/responsive/ekran_boyutu.dart';
 import 'package:restoran_app/ortak/sabitler/uygulama_sabitleri.dart';
 import 'package:restoran_app/ortak/yonlendirme/rota_yapisi.dart';
 import 'package:restoran_app/ozellikler/siparis/alan/enumlar/siparis_durumu.dart';
 import 'package:restoran_app/ozellikler/siparis/alan/enumlar/teslimat_tipi.dart';
 import 'package:restoran_app/ozellikler/siparis/alan/varliklar/siparis_varligi.dart';
-import 'package:restoran_app/ozellikler/stok/alan/varliklar/stok_ozeti_varligi.dart';
 import 'package:restoran_app/ozellikler/yonetim/alan/varliklar/personel_durumu_varligi.dart';
-import 'package:restoran_app/ozellikler/yonetim/alan/varliklar/saatlik_siparis_ozeti_varligi.dart';
 import 'package:restoran_app/ozellikler/yonetim/alan/varliklar/salon_bolumu_varligi.dart';
 import 'package:restoran_app/ozellikler/yonetim/alan/varliklar/yazici_durumu_varligi.dart';
 import 'package:restoran_app/ozellikler/yonetim/alan/varliklar/yonetim_paneli_ozeti_varligi.dart';
-import 'package:restoran_app/ozellikler/yonetim/sunum/bilesenler/yonetim_analiz_kartlari.dart';
 import 'package:restoran_app/ozellikler/yonetim/sunum/bilesenler/masa_plani_karti.dart';
-import 'package:restoran_app/ozellikler/yonetim/sunum/bilesenler/paket_servis_operasyon_karti.dart';
 import 'package:restoran_app/ozellikler/yonetim/sunum/bilesenler/personel_yonetimi_karti.dart';
 import 'package:restoran_app/ozellikler/yonetim/sunum/bilesenler/yonetim_ayarlari_dialogu.dart';
 import 'package:restoran_app/ozellikler/yonetim/sunum/bilesenler/yazici_form_dialogu.dart';
-import 'package:restoran_app/ozellikler/yonetim/sunum/bilesenler/yonetim_rapor_kartlari.dart';
 import 'package:restoran_app/ozellikler/yonetim/sunum/bilesenler/yazici_yonetimi_karti.dart';
 import 'package:restoran_app/ozellikler/yonetim/sunum/viewmodel/yonetim_paneli_viewmodel.dart';
 
@@ -258,8 +254,6 @@ class _YonetimPaneliSayfasiState extends State<YonetimPaneliSayfasi> {
         final List<SiparisVarligi> filtreliSiparisler =
             viewModel.filtreliSiparisler;
         final YonetimPaneliOzetiVarligi ozet = viewModel.panelOzeti;
-        final List<SaatlikSiparisOzetiVarligi> saatlikVeriler =
-            viewModel.saatlikVeriler;
 
         return Scaffold(
           backgroundColor: const Color(0xFF110D18),
@@ -325,15 +319,9 @@ class _YonetimPaneliSayfasiState extends State<YonetimPaneliSayfasi> {
                                           Expanded(
                                             flex: 5,
                                             child: _YanPanel(
-                                              ozet: ozet,
-                                              saatlikVeriler: saatlikVeriler,
                                               siparisler: filtreliSiparisler,
                                               salonBolumleri:
                                                   viewModel.salonBolumleri,
-                                              stokOzeti: viewModel.stokOzeti,
-                                              yaziciEkle: _yaziciEkle,
-                                              yaziciSil: _yaziciSil,
-                                              yaziciGuncelle: _yaziciGuncelle,
                                               personelEkle: _garsonEkle,
                                               personelSil: _personelSil,
                                               personeller:
@@ -353,15 +341,9 @@ class _YonetimPaneliSayfasiState extends State<YonetimPaneliSayfasi> {
                                           ),
                                           const SizedBox(height: 18),
                                           _YanPanel(
-                                            ozet: ozet,
-                                            saatlikVeriler: saatlikVeriler,
                                             siparisler: filtreliSiparisler,
                                             salonBolumleri:
                                                 viewModel.salonBolumleri,
-                                            stokOzeti: viewModel.stokOzeti,
-                                            yaziciEkle: _yaziciEkle,
-                                            yaziciSil: _yaziciSil,
-                                            yaziciGuncelle: _yaziciGuncelle,
                                             personelEkle: _garsonEkle,
                                             personelSil: _personelSil,
                                             personeller: viewModel.personeller,
@@ -618,6 +600,34 @@ class _KompaktUstAlan extends StatelessWidget {
                 spacing: 8,
                 runSpacing: 8,
                 children: [
+                  FilledButton.tonalIcon(
+                    onPressed: () => anaSayfayaDon(context),
+                    style: FilledButton.styleFrom(
+                      foregroundColor: Colors.white,
+                      backgroundColor: Colors.white.withValues(alpha: 0.12),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 14,
+                      ),
+                    ),
+                    icon: const Icon(Icons.home_rounded, size: 18),
+                    label: const Text('Ana sayfaya don'),
+                  ),
+                  FilledButton.tonalIcon(
+                    onPressed: () {
+                      Navigator.of(context).pushNamed(RotaYapisi.raporlar);
+                    },
+                    style: FilledButton.styleFrom(
+                      foregroundColor: Colors.white,
+                      backgroundColor: Colors.white.withValues(alpha: 0.12),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 14,
+                      ),
+                    ),
+                    icon: const Icon(Icons.bar_chart_rounded, size: 18),
+                    label: const Text('Rapor merkezi'),
+                  ),
                   FilledButton.tonalIcon(
                     onPressed: () {
                       Navigator.of(
@@ -982,32 +992,15 @@ class _SiparisSatiri extends StatelessWidget {
 
 class _YanPanel extends StatelessWidget {
   const _YanPanel({
-    required this.ozet,
-    required this.saatlikVeriler,
     required this.siparisler,
     required this.salonBolumleri,
-    required this.stokOzeti,
-    required this.yaziciEkle,
-    required this.yaziciSil,
-    required this.yaziciGuncelle,
     required this.personelEkle,
     required this.personelSil,
     required this.personeller,
   });
 
-  final YonetimPaneliOzetiVarligi ozet;
-  final List<SaatlikSiparisOzetiVarligi> saatlikVeriler;
   final List<SiparisVarligi> siparisler;
   final List<SalonBolumuVarligi> salonBolumleri;
-  final StokOzetiVarligi? stokOzeti;
-  final Future<void> Function() yaziciEkle;
-  final Future<void> Function(YaziciDurumuVarligi yazici) yaziciSil;
-  final Future<void> Function(
-    YaziciDurumuVarligi yazici, {
-    String? rolEtiketi,
-    YaziciBaglantiDurumu? durum,
-  })
-  yaziciGuncelle;
   final Future<void> Function() personelEkle;
   final Future<void> Function(PersonelDurumuVarligi personel) personelSil;
   final List<PersonelDurumuVarligi> personeller;
@@ -1026,30 +1019,6 @@ class _YanPanel extends StatelessWidget {
           children: [
             SizedBox(
               width: yariGenislik,
-              child: KanalDagilimiKarti(ozet: ozet),
-            ),
-            SizedBox(
-              width: yariGenislik,
-              child: PaketServisOperasyonKarti(siparisler: siparisler),
-            ),
-            SizedBox(
-              width: yariGenislik,
-              child: SaatlikTrendKarti(veriler: saatlikVeriler),
-            ),
-            if (stokOzeti != null)
-              SizedBox(
-                width: yariGenislik,
-                child: StokVeMaliyetKarti(ozet: stokOzeti!),
-              ),
-            SizedBox(
-              width: yariGenislik,
-              child: PatronRaporuKarti(
-                siparisler: siparisler,
-                saatlikVeriler: saatlikVeriler,
-              ),
-            ),
-            SizedBox(
-              width: yariGenislik,
               child: PersonelYonetimiKarti(
                 personeller: personeller,
                 personelEkle: personelEkle,
@@ -1057,7 +1026,7 @@ class _YanPanel extends StatelessWidget {
               ),
             ),
             SizedBox(
-              width: genislik,
+              width: yariGenislik,
               child: MasaPlaniKarti(
                 siparisler: siparisler,
                 salonBolumleri: salonBolumleri,

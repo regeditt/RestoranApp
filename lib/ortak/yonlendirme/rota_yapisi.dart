@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:restoran_app/bagimlilik_enjeksiyonu/servis_kaydi.dart';
 import 'package:restoran_app/ortak/bagimlilik/servis_saglayici.dart';
+import 'package:restoran_app/ortak/sabitler/uygulama_sabitleri.dart';
 import 'package:restoran_app/ozellikler/anasayfa/sunum/sayfalar/ana_sayfa.dart';
 import 'package:restoran_app/ozellikler/kimlik/alan/roller/kullanici_rolu.dart';
 import 'package:restoran_app/ozellikler/kimlik/alan/varliklar/kullanici_varligi.dart';
@@ -12,6 +13,7 @@ import 'package:restoran_app/ozellikler/menu/sunum/sayfalar/musteri_menu_sayfasi
 import 'package:restoran_app/ozellikler/menu/sunum/sayfalar/qr_menu_sayfasi.dart';
 import 'package:restoran_app/ozellikler/menu/sunum/viewmodel/musteri_menu_viewmodel.dart';
 import 'package:restoran_app/ozellikler/sepet/alan/varliklar/sepet_varligi.dart';
+import 'package:restoran_app/ozellikler/raporlar/sunum/sayfalar/raporlar_sayfasi.dart';
 import 'package:restoran_app/ozellikler/siparis/alan/varliklar/siparis_ozeti_girdisi_varligi.dart';
 import 'package:restoran_app/ozellikler/siparis/sunum/sayfalar/mutfak_siparis_sayfasi.dart';
 import 'package:restoran_app/ozellikler/siparis/sunum/sayfalar/siparis_ozeti_sayfasi.dart';
@@ -31,6 +33,7 @@ class RotaYapisi {
   static const String qrMenu = '/qr-menu';
   static const String pos = '/pos';
   static const String mutfak = '/mutfak';
+  static const String raporlar = '/raporlar';
   static const String siparisOzeti = '/siparis-ozeti';
   static const String yonetimPaneli = '/yonetim-paneli';
 
@@ -64,6 +67,19 @@ class RotaYapisi {
       baslik: 'Yonetim paneli yalnizca yonetim icindir',
       aciklama:
           'Garson operasyonu POS uzerinden ilerler. Yonetim paneli icin yonetici rolu ile oturum acman gerekir.',
+    ),
+    raporlar: _PersonelErisimKurali(
+      izinliRoller: <KullaniciRolu>[
+        KullaniciRolu.yonetici,
+        KullaniciRolu.patron,
+      ],
+      izinliKullaniciKimlikleri:
+          UygulamaSabitleri.raporErisimIzinliKullaniciKimlikleri,
+      izinliTelefonlar: UygulamaSabitleri.raporErisimIzinliTelefonlar,
+      izinliEpostalar: UygulamaSabitleri.raporErisimIzinliEpostalar,
+      baslik: 'Raporlar yalnizca yetkili kullanicilara acik',
+      aciklama:
+          'Rapor merkezi admin kullanicilar icindir. Izinli kullanici listesine ekli degilsen personel girisi ile devam etmelisin.',
     ),
   };
 
@@ -130,6 +146,20 @@ class RotaYapisi {
               servisKaydi: servisKaydi,
               yetkiliSayfaOlustur: () => MutfakSiparisSayfasi(
                 viewModel: MutfakSiparisViewModel.servisKaydindan(servisKaydi),
+              ),
+            );
+          },
+          settings: ayarlar,
+        );
+      case raporlar:
+        return MaterialPageRoute<void>(
+          builder: (context) {
+            final servisKaydi = ServisSaglayici.of(context);
+            return _personelYetkiKorumaIle(
+              rota: raporlar,
+              servisKaydi: servisKaydi,
+              yetkiliSayfaOlustur: () => RaporlarSayfasi(
+                viewModel: YonetimPaneliViewModel.servisKaydindan(servisKaydi),
               ),
             );
           },
@@ -207,6 +237,9 @@ class RotaYapisi {
     return _PersonelYetkiKapisi(
       servisKaydi: servisKaydi,
       izinliRoller: kural.izinliRoller,
+      izinliKullaniciKimlikleri: kural.izinliKullaniciKimlikleri,
+      izinliTelefonlar: kural.izinliTelefonlar,
+      izinliEpostalar: kural.izinliEpostalar,
       baslik: kural.baslik,
       aciklama: kural.aciklama,
       yetkiliSayfaOlustur: yetkiliSayfaOlustur,
@@ -219,9 +252,15 @@ class _PersonelErisimKurali {
     required this.izinliRoller,
     required this.baslik,
     required this.aciklama,
+    this.izinliKullaniciKimlikleri = const <String>{},
+    this.izinliTelefonlar = const <String>{},
+    this.izinliEpostalar = const <String>{},
   });
 
   final List<KullaniciRolu> izinliRoller;
+  final Set<String> izinliKullaniciKimlikleri;
+  final Set<String> izinliTelefonlar;
+  final Set<String> izinliEpostalar;
   final String baslik;
   final String aciklama;
 }
@@ -230,6 +269,9 @@ class _PersonelYetkiKapisi extends StatelessWidget {
   const _PersonelYetkiKapisi({
     required this.servisKaydi,
     required this.izinliRoller,
+    required this.izinliKullaniciKimlikleri,
+    required this.izinliTelefonlar,
+    required this.izinliEpostalar,
     required this.baslik,
     required this.aciklama,
     required this.yetkiliSayfaOlustur,
@@ -237,6 +279,9 @@ class _PersonelYetkiKapisi extends StatelessWidget {
 
   final ServisKaydi servisKaydi;
   final List<KullaniciRolu> izinliRoller;
+  final Set<String> izinliKullaniciKimlikleri;
+  final Set<String> izinliTelefonlar;
+  final Set<String> izinliEpostalar;
   final String baslik;
   final String aciklama;
   final Widget Function() yetkiliSayfaOlustur;
@@ -254,10 +299,7 @@ class _PersonelYetkiKapisi extends StatelessWidget {
             }
 
             final KullaniciVarligi? kullanici = snapshot.data;
-            final bool yetkili =
-                kullanici != null &&
-                kullanici.aktifMi &&
-                izinliRoller.contains(kullanici.rol);
+            final bool yetkili = _kullaniciYetkiliMi(kullanici);
             if (yetkili) {
               return yetkiliSayfaOlustur();
             }
@@ -269,6 +311,74 @@ class _PersonelYetkiKapisi extends StatelessWidget {
             );
           },
     );
+  }
+
+  bool _kullaniciYetkiliMi(KullaniciVarligi? kullanici) {
+    if (kullanici == null || !kullanici.aktifMi) {
+      return false;
+    }
+
+    final bool roldenYetkili = izinliRoller.contains(kullanici.rol);
+    if (roldenYetkili) {
+      return true;
+    }
+
+    return _izinliListedenYetkili(kullanici);
+  }
+
+  bool _izinliListedenYetkili(KullaniciVarligi kullanici) {
+    final bool kimlikEslesmesi = _degerListedeVarMi(
+      kaynak: izinliKullaniciKimlikleri,
+      hedef: kullanici.id,
+    );
+    if (kimlikEslesmesi) {
+      return true;
+    }
+
+    final bool telefonEslesmesi = _degerListedeVarMi(
+      kaynak: izinliTelefonlar,
+      hedef: kullanici.telefon,
+    );
+    if (telefonEslesmesi) {
+      return true;
+    }
+
+    final String? eposta = kullanici.eposta;
+    if (eposta == null) {
+      return false;
+    }
+
+    return _degerListedeVarMi(
+      kaynak: izinliEpostalar,
+      hedef: eposta,
+      buyukKucukHarfDuyarsiz: true,
+    );
+  }
+
+  bool _degerListedeVarMi({
+    required Set<String> kaynak,
+    required String hedef,
+    bool buyukKucukHarfDuyarsiz = false,
+  }) {
+    String normalizasyon(String deger) {
+      final String temiz = deger.trim();
+      if (buyukKucukHarfDuyarsiz) {
+        return temiz.toLowerCase();
+      }
+      return temiz;
+    }
+
+    final String hedefNormalize = normalizasyon(hedef);
+    if (hedefNormalize.isEmpty) {
+      return false;
+    }
+
+    for (final String deger in kaynak) {
+      if (normalizasyon(deger) == hedefNormalize) {
+        return true;
+      }
+    }
+    return false;
   }
 
   String? _rolEtiketi(KullaniciRolu? rol) {
@@ -359,6 +469,15 @@ class _YetkisizErisimSayfasi extends StatelessWidget {
                         ).pushReplacementNamed(RotaYapisi.personelGiris),
                         icon: const Icon(Icons.badge_rounded),
                         label: const Text('Personel girisine git'),
+                      ),
+                      FilledButton.tonalIcon(
+                        onPressed: () =>
+                            Navigator.of(context).pushNamedAndRemoveUntil(
+                              RotaYapisi.anaSayfa,
+                              (Route<dynamic> route) => false,
+                            ),
+                        icon: const Icon(Icons.home_rounded),
+                        label: const Text('Ana sayfaya don'),
                       ),
                       OutlinedButton.icon(
                         onPressed: () => Navigator.of(
