@@ -109,14 +109,19 @@ class SiparisDeposuSqlite implements SiparisDeposu {
   @override
   Future<SiparisVarligi> siparisDurumuGuncelle(
     String siparisId,
-    SiparisDurumu yeniDurum,
-  ) async {
+    SiparisDurumu yeniDurum, {
+    String? kuryeAdi,
+  }) async {
     final SiparisVarligi? mevcutSiparis = await siparisGetir(siparisId);
     if (mevcutSiparis == null) {
       throw StateError('Siparis bulunamadi');
     }
     final PaketServisDurumGuncellemesi durumGuncellemesi =
-        paketServisDurumGuncellemesiniHesapla(mevcutSiparis, yeniDurum);
+        paketServisDurumGuncellemesiniHesapla(
+          mevcutSiparis,
+          yeniDurum,
+          kuryeAdi: kuryeAdi,
+        );
 
     await (_veritabani.update(
       _veritabani.siparisKayitlari,

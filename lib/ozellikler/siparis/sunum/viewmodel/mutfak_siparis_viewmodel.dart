@@ -3,6 +3,7 @@ import 'package:restoran_app/bagimlilik_enjeksiyonu/servis_kaydi.dart';
 import 'package:restoran_app/ozellikler/siparis/alan/enumlar/siparis_durumu.dart';
 import 'package:restoran_app/ozellikler/siparis/alan/enumlar/teslimat_tipi.dart';
 import 'package:restoran_app/ozellikler/siparis/alan/varliklar/siparis_varligi.dart';
+import 'package:restoran_app/ozellikler/siparis/uygulama/servisler/kurye_konum_takip_servisi.dart';
 import 'package:restoran_app/ozellikler/siparis/uygulama/use_case/siparis_durumu_guncelle_use_case.dart';
 import 'package:restoran_app/ozellikler/siparis/uygulama/use_case/siparisleri_getir_use_case.dart';
 import 'package:restoran_app/ozellikler/yonetim/alan/varliklar/yazici_durumu_varligi.dart';
@@ -36,9 +37,11 @@ class MutfakSiparisViewModel extends ChangeNotifier {
     required SiparisleriGetirUseCase siparisleriGetirUseCase,
     required YazicilariGetirUseCase yazicilariGetirUseCase,
     required SiparisDurumuGuncelleUseCase siparisDurumuGuncelleUseCase,
+    KuryeKonumTakipServisi? kuryeTakipServisi,
   }) : _siparisleriGetirUseCase = siparisleriGetirUseCase,
        _yazicilariGetirUseCase = yazicilariGetirUseCase,
-       _siparisDurumuGuncelleUseCase = siparisDurumuGuncelleUseCase;
+       _siparisDurumuGuncelleUseCase = siparisDurumuGuncelleUseCase,
+       _kuryeKonumTakipServisi = kuryeTakipServisi ?? kuryeKonumTakipServisi;
 
   factory MutfakSiparisViewModel.servisKaydindan(ServisKaydi servisKaydi) {
     return MutfakSiparisViewModel(
@@ -51,6 +54,7 @@ class MutfakSiparisViewModel extends ChangeNotifier {
   final SiparisleriGetirUseCase _siparisleriGetirUseCase;
   final YazicilariGetirUseCase _yazicilariGetirUseCase;
   final SiparisDurumuGuncelleUseCase _siparisDurumuGuncelleUseCase;
+  final KuryeKonumTakipServisi _kuryeKonumTakipServisi;
 
   bool _yukleniyor = true;
   List<SiparisVarligi> _siparisler = const <SiparisVarligi>[];
@@ -135,7 +139,10 @@ class MutfakSiparisViewModel extends ChangeNotifier {
     }
   }
 
-  Future<MutfakSiparisIslemSonucu> durumIlerle(SiparisVarligi siparis) async {
+  Future<MutfakSiparisIslemSonucu> durumIlerle(
+    SiparisVarligi siparis, {
+    String? kuryeAdi,
+  }) async {
     final SiparisDurumu? sonrakiDurum = _sonrakiDurum(siparis);
     if (sonrakiDurum == null) {
       return const MutfakSiparisIslemSonucu.hata(
@@ -144,14 +151,24 @@ class MutfakSiparisViewModel extends ChangeNotifier {
     }
 
     try {
-      await _siparisDurumuGuncelleUseCase(siparis.id, sonrakiDurum);
+      await _siparisDurumuGuncelleUseCase(
+        siparis.id,
+        sonrakiDurum,
+        kuryeAdi: kuryeAdi,
+      );
+      final String takipMesaji = await _kuryeTakibiniDurumaGoreYonet(
+        siparisId: siparis.id,
+        kuryeKimligi: _kuryeKimliginiBelirle(siparis, kuryeAdi: kuryeAdi),
+        yeniDurum: sonrakiDurum,
+      );
       final MutfakSiparisIslemSonucu yenileSonucu = await yukle();
       if (!yenileSonucu.basarili) {
         return yenileSonucu;
       }
+      final String durumMesaji =
+          '${_durumYaziciMesaji(siparis, sonrakiDurum)}${takipMesaji.isEmpty ? '' : ' $takipMesaji'}';
       return MutfakSiparisIslemSonucu.basarili(
-        '${siparis.siparisNo} ${_durumEtiketi(sonrakiDurum).toLowerCase()} durumuna alindi. '
-        '${_durumYaziciMesaji(siparis, sonrakiDurum)}',
+        '${siparis.siparisNo} ${_durumEtiketi(sonrakiDurum).toLowerCase()} durumuna alindi. $durumMesaji',
       );
     } catch (_) {
       return const MutfakSiparisIslemSonucu.hata(
@@ -168,6 +185,7 @@ class MutfakSiparisViewModel extends ChangeNotifier {
         siparis.id,
         SiparisDurumu.iptalEdildi,
       );
+      await _kuryeKonumTakipServisi.takipDurdur(siparis.id);
       final MutfakSiparisIslemSonucu yenileSonucu = await yukle();
       if (!yenileSonucu.basarili) {
         return yenileSonucu;
@@ -178,6 +196,42 @@ class MutfakSiparisViewModel extends ChangeNotifier {
     } catch (_) {
       return const MutfakSiparisIslemSonucu.hata('Siparis iptal edilemedi');
     }
+  }
+
+  Future<String> _kuryeTakibiniDurumaGoreYonet({
+    required String siparisId,
+    required String kuryeKimligi,
+    required SiparisDurumu yeniDurum,
+  }) async {
+    switch (yeniDurum) {
+      case SiparisDurumu.yolda:
+        final KuryeKonumTakipSonucu sonuc = await _kuryeKonumTakipServisi
+            .takipBaslat(siparisId: siparisId, kuryeKimligi: kuryeKimligi);
+        if (sonuc.basarili) {
+          return sonuc.mesaj;
+        }
+        if (sonuc.mesaj.isEmpty) {
+          return 'Konum takibi baslatilamadi.';
+        }
+        return sonuc.mesaj;
+      case SiparisDurumu.teslimEdildi:
+      case SiparisDurumu.iptalEdildi:
+        await _kuryeKonumTakipServisi.takipDurdur(siparisId);
+        return 'Canli konum takibi durduruldu.';
+      case SiparisDurumu.alindi:
+      case SiparisDurumu.hazirlaniyor:
+      case SiparisDurumu.hazir:
+        return '';
+    }
+  }
+
+  String _kuryeKimliginiBelirle(SiparisVarligi siparis, {String? kuryeAdi}) {
+    final String ham = kuryeAdi ?? siparis.kuryeAdi ?? '';
+    final String temiz = ham.trim();
+    if (temiz.isNotEmpty) {
+      return temiz;
+    }
+    return 'Moto Kurye';
   }
 
   List<SiparisVarligi> _grupSiparisleri(

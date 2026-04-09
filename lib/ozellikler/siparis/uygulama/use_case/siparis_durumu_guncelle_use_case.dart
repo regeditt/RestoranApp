@@ -7,7 +7,15 @@ class SiparisDurumuGuncelleUseCase {
 
   final SiparisDeposu _siparisDeposu;
 
-  Future<SiparisVarligi> call(String siparisId, SiparisDurumu yeniDurum) {
-    return _siparisDeposu.siparisDurumuGuncelle(siparisId, yeniDurum);
+  Future<SiparisVarligi> call(
+    String siparisId,
+    SiparisDurumu yeniDurum, {
+    String? kuryeAdi,
+  }) {
+    return _siparisDeposu.siparisDurumuGuncelle(
+      siparisId,
+      yeniDurum,
+      kuryeAdi: kuryeAdi,
+    );
   }
 }

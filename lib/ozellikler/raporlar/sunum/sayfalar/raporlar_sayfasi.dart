@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:restoran_app/ortak/bilesenler/ana_sayfaya_donus.dart';
 import 'package:restoran_app/ortak/tema/restoran_tema_uzantilari.dart';
 import 'package:restoran_app/ortak/yonlendirme/rota_yapisi.dart';
+import 'package:restoran_app/ozellikler/raporlar/sunum/bilesenler/kurye_takip_haritasi_karti.dart';
 import 'package:restoran_app/ozellikler/stok/alan/varliklar/stok_ozeti_varligi.dart';
 import 'package:restoran_app/ozellikler/yonetim/alan/varliklar/saatlik_siparis_ozeti_varligi.dart';
 import 'package:restoran_app/ozellikler/yonetim/alan/varliklar/yonetim_paneli_ozeti_varligi.dart';
@@ -71,6 +72,7 @@ class _RaporlarSayfasiState extends State<RaporlarSayfasi> {
           KanalDagilimiKarti(ozet: ozet),
           SaatlikTrendKarti(veriler: saatlikVeriler),
           PaketServisOperasyonKarti(siparisler: viewModel.filtreliSiparisler),
+          KuryeTakipHaritasiKarti(siparisler: viewModel.siparisler),
           if (stokOzeti != null) StokVeMaliyetKarti(ozet: stokOzeti),
           PatronRaporuKarti(
             siparisler: viewModel.filtreliSiparisler,

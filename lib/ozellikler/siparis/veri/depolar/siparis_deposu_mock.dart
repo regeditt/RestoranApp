@@ -46,8 +46,9 @@ class SiparisDeposuMock implements SiparisDeposu {
   @override
   Future<SiparisVarligi> siparisDurumuGuncelle(
     String siparisId,
-    SiparisDurumu yeniDurum,
-  ) async {
+    SiparisDurumu yeniDurum, {
+    String? kuryeAdi,
+  }) async {
     final int index = _siparisler.indexWhere(
       (SiparisVarligi siparis) => siparis.id == siparisId,
     );
@@ -55,7 +56,11 @@ class SiparisDeposuMock implements SiparisDeposu {
       throw StateError('Siparis bulunamadi');
     }
     final PaketServisDurumGuncellemesi durumGuncellemesi =
-        paketServisDurumGuncellemesiniHesapla(_siparisler[index], yeniDurum);
+        paketServisDurumGuncellemesiniHesapla(
+          _siparisler[index],
+          yeniDurum,
+          kuryeAdi: kuryeAdi,
+        );
 
     final SiparisVarligi guncelSiparis = _siparisler[index].copyWith(
       durum: yeniDurum,

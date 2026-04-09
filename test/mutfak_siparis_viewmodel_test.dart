@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:restoran_app/bagimlilik_enjeksiyonu/servis_kaydi.dart';
 import 'package:restoran_app/ozellikler/siparis/alan/enumlar/siparis_durumu.dart';
+import 'package:restoran_app/ozellikler/siparis/alan/enumlar/teslimat_tipi.dart';
 import 'package:restoran_app/ozellikler/siparis/sunum/viewmodel/mutfak_siparis_viewmodel.dart';
 
 void main() {
@@ -37,6 +38,32 @@ void main() {
 
       expect(sonuc.basarili, isTrue);
       expect(guncelSiparis.durum, SiparisDurumu.hazirlaniyor);
+    },
+  );
+
+  test(
+    'MutfakSiparisViewModel hazir paket siparisinde secilen kuryeyi atar',
+    () async {
+      final MutfakSiparisViewModel viewModel =
+          MutfakSiparisViewModel.servisKaydindan(ServisKaydi.mock());
+      await viewModel.yukle();
+      final siparis = viewModel.siparisler.firstWhere(
+        (siparis) =>
+            siparis.teslimatTipi == TeslimatTipi.paketServis &&
+            siparis.durum == SiparisDurumu.hazir,
+      );
+
+      final MutfakSiparisIslemSonucu sonuc = await viewModel.durumIlerle(
+        siparis,
+        kuryeAdi: 'Zeynep Kurye',
+      );
+      final guncelSiparis = viewModel.siparisler.firstWhere(
+        (deger) => deger.id == siparis.id,
+      );
+
+      expect(sonuc.basarili, isTrue);
+      expect(guncelSiparis.durum, SiparisDurumu.yolda);
+      expect(guncelSiparis.kuryeAdi, 'Zeynep Kurye');
     },
   );
 }

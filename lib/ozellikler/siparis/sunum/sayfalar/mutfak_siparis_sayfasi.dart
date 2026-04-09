@@ -64,8 +64,20 @@ class _MutfakSiparisSayfasiState extends State<MutfakSiparisSayfasi> {
   }
 
   Future<void> _durumIlerle(SiparisVarligi siparis) async {
+    String? kuryeAdi;
+    if (_kuryeSecimiGerekliMi(siparis)) {
+      kuryeAdi = await _kuryeAdiSec(siparis);
+      if (!mounted) {
+        return;
+      }
+      if (kuryeAdi == null) {
+        return;
+      }
+    }
+
     final MutfakSiparisIslemSonucu sonuc = await widget.viewModel.durumIlerle(
       siparis,
+      kuryeAdi: kuryeAdi,
     );
 
     if (!mounted) {
@@ -74,6 +86,106 @@ class _MutfakSiparisSayfasiState extends State<MutfakSiparisSayfasi> {
     ScaffoldMessenger.of(
       context,
     ).showSnackBar(SnackBar(content: Text(sonuc.mesaj)));
+  }
+
+  bool _kuryeSecimiGerekliMi(SiparisVarligi siparis) {
+    return siparis.teslimatTipi == TeslimatTipi.paketServis &&
+        siparis.durum == SiparisDurumu.hazir;
+  }
+
+  Future<String?> _kuryeAdiSec(SiparisVarligi siparis) async {
+    final TextEditingController denetleyici = TextEditingController(
+      text: siparis.kuryeAdi ?? '',
+    );
+    final List<String> mevcutKuryeler =
+        widget.viewModel.siparisler
+            .map((SiparisVarligi siparis) => siparis.kuryeAdi?.trim() ?? '')
+            .where((String ad) => ad.isNotEmpty)
+            .toSet()
+            .toList()
+          ..sort();
+
+    final String? secilen = await showDialog<String>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Kurye Sec'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              Text('${siparis.siparisNo} icin teslimata cikacak kuryeyi sec.'),
+              const SizedBox(height: 12),
+              TextField(
+                controller: denetleyici,
+                autofocus: true,
+                textInputAction: TextInputAction.done,
+                decoration: const InputDecoration(
+                  labelText: 'Kurye adi',
+                  hintText: 'Ornek: Emre Kurye',
+                ),
+                onSubmitted: (_) {
+                  final String? sonuc = _kuryeAdiTemizle(denetleyici.text);
+                  if (sonuc != null) {
+                    Navigator.of(context).pop(sonuc);
+                  }
+                },
+              ),
+              if (mevcutKuryeler.isNotEmpty) ...<Widget>[
+                const SizedBox(height: 12),
+                const Text(
+                  'Hizli secim',
+                  style: TextStyle(fontWeight: FontWeight.w700),
+                ),
+                const SizedBox(height: 6),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: mevcutKuryeler.map((String ad) {
+                    return ActionChip(
+                      label: Text(ad),
+                      onPressed: () {
+                        denetleyici.text = ad;
+                      },
+                    );
+                  }).toList(),
+                ),
+              ],
+            ],
+          ),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Vazgec'),
+            ),
+            FilledButton(
+              onPressed: () {
+                final String? sonuc = _kuryeAdiTemizle(denetleyici.text);
+                if (sonuc == null) {
+                  return;
+                }
+                Navigator.of(context).pop(sonuc);
+              },
+              child: const Text('Devam et'),
+            ),
+          ],
+        );
+      },
+    );
+
+    denetleyici.dispose();
+    return secilen;
+  }
+
+  String? _kuryeAdiTemizle(String hamMetin) {
+    final String temiz = hamMetin.trim();
+    if (temiz.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Kurye adi bos birakilamaz.')),
+      );
+      return null;
+    }
+    return temiz;
   }
 
   Future<void> _siparisiIptalEt(SiparisVarligi siparis) async {

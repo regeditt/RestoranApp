@@ -6,8 +6,9 @@ abstract class SiparisDeposu {
 
   Future<SiparisVarligi> siparisDurumuGuncelle(
     String siparisId,
-    SiparisDurumu yeniDurum,
-  );
+    SiparisDurumu yeniDurum, {
+    String? kuryeAdi,
+  });
 
   Future<List<SiparisVarligi>> siparisleriGetir();
 

@@ -15,8 +15,9 @@ class PaketServisDurumGuncellemesi {
 
 PaketServisDurumGuncellemesi paketServisDurumGuncellemesiniHesapla(
   SiparisVarligi siparis,
-  SiparisDurumu yeniDurum,
-) {
+  SiparisDurumu yeniDurum, {
+  String? kuryeAdi,
+}) {
   if (siparis.teslimatTipi != TeslimatTipi.paketServis) {
     return const PaketServisDurumGuncellemesi(
       kuryeAdi: null,
@@ -33,13 +34,26 @@ PaketServisDurumGuncellemesi paketServisDurumGuncellemesiniHesapla(
     SiparisDurumu.iptalEdildi => siparis.paketTeslimatDurumu,
   };
 
-  final String? kuryeAdi = switch (yeniDurum) {
-    SiparisDurumu.yolda => siparis.kuryeAdi ?? 'Moto Kurye',
-    _ => siparis.kuryeAdi,
+  final String? guncelKuryeAdi = switch (yeniDurum) {
+    SiparisDurumu.yolda =>
+      _kuryeAdiNormalize(kuryeAdi) ?? siparis.kuryeAdi ?? 'Moto Kurye',
+    _ => _kuryeAdiNormalize(kuryeAdi) ?? siparis.kuryeAdi,
   };
 
   return PaketServisDurumGuncellemesi(
-    kuryeAdi: kuryeAdi,
+    kuryeAdi: guncelKuryeAdi,
     paketTeslimatDurumu: paketTeslimatDurumu,
   );
+}
+
+String? _kuryeAdiNormalize(String? kuryeAdi) {
+  final String? ham = kuryeAdi;
+  if (ham == null) {
+    return null;
+  }
+  final String temiz = ham.trim();
+  if (temiz.isEmpty) {
+    return null;
+  }
+  return temiz;
 }
