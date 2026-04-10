@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'dart:ui';
 
 enum YaziciBaglantiDurumu { bagli, dikkat, kapali }
 

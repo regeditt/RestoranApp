@@ -1,6 +1,8 @@
 import 'package:restoran_app/ozellikler/menu/alan/varliklar/urun_secenegi_varligi.dart';
 
 class UrunVarligi {
+  static const Object _gorselUrlBelirsiz = Object();
+
   const UrunVarligi({
     required this.id,
     required this.kategoriId,
@@ -29,7 +31,7 @@ class UrunVarligi {
     String? ad,
     String? aciklama,
     double? fiyat,
-    String? gorselUrl,
+    Object? gorselUrl = _gorselUrlBelirsiz,
     bool? stoktaMi,
     bool? oneCikanMi,
     List<UrunSecenegiVarligi>? secenekler,
@@ -40,7 +42,9 @@ class UrunVarligi {
       ad: ad ?? this.ad,
       aciklama: aciklama ?? this.aciklama,
       fiyat: fiyat ?? this.fiyat,
-      gorselUrl: gorselUrl ?? this.gorselUrl,
+      gorselUrl: identical(gorselUrl, _gorselUrlBelirsiz)
+          ? this.gorselUrl
+          : gorselUrl as String?,
       stoktaMi: stoktaMi ?? this.stoktaMi,
       oneCikanMi: oneCikanMi ?? this.oneCikanMi,
       secenekler: secenekler ?? this.secenekler,

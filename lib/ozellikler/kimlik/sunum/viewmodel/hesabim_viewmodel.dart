@@ -5,6 +5,7 @@ import 'package:restoran_app/ozellikler/kimlik/uygulama/use_case/aktif_kullanici
 import 'package:restoran_app/ozellikler/kimlik/uygulama/use_case/cikis_yap_use_case.dart';
 import 'package:restoran_app/ozellikler/kimlik/uygulama/use_case/giris_yap_use_case.dart';
 
+/// Kullaniciya ait tek bir adres kartinin baslik ve metin bilgisini tutar.
 class AdresVerisi {
   const AdresVerisi({required this.baslik, required this.adresMetni});
 
@@ -12,6 +13,7 @@ class AdresVerisi {
   final String adresMetni;
 }
 
+/// Hesabim ekranindaki islem cagri sonuclarini (basarili/hata) tasir.
 class HesabimIslemSonucu {
   const HesabimIslemSonucu.basarili([this.mesaj = '']) : basarili = true;
 
@@ -21,6 +23,7 @@ class HesabimIslemSonucu {
   final String mesaj;
 }
 
+/// Hesabim ekraninda aktif kullanici, profil duzenleme ve adres listesini yonetir.
 class HesabimViewModel extends ChangeNotifier {
   HesabimViewModel({
     required AktifKullaniciGetirUseCase aktifKullaniciGetirUseCase,

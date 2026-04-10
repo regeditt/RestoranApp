@@ -1,6 +1,8 @@
 import 'package:drift/drift.dart';
 import 'package:restoran_app/ortak/veri/veritabani.dart';
 
+enum MenuIceriAktarimKapsami { tumu, sadeceKategoriler, sadeceUrunler }
+
 class VeriAktarimServisi {
   VeriAktarimServisi(this._veritabani);
 
@@ -46,6 +48,7 @@ class VeriAktarimServisi {
   Future<void> menuIceriAktar(
     Map<String, Object?> veri, {
     bool temizle = false,
+    MenuIceriAktarimKapsami kapsami = MenuIceriAktarimKapsami.tumu,
   }) async {
     final int surum = (veri['surum'] as num?)?.toInt() ?? 1;
     if (surum != 1) {
@@ -58,62 +61,70 @@ class VeriAktarimServisi {
 
     await _veritabani.transaction(() async {
       if (temizle) {
-        await _veritabani.delete(_veritabani.urunKayitlari).go();
-        await _veritabani.delete(_veritabani.kategoriKayitlari).go();
+        if (kapsami == MenuIceriAktarimKapsami.sadeceUrunler) {
+          await _veritabani.delete(_veritabani.urunKayitlari).go();
+        } else {
+          await _veritabani.delete(_veritabani.urunKayitlari).go();
+          await _veritabani.delete(_veritabani.kategoriKayitlari).go();
+        }
       }
 
       final Map<String, String> kategoriIdHaritasi = <String, String>{};
-      for (final ham in kategoriHam) {
-        final Map<String, Object?> k = Map<String, Object?>.from(ham as Map);
-        final String kaynakId = (k['id'] as String?) ?? '';
-        final String kategoriId = await _veritabani.numerikKimlikCozumle(
-          tabloAdi: 'kategori_kayitlari',
-          adayKimlik: kaynakId,
-        );
-        kategoriIdHaritasi[kaynakId] = kategoriId;
-        await _veritabani
-            .into(_veritabani.kategoriKayitlari)
-            .insertOnConflictUpdate(
-              KategoriKayitlariCompanion(
-                id: Value(kategoriId),
-                ad: Value(k['ad'] as String),
-                sira: Value((k['sira'] as num).toInt()),
-                acikMi: Value(k['acikMi'] as bool),
-              ),
-            );
+      if (kapsami != MenuIceriAktarimKapsami.sadeceUrunler) {
+        for (final ham in kategoriHam) {
+          final Map<String, Object?> k = Map<String, Object?>.from(ham as Map);
+          final String kaynakId = (k['id'] as String?) ?? '';
+          final String kategoriId = await _veritabani.numerikKimlikCozumle(
+            tabloAdi: 'kategori_kayitlari',
+            adayKimlik: kaynakId,
+          );
+          kategoriIdHaritasi[kaynakId] = kategoriId;
+          await _veritabani
+              .into(_veritabani.kategoriKayitlari)
+              .insertOnConflictUpdate(
+                KategoriKayitlariCompanion(
+                  id: Value(kategoriId),
+                  ad: Value(k['ad'] as String),
+                  sira: Value((k['sira'] as num).toInt()),
+                  acikMi: Value(k['acikMi'] as bool),
+                ),
+              );
+        }
       }
 
-      for (final ham in urunHam) {
-        final Map<String, Object?> u = Map<String, Object?>.from(ham as Map);
-        final String urunId = await _veritabani.numerikKimlikCozumle(
-          tabloAdi: 'urun_kayitlari',
-          adayKimlik: (u['id'] as String?) ?? '',
-        );
-        final String kaynakKategoriId = (u['kategoriId'] as String?) ?? '';
-        final String? kategoriId =
-            kategoriIdHaritasi[kaynakKategoriId] ??
-            (await (_veritabani.select(_veritabani.kategoriKayitlari)
-                      ..where((tbl) => tbl.id.equals(kaynakKategoriId)))
-                    .getSingleOrNull())
-                ?.id;
-        if (kategoriId == null) {
-          continue;
+      if (kapsami != MenuIceriAktarimKapsami.sadeceKategoriler) {
+        for (final ham in urunHam) {
+          final Map<String, Object?> u = Map<String, Object?>.from(ham as Map);
+          final String urunId = await _veritabani.numerikKimlikCozumle(
+            tabloAdi: 'urun_kayitlari',
+            adayKimlik: (u['id'] as String?) ?? '',
+          );
+          final String kaynakKategoriId = (u['kategoriId'] as String?) ?? '';
+          final String? kategoriId =
+              kategoriIdHaritasi[kaynakKategoriId] ??
+              (await (_veritabani.select(_veritabani.kategoriKayitlari)
+                        ..where((tbl) => tbl.id.equals(kaynakKategoriId)))
+                      .getSingleOrNull())
+                  ?.id;
+          if (kategoriId == null) {
+            continue;
+          }
+          await _veritabani
+              .into(_veritabani.urunKayitlari)
+              .insertOnConflictUpdate(
+                UrunKayitlariCompanion(
+                  id: Value(urunId),
+                  kategoriId: Value(kategoriId),
+                  ad: Value(u['ad'] as String),
+                  aciklama: Value(u['aciklama'] as String),
+                  fiyat: Value((u['fiyat'] as num).toDouble()),
+                  gorselUrl: Value(u['gorselUrl'] as String?),
+                  stoktaMi: Value(u['stoktaMi'] as bool),
+                  oneCikanMi: Value(u['oneCikanMi'] as bool),
+                  seceneklerJson: Value(u['seceneklerJson'] as String),
+                ),
+              );
         }
-        await _veritabani
-            .into(_veritabani.urunKayitlari)
-            .insertOnConflictUpdate(
-              UrunKayitlariCompanion(
-                id: Value(urunId),
-                kategoriId: Value(kategoriId),
-                ad: Value(u['ad'] as String),
-                aciklama: Value(u['aciklama'] as String),
-                fiyat: Value((u['fiyat'] as num).toDouble()),
-                gorselUrl: Value(u['gorselUrl'] as String?),
-                stoktaMi: Value(u['stoktaMi'] as bool),
-                oneCikanMi: Value(u['oneCikanMi'] as bool),
-                seceneklerJson: Value(u['seceneklerJson'] as String),
-              ),
-            );
       }
     });
   }

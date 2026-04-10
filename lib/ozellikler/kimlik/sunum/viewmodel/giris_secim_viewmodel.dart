@@ -43,6 +43,7 @@ enum KimlikEkranModu {
   final String aciklama;
 }
 
+/// Giris/hesap olusturma denemelerinin sonucunu ve hedef ekran bilgisini tasir.
 class GirisSecimIslemSonucu {
   const GirisSecimIslemSonucu._({
     required this.basarili,
@@ -61,6 +62,7 @@ class GirisSecimIslemSonucu {
   final GirisHedefi? hedef;
 }
 
+/// Personel giris akisini, secili rol modunu ve ekran yonlendirmesini yonetir.
 class GirisSecimViewModel extends ChangeNotifier {
   GirisSecimViewModel({
     required GirisYapUseCase girisYapUseCase,
@@ -170,13 +172,26 @@ class GirisSecimViewModel extends ChangeNotifier {
         hedef: hedef ?? _seciliMod.ilkHedef,
       );
     } on StateError catch (hata) {
-      return GirisSecimIslemSonucu.hata(hata.message.toString());
+      return GirisSecimIslemSonucu.hata(
+        _hataMesajiniIyilestir(hata.message.toString()),
+      );
     } catch (_) {
       return const GirisSecimIslemSonucu.hata('Giris yapilamadi.');
     } finally {
       _islemde = false;
       notifyListeners();
     }
+  }
+
+  String _hataMesajiniIyilestir(String mesaj) {
+    final String temizMesaj = mesaj.trim();
+    if (temizMesaj != 'Kullanici bulunamadi.') {
+      return temizMesaj;
+    }
+    if (_seciliMod == PersonelGirisModu.garson) {
+      return 'Bu cihazda garson hesabi bulunamadi. Veriler cihazlar arasinda otomatik paylasilmaz. Once yonetici girisinden hesap olustur.';
+    }
+    return 'Bu cihazda yonetici hesabi bulunamadi. Veriler cihazlar arasinda otomatik paylasilmaz. Bu cihazda once hesap olustur.';
   }
 
   KullaniciRolu get _seciliRol => _seciliMod == PersonelGirisModu.garson

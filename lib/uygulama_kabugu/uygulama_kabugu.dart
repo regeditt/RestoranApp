@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:restoran_app/bagimlilik_enjeksiyonu/servis_kaydi.dart';
 import 'package:restoran_app/ortak/bagimlilik/servis_saglayici.dart';
+import 'package:restoran_app/ortak/sabitler/uygulama_sabitleri.dart';
 import 'package:restoran_app/ortak/tema/uygulama_tema.dart';
 import 'package:restoran_app/ortak/yonlendirme/rota_yapisi.dart';
 import 'package:restoran_app/ortak/veri/veri_kaynagi_tipi.dart';
@@ -47,7 +48,7 @@ class _UygulamaKabuguState extends State<UygulamaKabugu> {
     return ServisSaglayici(
       servis: _servisKaydi,
       child: MaterialApp(
-        title: 'RestoranApp',
+        title: UygulamaSabitleri.uygulamaAdi,
         debugShowCheckedModeBanner: false,
         theme: UygulamaTema.acikTema,
         home: AnimatedBuilder(

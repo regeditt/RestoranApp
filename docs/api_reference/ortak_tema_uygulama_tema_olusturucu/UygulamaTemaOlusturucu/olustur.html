@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1, user-scalable=no">
+  <meta name="description" content="API docs for the olustur method from the UygulamaTemaOlusturucu class, for the Dart programming language.">
+  <title>olustur method - UygulamaTemaOlusturucu class - uygulama_tema_olusturucu library - Dart API</title>
+
+
+  
+  <link rel="preconnect" href="https://fonts.gstatic.com">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:ital,wght@0,300;0,400;0,500;0,700;1,400&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet">
+  
+  <link rel="stylesheet" href="../../static-assets/github.css?v1">
+  <link rel="stylesheet" href="../../static-assets/styles.css?v1">
+  <link rel="icon" href="../../static-assets/favicon.png?v1">
+  
+</head>
+
+<body data-base-href="../../" data-using-base-href="false" class="light-theme">
+<div id="overlay-under-drawer"></div>
+<header id="title">
+  <span id="sidenav-left-toggle" class="material-symbols-outlined" role="button" tabindex="0">menu</span>
+  <ol class="breadcrumbs gt-separated dark hidden-xs">
+    <li><a href="../../index.html">restoran_app</a></li>
+    <li><a href="../../ortak_tema_uygulama_tema_olusturucu/">ortak\tema\uygulama_tema_olusturucu.dart</a></li>
+    <li><a href="../../ortak_tema_uygulama_tema_olusturucu/UygulamaTemaOlusturucu-class.html">UygulamaTemaOlusturucu</a></li>
+    <li class="self-crumb">olustur method</li>
+  </ol>
+  <div class="self-name">olustur</div>
+  <form class="search navbar-right" role="search">
+    <input type="text" id="search-box" autocomplete="off" disabled class="form-control typeahead" placeholder="Loading search...">
+  </form>
+  <button class="toggle" id="theme-button" title="Toggle between light and dark mode" aria-label="Light and dark mode toggle">
+    <span id="dark-theme-button" class="material-symbols-outlined" aria-hidden="true">
+      dark_mode
+    </span>
+    <span id="light-theme-button" class="material-symbols-outlined" aria-hidden="true">
+      light_mode
+    </span>
+  </button>
+</header>
+<main>
+<div
+    id="dartdoc-main-content"
+    class="main-content"
+    data-above-sidebar="ortak_tema_uygulama_tema_olusturucu&#47;UygulamaTemaOlusturucu-class-sidebar.html"
+    data-below-sidebar="">
+    <div>
+<h1><span class="kind-method">olustur</span> method 
+</h1></div>
+
+    <section class="multi-line-signature">
+      
+<span class="returntype"><a href="https://api.flutter.dev/flutter/material/ThemeData-class.html">ThemeData</a></span>
+<span class="name ">olustur</span>(<wbr>)
+
+      
+
+    </section>
+    
+
+
+    
+<section class="summary source-code" id="source">
+  <h2><span>Implementation</span></h2>
+  <pre class="language-dart"><code class="language-dart">ThemeData olustur() {
+  final ColorScheme renkSemasi =
+      ColorScheme.fromSeed(
+        seedColor: temaTokenlari.birincilAksiyon,
+        brightness: Brightness.light,
+      ).copyWith(
+        primary: temaTokenlari.birincilAksiyon,
+        secondary: temaTokenlari.ikincilAksiyon,
+        tertiary: temaTokenlari.vurguAksiyon,
+        surface: temaTokenlari.popupYuzey,
+        onSurface: temaTokenlari.metinBirincilKoyu,
+      );
+
+  final TextTheme yaziTemasi = TextTheme(
+    headlineLarge: TextStyle(
+      fontSize: 52,
+      fontWeight: FontWeight.w700,
+      color: temaTokenlari.metinBirincilKoyu,
+      height: 1.02,
+    ),
+    headlineMedium: TextStyle(
+      fontSize: 34,
+      fontWeight: FontWeight.w700,
+      color: temaTokenlari.metinBirincilKoyu,
+    ),
+    titleLarge: TextStyle(
+      fontSize: 22,
+      fontWeight: FontWeight.w800,
+      color: temaTokenlari.metinBirincilKoyu,
+    ),
+    titleMedium: TextStyle(
+      fontSize: 16,
+      fontWeight: FontWeight.w700,
+      color: temaTokenlari.metinBirincilKoyu,
+    ),
+    bodyLarge: TextStyle(
+      fontSize: 16,
+      height: 1.6,
+      fontWeight: FontWeight.w500,
+      color: temaTokenlari.metinIkincilKoyu,
+    ),
+    bodyMedium: TextStyle(
+      fontSize: 14,
+      height: 1.55,
+      fontWeight: FontWeight.w500,
+      color: temaTokenlari.metinIkincilKoyu,
+    ),
+    labelLarge: TextStyle(
+      fontSize: 13,
+      fontWeight: FontWeight.w700,
+      color: temaTokenlari.metinBirincilKoyu,
+    ),
+  );
+
+  return ThemeData(
+    useMaterial3: true,
+    colorScheme: renkSemasi,
+    scaffoldBackgroundColor: temaTokenlari.anaArkaPlan,
+    materialTapTargetSize: MaterialTapTargetSize.padded,
+    textTheme: yaziTemasi,
+    extensions: &lt;ThemeExtension&lt;dynamic&gt;&gt;[
+      RestoranTemaRenkleri(
+        anaArkaPlan: temaTokenlari.anaArkaPlan,
+        anaArkaPlanIkincil: temaTokenlari.anaArkaPlanIkincil,
+        anaArkaPlanUcuncul: temaTokenlari.anaArkaPlanUcuncul,
+        popupYuzey: temaTokenlari.popupYuzey,
+        popupAltYuzey: temaTokenlari.popupAltYuzey,
+        kartYuzey: temaTokenlari.kartYuzey,
+        inceKenar: temaTokenlari.inceKenar,
+        metinBirincilKoyu: temaTokenlari.metinBirincilKoyu,
+        metinIkincilKoyu: temaTokenlari.metinIkincilKoyu,
+        metinBirincilAcik: temaTokenlari.metinBirincilAcik,
+        metinIkincilAcik: temaTokenlari.metinIkincilAcik,
+        suruklemeTutamaci: temaTokenlari.suruklemeTutamaci,
+      ),
+    ],
+    appBarTheme: AppBarTheme(
+      elevation: 0,
+      centerTitle: false,
+      backgroundColor: Colors.transparent,
+      foregroundColor: renkSemasi.onSurface,
+      titleTextStyle: yaziTemasi.titleLarge,
+    ),
+    dialogTheme: DialogThemeData(
+      backgroundColor: temaTokenlari.popupYuzey,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
+    ),
+    cardTheme: CardThemeData(
+      elevation: 0,
+      color: temaTokenlari.kartYuzey,
+      margin: EdgeInsets.zero,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(28),
+        side: BorderSide(color: temaTokenlari.inceKenar),
+      ),
+    ),
+    chipTheme: ChipThemeData(
+      backgroundColor: Colors.white.withValues(alpha: 0.88),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(999),
+        side: BorderSide(color: temaTokenlari.inceKenar),
+      ),
+      labelStyle: yaziTemasi.labelLarge,
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+    ),
+    elevatedButtonTheme: ElevatedButtonThemeData(
+      style: ElevatedButton.styleFrom(
+        backgroundColor: temaTokenlari.birincilAksiyon,
+        foregroundColor: temaTokenlari.metinBirincilAcik,
+        minimumSize: temaTokenlari.dokunmatikHedefBoyutu,
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+        textStyle: TextStyle(
+          fontWeight: FontWeight.w800,
+          fontSize: 15,
+        ),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(18),
+        ),
+      ),
+    ),
+    filledButtonTheme: FilledButtonThemeData(
+      style: FilledButton.styleFrom(
+        backgroundColor: temaTokenlari.birincilAksiyon,
+        foregroundColor: temaTokenlari.metinBirincilAcik,
+        minimumSize: temaTokenlari.dokunmatikHedefBoyutu,
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+        textStyle: TextStyle(
+          fontWeight: FontWeight.w800,
+          fontSize: 15,
+        ),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(18),
+        ),
+      ),
+    ),
+    outlinedButtonTheme: OutlinedButtonThemeData(
+      style: OutlinedButton.styleFrom(
+        minimumSize: temaTokenlari.dokunmatikHedefBoyutu,
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+        textStyle: TextStyle(
+          fontWeight: FontWeight.w700,
+          fontSize: 15,
+        ),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(18),
+        ),
+      ),
+    ),
+    textButtonTheme: TextButtonThemeData(
+      style: TextButton.styleFrom(
+        minimumSize: temaTokenlari.dokunmatikHedefBoyutu,
+        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+        textStyle: TextStyle(
+          fontWeight: FontWeight.w700,
+          fontSize: 15,
+        ),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+      ),
+    ),
+    iconButtonTheme: IconButtonThemeData(
+      style: IconButton.styleFrom(
+        minimumSize: temaTokenlari.dokunmatikHedefBoyutu,
+        padding: const EdgeInsets.all(14),
+      ),
+    ),
+    inputDecorationTheme: InputDecorationTheme(
+      filled: true,
+      fillColor: Colors.white.withValues(alpha: 0.94),
+      contentPadding: const EdgeInsets.symmetric(
+        horizontal: 16,
+        vertical: 18,
+      ),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(18),
+        borderSide: BorderSide(color: temaTokenlari.inceKenar),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(18),
+        borderSide: BorderSide(color: temaTokenlari.inceKenar),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(18),
+        borderSide: BorderSide(color: renkSemasi.primary, width: 1.4),
+      ),
+    ),
+    tabBarTheme: TabBarThemeData(
+      dividerColor: Colors.transparent,
+      labelColor: temaTokenlari.birincilAksiyon,
+      unselectedLabelColor: temaTokenlari.metinBirincilKoyu,
+    ),
+    listTileTheme: const ListTileThemeData(
+      minTileHeight: 56,
+      contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+    ),
+  );
+}</code></pre>
+</section>
+
+
+  </div> <!-- /.main-content -->
+  <div id="dartdoc-sidebar-left" class="sidebar sidebar-offcanvas-left">
+    <!-- The search input and breadcrumbs below are only responsively visible at low resolutions. -->
+<header id="header-search-sidebar" class="hidden-l">
+  <form class="search-sidebar" role="search">
+    <input type="text" id="search-sidebar" autocomplete="off" disabled class="form-control typeahead" placeholder="Loading search...">
+  </form>
+</header>
+<ol class="breadcrumbs gt-separated dark hidden-l" id="sidebar-nav">
+    <li><a href="../../index.html">restoran_app</a></li>
+    <li><a href="../../ortak_tema_uygulama_tema_olusturucu/">uygulama_tema_olusturucu</a></li>
+    <li><a href="../../ortak_tema_uygulama_tema_olusturucu/UygulamaTemaOlusturucu-class.html">UygulamaTemaOlusturucu</a></li>
+    <li class="self-crumb">olustur method</li>
+</ol>
+
+    <h5>UygulamaTemaOlusturucu class</h5>
+    <div id="dartdoc-sidebar-left-content"></div>
+  </div><!--/.sidebar-offcanvas-->
+  <div id="dartdoc-sidebar-right" class="sidebar sidebar-offcanvas-right">
+</div><!--/.sidebar-offcanvas-->
+</main>
+<footer>
+  <span class="no-break">
+    restoran_app
+      1.0.0+1
+  </span>
+  
+</footer>
+
+
+<script src="../../static-assets/highlight.pack.js?v1"></script>
+<script src="../../static-assets/docs.dart.js"></script>
+
+</body>
+</html>
+

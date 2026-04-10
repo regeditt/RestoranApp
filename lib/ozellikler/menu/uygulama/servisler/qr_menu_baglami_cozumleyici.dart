@@ -1,5 +1,6 @@
-import 'package:restoran_app/ozellikler/menu/alan/varliklar/qr_menu_baglami_varligi.dart';
+﻿import 'package:restoran_app/ozellikler/menu/alan/varliklar/qr_menu_baglami_varligi.dart';
 
+/// QR menuden gelen URI parametrelerini okuyup menu baglamina cevirir.
 class QrMenuBaglamiCozumleyici {
   const QrMenuBaglamiCozumleyici._();
 

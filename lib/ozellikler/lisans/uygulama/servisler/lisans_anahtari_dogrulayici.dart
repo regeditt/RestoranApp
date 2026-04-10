@@ -1,3 +1,4 @@
+﻿/// Lisans anahtari dogrulamasinin durumunu, mesajini ve gecerlilik bilgisini tasir.
 class LisansAnahtariDogrulamaSonucu {
   const LisansAnahtariDogrulamaSonucu._({
     required this.gecerliMi,
@@ -25,6 +26,7 @@ class LisansAnahtariDogrulamaSonucu {
   final DateTime? gecerlilikTarihi;
 }
 
+/// Lisans anahtarinin format, imza ve son gecerlilik tarihini dogrular.
 class LisansAnahtariDogrulayici {
   const LisansAnahtariDogrulayici();
 

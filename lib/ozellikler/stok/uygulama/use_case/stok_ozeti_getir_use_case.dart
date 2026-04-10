@@ -1,16 +1,18 @@
-import 'package:restoran_app/ozellikler/menu/alan/depolar/menu_deposu.dart';
+﻿import 'package:restoran_app/ozellikler/menu/alan/depolar/menu_deposu.dart';
 import 'package:restoran_app/ozellikler/menu/alan/varliklar/urun_varligi.dart';
 import 'package:restoran_app/ozellikler/stok/alan/depolar/stok_deposu.dart';
 import 'package:restoran_app/ozellikler/stok/alan/varliklar/hammadde_stok_varligi.dart';
 import 'package:restoran_app/ozellikler/stok/alan/varliklar/recete_kalemi_varligi.dart';
 import 'package:restoran_app/ozellikler/stok/alan/varliklar/stok_ozeti_varligi.dart';
 
+/// StokOzetiGetirUseCase use-case operasyonunu yurutur.
 class StokOzetiGetirUseCase {
   const StokOzetiGetirUseCase(this._stokDeposu, this._menuDeposu);
 
   final StokDeposu _stokDeposu;
   final MenuDeposu _menuDeposu;
 
+  /// Use-case operasyonunu calistirir ve sonucu dondurur.
   Future<StokOzetiVarligi> call() async {
     final List<HammaddeStokVarligi> hammaddeler = await _stokDeposu
         .hammaddeleriGetir();

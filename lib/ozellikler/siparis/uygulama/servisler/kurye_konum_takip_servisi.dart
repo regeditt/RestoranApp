@@ -1,9 +1,10 @@
-import 'dart:async';
+﻿import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/foundation.dart';
 import 'package:restoran_app/ortak/platform/konum_platformu.dart';
 
+/// Takipteki bir siparis icin son kurye konumunu ve guncelleme zamanini tasir.
 class KuryeCanliKonumVarligi {
   const KuryeCanliKonumVarligi({
     required this.enlem,
@@ -18,6 +19,7 @@ class KuryeCanliKonumVarligi {
   final String kuryeKimligi;
 }
 
+/// Kurye konum takibi baslatma/durdurma islemlerinin sonucunu tasir.
 class KuryeKonumTakipSonucu {
   const KuryeKonumTakipSonucu.basarili([this.mesaj = '']) : basarili = true;
 
@@ -27,6 +29,7 @@ class KuryeKonumTakipSonucu {
   final String mesaj;
 }
 
+/// Siparis bazli canli kurye konum takibini baslatir, surdurur ve sonlandirir.
 class KuryeKonumTakipServisi extends ChangeNotifier {
   KuryeKonumTakipServisi({KonumPlatformu? konumSaglayici})
     : _konumSaglayici = konumSaglayici ?? konumPlatformu;
@@ -39,6 +42,7 @@ class KuryeKonumTakipServisi extends ChangeNotifier {
   StreamSubscription<KonumNoktasi>? _konumAboneligi;
 
   int get aktifTakipSayisi => _siparisKuryeHaritasi.length;
+  Set<String> get takiptekiSiparisIdleri => _siparisKuryeHaritasi.keys.toSet();
 
   KuryeCanliKonumVarligi? siparisKonumuGetir(String siparisId) {
     return _siparisKonumlari[siparisId];
@@ -174,6 +178,7 @@ class KuryeKonumTakipServisi extends ChangeNotifier {
   }
 }
 
+/// Enlem-boylam ciftini dahili hesaplamalarda tasiyan yardimci veri yapisi.
 class _EnlemBoylam {
   const _EnlemBoylam({required this.enlem, required this.boylam});
 

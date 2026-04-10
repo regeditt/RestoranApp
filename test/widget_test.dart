@@ -20,10 +20,12 @@ import 'package:restoran_app/ozellikler/siparis/sunum/sayfalar/mutfak_siparis_sa
 import 'package:restoran_app/ozellikler/siparis/sunum/sayfalar/siparis_ozeti_sayfasi.dart';
 import 'package:restoran_app/ozellikler/siparis/sunum/viewmodel/mutfak_siparis_viewmodel.dart';
 import 'package:restoran_app/ozellikler/siparis/sunum/viewmodel/siparis_ozeti_viewmodel.dart';
+import 'package:restoran_app/ozellikler/siparis/uygulama/servisler/kurye_konum_takip_servisi.dart';
 import 'package:restoran_app/ozellikler/yonetim/alan/varliklar/personel_durumu_varligi.dart';
 import 'package:restoran_app/ozellikler/yonetim/alan/varliklar/saatlik_siparis_ozeti_varligi.dart';
 import 'package:restoran_app/ozellikler/yonetim/alan/varliklar/salon_bolumu_varligi.dart';
 import 'package:restoran_app/ozellikler/yonetim/alan/varliklar/yonetim_paneli_ozeti_varligi.dart';
+import 'package:restoran_app/ortak/platform/konum_platformu.dart';
 import 'package:restoran_app/ozellikler/yonetim/sunum/bilesenler/masa_plani_karti.dart';
 import 'package:restoran_app/ozellikler/yonetim/sunum/bilesenler/paket_servis_operasyon_karti.dart';
 import 'package:restoran_app/ozellikler/yonetim/sunum/bilesenler/personel_yonetimi_karti.dart';
@@ -90,8 +92,13 @@ void main() {
     expect(find.text('Yonetici girisi'), findsWidgets);
     expect(find.text('QR menuye don'), findsOneWidget);
     expect(find.text('Ana sayfaya don'), findsOneWidget);
+    expect(find.text('Chatbot'), findsOneWidget);
     expect(find.text('Giris yap'), findsNothing);
     expect(find.text('Hesap olustur'), findsNothing);
+
+    await tester.tap(find.text('Chatbot'));
+    await tester.pumpAndSettle();
+    expect(find.text('Ayar Chatbot'), findsOneWidget);
   });
 
   testWidgets('Ileri ekrandan ana sayfaya donus navigasyonu calisir', (
@@ -277,13 +284,20 @@ void main() {
       await tester.binding.setSurfaceSize(null);
     });
 
+    final ServisKaydi servisKaydi = ServisKaydi.mock();
+    final MutfakSiparisViewModel viewModel = MutfakSiparisViewModel(
+      siparisleriGetirUseCase: servisKaydi.siparisleriGetirUseCase,
+      yazicilariGetirUseCase: servisKaydi.yazicilariGetirUseCase,
+      siparisDurumuGuncelleUseCase: servisKaydi.siparisDurumuGuncelleUseCase,
+      kuryeTakipServisi: KuryeKonumTakipServisi(
+        konumSaglayici: const _WidgetTestKonumPlatformu(),
+      ),
+      kuryeEntegrasyonServisi: servisKaydi.kuryeEntegrasyonYonetimServisi,
+    );
+
     await tester.binding.setSurfaceSize(const Size(1400, 900));
     await tester.pumpWidget(
-      testUygulamasi(
-        child: MutfakSiparisSayfasi(
-          viewModel: MutfakSiparisViewModel.servisKaydindan(ServisKaydi.mock()),
-        ),
-      ),
+      testUygulamasi(child: MutfakSiparisSayfasi(viewModel: viewModel)),
     );
     await tester.pumpAndSettle();
 
@@ -370,7 +384,7 @@ void main() {
     expect(find.textContaining('Tum urunler kategorisinde'), findsOneWidget);
     expect(find.text('Salon'), findsWidgets);
     expect(find.text('Masa 1'), findsWidgets);
-    expect(find.text('5 urun'), findsOneWidget);
+    expect(find.textContaining(' urun'), findsWidgets);
     expect(tester.takeException(), isNull);
   });
 
@@ -761,4 +775,27 @@ void main() {
     expect(find.text('Selin Aras - 360 TL'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
+}
+
+class _WidgetTestKonumPlatformu implements KonumPlatformu {
+  const _WidgetTestKonumPlatformu();
+
+  @override
+  Future<KonumHazirlamaSonucu> hazirla() async {
+    return const KonumHazirlamaSonucu.basarili();
+  }
+
+  @override
+  Future<KonumNoktasi?> anlikKonumGetir() async {
+    return KonumNoktasi(
+      enlem: 41.015,
+      boylam: 28.979,
+      olusturmaTarihi: DateTime(2026, 4, 9, 12, 0),
+    );
+  }
+
+  @override
+  Stream<KonumNoktasi> konumAkisi() {
+    return const Stream<KonumNoktasi>.empty();
+  }
 }

@@ -2,9 +2,16 @@ import 'package:restoran_app/ozellikler/kimlik/alan/roller/kullanici_rolu.dart';
 import 'package:restoran_app/ozellikler/kimlik/alan/varliklar/kullanici_varligi.dart';
 import 'package:restoran_app/ozellikler/kimlik/alan/varliklar/misafir_bilgisi_varligi.dart';
 
+/// Kimlik akisindaki oturum ve hesap operasyonlari icin depo kontrati.
 abstract class KimlikDeposu {
+  /// Aktif oturumu olan kullaniciyi getirir.
+  ///
+  /// Aktif oturum yoksa `null` dondurur.
   Future<KullaniciVarligi?> aktifKullaniciGetir();
 
+  /// Yeni bir kullanici hesabi olusturur.
+  ///
+  /// [rol] verilmezse varsayilan olarak `musteri` rolu atanir.
   Future<KullaniciVarligi> hesapOlustur({
     required String telefon,
     required String sifre,
@@ -14,6 +21,7 @@ abstract class KimlikDeposu {
     bool aktifYap = true,
   });
 
+  /// Kullanici bilgileriyle giris yapar ve aktif oturumu gunceller.
   Future<KullaniciVarligi> girisYap({
     required String telefon,
     required String sifre,
@@ -22,6 +30,7 @@ abstract class KimlikDeposu {
     String? adresMetni,
   });
 
+  /// Uyeliksiz siparis akisi icin misafir kaydi olusturur.
   Future<MisafirBilgisiVarligi> misafirOlustur({
     required String adSoyad,
     required String telefon,
@@ -29,5 +38,6 @@ abstract class KimlikDeposu {
     String? adres,
   });
 
+  /// Aktif kullanici oturumunu kapatir.
   Future<void> cikisYap();
 }

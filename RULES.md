@@ -1,6 +1,7 @@
 # Proje Kurallari
 
 Bu dosya, proje boyunca uyulacak temel kurallari icerir. Tum gelistirme adimlari bu dosyaya bakilarak yapilacaktir.
+SOLID ve modul bagimlilik kurallarinin detayli surumu icin: `RULES_SOLID.md`.
 ## MCP SERVER KURALI
 Çalışırken Dart ve Flutter Mcp Server Sürekli Kullanılacak.
 
@@ -279,6 +280,24 @@ Bir sonraki teknik sira su olacak:
 2. urunlere recete ve stok dusum baglantisi ekle
 3. mutfak siparis yonetimi icin ayri ekran olustur
 4. paket servis akisina adres ve teslimat durumu katmani ekle
+
+## Oncelikli Ozellik Sirasi (1-10)
+
+Asagidaki sira, urun backlog planinda korunacak ve adimlar bu oncelige gore alinacak.
+
+1. Rezervasyon modulu
+2. Online siparis kanali
+3. Odeme ve kasa
+4. Kampanya ve kupon
+5. Sadakat programi
+6. Stok uyari sistemi
+7. Mutfak ekrani gelistirmesi
+8. Kurye performans paneli
+9. Rol ve yetki yonetimi
+10. Yedekleme ve veri aktarim
+   - Yonetim panelinde tek tik disa aktar / ice aktar aksiyonlari olacak.
+   - JSON tabanli yedek formati surumlu ilerleyecek.
+   - Felaket kurtarma ve sube tasima senaryosu desteklenecek.
 
 ## Kod Kalitesi Notlari
 

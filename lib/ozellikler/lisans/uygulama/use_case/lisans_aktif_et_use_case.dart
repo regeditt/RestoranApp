@@ -1,7 +1,8 @@
-import 'package:restoran_app/ozellikler/lisans/alan/depolar/lisans_deposu.dart';
+﻿import 'package:restoran_app/ozellikler/lisans/alan/depolar/lisans_deposu.dart';
 import 'package:restoran_app/ozellikler/lisans/alan/varliklar/lisans_durumu_varligi.dart';
 import 'package:restoran_app/ozellikler/lisans/uygulama/servisler/lisans_anahtari_dogrulayici.dart';
 
+/// LisansAktifEtSonucu use-case operasyonunu yurutur.
 class LisansAktifEtSonucu {
   const LisansAktifEtSonucu._({
     required this.basariliMi,
@@ -20,12 +21,14 @@ class LisansAktifEtSonucu {
   final LisansDurumuVarligi? durum;
 }
 
+/// LisansAktifEtUseCase use-case operasyonunu yurutur.
 class LisansAktifEtUseCase {
   const LisansAktifEtUseCase(this._lisansDeposu, this._dogrulayici);
 
   final LisansDeposu _lisansDeposu;
   final LisansAnahtariDogrulayici _dogrulayici;
 
+  /// Use-case operasyonunu calistirir ve sonucu dondurur.
   Future<LisansAktifEtSonucu> call(
     String girilenAnahtar, {
     DateTime? simdi,

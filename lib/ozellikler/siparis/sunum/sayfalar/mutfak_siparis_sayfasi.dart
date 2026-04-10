@@ -219,6 +219,10 @@ class _MutfakSiparisSayfasiState extends State<MutfakSiparisSayfasi> {
             widget.viewModel.yaziciKuyrugu;
         final List<SiparisVarligi> aktifSiparisler =
             widget.viewModel.aktifSiparisler;
+        final bool durumIlerletmeYetkisiVar =
+            widget.viewModel.durumIlerletmeYetkisiVar;
+        final bool siparisIptalYetkisiVar =
+            widget.viewModel.siparisIptalYetkisiVar;
 
         return Scaffold(
           backgroundColor: const Color(0xFF130F1D),
@@ -297,6 +301,10 @@ class _MutfakSiparisSayfasiState extends State<MutfakSiparisSayfasi> {
                                                   aksiyonCalistir: _durumIlerle,
                                                   iptalCalistir:
                                                       _siparisiIptalEt,
+                                                  aksiyonAktifMi:
+                                                      durumIlerletmeYetkisiVar,
+                                                  iptalAktifMi:
+                                                      siparisIptalYetkisiVar,
                                                   yukseklik: kolonYuksekligi,
                                                 ),
                                                 const SizedBox(width: 14),
@@ -313,6 +321,10 @@ class _MutfakSiparisSayfasiState extends State<MutfakSiparisSayfasi> {
                                                   aksiyonCalistir: _durumIlerle,
                                                   iptalCalistir:
                                                       _siparisiIptalEt,
+                                                  aksiyonAktifMi:
+                                                      durumIlerletmeYetkisiVar,
+                                                  iptalAktifMi:
+                                                      siparisIptalYetkisiVar,
                                                   yukseklik: kolonYuksekligi,
                                                 ),
                                                 const SizedBox(width: 14),
@@ -329,6 +341,10 @@ class _MutfakSiparisSayfasiState extends State<MutfakSiparisSayfasi> {
                                                   aksiyonCalistir: _durumIlerle,
                                                   iptalCalistir:
                                                       _siparisiIptalEt,
+                                                  aksiyonAktifMi:
+                                                      durumIlerletmeYetkisiVar,
+                                                  iptalAktifMi:
+                                                      siparisIptalYetkisiVar,
                                                   yukseklik: kolonYuksekligi,
                                                 ),
                                                 const SizedBox(width: 14),
@@ -345,6 +361,10 @@ class _MutfakSiparisSayfasiState extends State<MutfakSiparisSayfasi> {
                                                   aksiyonCalistir: _durumIlerle,
                                                   iptalCalistir:
                                                       _siparisiIptalEt,
+                                                  aksiyonAktifMi:
+                                                      durumIlerletmeYetkisiVar,
+                                                  iptalAktifMi:
+                                                      siparisIptalYetkisiVar,
                                                   yukseklik: kolonYuksekligi,
                                                 ),
                                               ],
@@ -390,6 +410,8 @@ class _MutfakSiparisSayfasiState extends State<MutfakSiparisSayfasi> {
                               siparisler: yeniSiparisler,
                               aksiyonCalistir: _durumIlerle,
                               iptalCalistir: _siparisiIptalEt,
+                              aksiyonAktifMi: durumIlerletmeYetkisiVar,
+                              iptalAktifMi: siparisIptalYetkisiVar,
                               yukseklik: 380,
                             ),
                             const SizedBox(height: 14),
@@ -401,6 +423,8 @@ class _MutfakSiparisSayfasiState extends State<MutfakSiparisSayfasi> {
                               siparisler: hazirlananlar,
                               aksiyonCalistir: _durumIlerle,
                               iptalCalistir: _siparisiIptalEt,
+                              aksiyonAktifMi: durumIlerletmeYetkisiVar,
+                              iptalAktifMi: siparisIptalYetkisiVar,
                               yukseklik: 380,
                             ),
                             const SizedBox(height: 14),
@@ -412,6 +436,8 @@ class _MutfakSiparisSayfasiState extends State<MutfakSiparisSayfasi> {
                               siparisler: hazirlar,
                               aksiyonCalistir: _durumIlerle,
                               iptalCalistir: _siparisiIptalEt,
+                              aksiyonAktifMi: durumIlerletmeYetkisiVar,
+                              iptalAktifMi: siparisIptalYetkisiVar,
                               yukseklik: 380,
                             ),
                             const SizedBox(height: 14),
@@ -423,6 +449,8 @@ class _MutfakSiparisSayfasiState extends State<MutfakSiparisSayfasi> {
                               siparisler: kapanisAkisi,
                               aksiyonCalistir: _durumIlerle,
                               iptalCalistir: _siparisiIptalEt,
+                              aksiyonAktifMi: durumIlerletmeYetkisiVar,
+                              iptalAktifMi: siparisIptalYetkisiVar,
                               yukseklik: 340,
                             ),
                           ],
@@ -1083,6 +1111,8 @@ class _DurumKolonu extends StatelessWidget {
     required this.siparisler,
     required this.aksiyonCalistir,
     required this.iptalCalistir,
+    required this.aksiyonAktifMi,
+    required this.iptalAktifMi,
     this.yukseklik,
   });
 
@@ -1093,6 +1123,8 @@ class _DurumKolonu extends StatelessWidget {
   final List<SiparisVarligi> siparisler;
   final ValueChanged<SiparisVarligi> aksiyonCalistir;
   final ValueChanged<SiparisVarligi> iptalCalistir;
+  final bool aksiyonAktifMi;
+  final bool iptalAktifMi;
   final double? yukseklik;
 
   @override
@@ -1118,6 +1150,8 @@ class _DurumKolonu extends StatelessWidget {
                 vurguRengi: vurguRengi,
                 aksiyonCalistir: () => aksiyonCalistir(siparis),
                 iptalCalistir: () => iptalCalistir(siparis),
+                aksiyonAktifMi: aksiyonAktifMi,
+                iptalAktifMi: iptalAktifMi,
               );
             },
           );
@@ -1176,12 +1210,16 @@ class _MutfakSiparisKarti extends StatelessWidget {
     required this.vurguRengi,
     required this.aksiyonCalistir,
     required this.iptalCalistir,
+    required this.aksiyonAktifMi,
+    required this.iptalAktifMi,
   });
 
   final SiparisVarligi siparis;
   final Color vurguRengi;
   final VoidCallback aksiyonCalistir;
   final VoidCallback iptalCalistir;
+  final bool aksiyonAktifMi;
+  final bool iptalAktifMi;
 
   @override
   Widget build(BuildContext context) {
@@ -1371,7 +1409,7 @@ class _MutfakSiparisKarti extends StatelessWidget {
               children: [
                 Expanded(
                   child: FilledButton(
-                    onPressed: aksiyonCalistir,
+                    onPressed: aksiyonAktifMi ? aksiyonCalistir : null,
                     style: FilledButton.styleFrom(
                       backgroundColor: vurguRengi,
                       foregroundColor: const Color(0xFF1A1322),
@@ -1381,7 +1419,8 @@ class _MutfakSiparisKarti extends StatelessWidget {
                 ),
                 const SizedBox(width: 10),
                 OutlinedButton(
-                  onPressed: siparis.durum == SiparisDurumu.yolda
+                  onPressed:
+                      !iptalAktifMi || siparis.durum == SiparisDurumu.yolda
                       ? null
                       : iptalCalistir,
                   style: OutlinedButton.styleFrom(

@@ -1,4 +1,4 @@
-import 'dart:typed_data';
+﻿import 'dart:typed_data';
 
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
@@ -6,6 +6,7 @@ import 'package:printing/printing.dart';
 import 'package:restoran_app/ortak/sabitler/uygulama_sabitleri.dart';
 import 'package:restoran_app/ozellikler/menu/alan/varliklar/qr_menu_karti_varligi.dart';
 
+/// QR menu kartlarini PDF olarak olusturur ve yazdirma akisini tetikler.
 class QrMenuPdfServisi {
   const QrMenuPdfServisi._();
 

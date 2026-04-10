@@ -1,8 +1,8 @@
 class UygulamaSabitleri {
   const UygulamaSabitleri._();
 
-  static const String uygulamaAdi = 'RestoranApp';
-  static const String restoranAdi = 'RestoranApp';
+  static const String uygulamaAdi = 'Adisyo Rarko';
+  static const String restoranAdi = 'Adisyo Rarko';
   static const String markaEtiketi = 'POS';
   static const String tamMarkaAdi = '$restoranAdi $markaEtiketi';
   static const String yonetimPaneliBasligi = '$restoranAdi Yonetim Paneli';

@@ -297,6 +297,8 @@ class _YonetimPaneliSayfasiState extends State<YonetimPaneliSayfasi> {
                                       _yonetimAyarlariniAc(0),
                                   menuYonetimiAc: () => _yonetimAyarlariniAc(1),
                                   stokYonetimiAc: () => _yonetimAyarlariniAc(2),
+                                  entegrasyonYonetimiAc: () =>
+                                      _yonetimAyarlariniAc(3),
                                 ),
                                 const SizedBox(height: 18),
                                 masaustu
@@ -542,6 +544,7 @@ class _KompaktUstAlan extends StatelessWidget {
     required this.salonYonetimiAc,
     required this.menuYonetimiAc,
     required this.stokYonetimiAc,
+    required this.entegrasyonYonetimiAc,
   });
 
   final YonetimPaneliOzetiVarligi ozet;
@@ -555,6 +558,7 @@ class _KompaktUstAlan extends StatelessWidget {
   final Future<void> Function() salonYonetimiAc;
   final Future<void> Function() menuYonetimiAc;
   final Future<void> Function() stokYonetimiAc;
+  final Future<void> Function() entegrasyonYonetimiAc;
 
   @override
   Widget build(BuildContext context) {
@@ -713,6 +717,19 @@ class _KompaktUstAlan extends StatelessWidget {
                 icon: const Icon(Icons.inventory_2_rounded),
                 label: const Text('Stok yonetimi'),
               ),
+              FilledButton.tonalIcon(
+                onPressed: entegrasyonYonetimiAc,
+                style: FilledButton.styleFrom(
+                  foregroundColor: Colors.white,
+                  backgroundColor: Colors.white.withValues(alpha: 0.12),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 18,
+                    vertical: 14,
+                  ),
+                ),
+                icon: const Icon(Icons.route_rounded),
+                label: const Text('Kurye entegrasyon'),
+              ),
               FilledButton.icon(
                 onPressed: yaziciYonetimiAc,
                 style: FilledButton.styleFrom(
@@ -727,7 +744,7 @@ class _KompaktUstAlan extends StatelessWidget {
                 label: const Text('Yazici yonetimi'),
               ),
               Text(
-                'Yazici ayarlari popup pencerede acilir.',
+                'Yazici ve kurye entegrasyon ayarlari popup pencerede acilir.',
                 style: const TextStyle(
                   color: Color(0xFFE8DDF0),
                   fontWeight: FontWeight.w600,

@@ -9,6 +9,9 @@ import 'package:restoran_app/ozellikler/kimlik/uygulama/use_case/hesap_olustur_u
 import 'package:restoran_app/ozellikler/siparis/alan/enumlar/siparis_durumu.dart';
 import 'package:restoran_app/ozellikler/siparis/alan/enumlar/teslimat_tipi.dart';
 import 'package:restoran_app/ozellikler/siparis/alan/varliklar/siparis_varligi.dart';
+import 'package:restoran_app/ozellikler/siparis/uygulama/servisler/kurye_entegrasyon_yonetim_servisi.dart';
+import 'package:restoran_app/ozellikler/siparis/uygulama/servisler/kurye_konum_takip_servisi.dart';
+import 'package:restoran_app/ozellikler/siparis/uygulama/servisler/kurye_takip_senkronlayici.dart';
 import 'package:restoran_app/ozellikler/siparis/uygulama/use_case/siparisleri_getir_use_case.dart';
 import 'package:restoran_app/ozellikler/stok/alan/varliklar/stok_ozeti_varligi.dart';
 import 'package:restoran_app/ozellikler/stok/uygulama/use_case/stok_ozeti_getir_use_case.dart';
@@ -35,6 +38,7 @@ enum ZamanFiltresi { bugun, sonIkiSaat, tumu }
 
 enum SiparisSirasi { enYeni, tutarYuksek, durumOncelikli }
 
+/// Yonetim panelindeki kullanici aksiyonlarinin sonucunu UI katmanina tasir.
 class YonetimPaneliIslemSonucu {
   const YonetimPaneliIslemSonucu.basarili([this.mesaj = '']) : basarili = true;
 
@@ -44,6 +48,7 @@ class YonetimPaneliIslemSonucu {
   final String mesaj;
 }
 
+/// Yonetim panelinde siparis, personel, yazici, menu ve stok verilerinin durumunu yonetir.
 class YonetimPaneliViewModel extends ChangeNotifier {
   YonetimPaneliViewModel({
     required SiparisleriGetirUseCase siparisleriGetirUseCase,
@@ -59,6 +64,8 @@ class YonetimPaneliViewModel extends ChangeNotifier {
     required YaziciEkleUseCase yaziciEkleUseCase,
     required YaziciGuncelleUseCase yaziciGuncelleUseCase,
     required YaziciSilUseCase yaziciSilUseCase,
+    KuryeKonumTakipServisi? kuryeTakipServisi,
+    KuryeEntegrasyonYonetimServisi? kuryeEntegrasyonServisi,
   }) : _siparisleriGetirUseCase = siparisleriGetirUseCase,
        _personelleriGetirUseCase = personelleriGetirUseCase,
        _personelSilUseCase = personelSilUseCase,
@@ -71,7 +78,10 @@ class YonetimPaneliViewModel extends ChangeNotifier {
        _hesapOlusturUseCase = hesapOlusturUseCase,
        _yaziciEkleUseCase = yaziciEkleUseCase,
        _yaziciGuncelleUseCase = yaziciGuncelleUseCase,
-       _yaziciSilUseCase = yaziciSilUseCase;
+       _yaziciSilUseCase = yaziciSilUseCase,
+       _kuryeKonumTakipServisi = kuryeTakipServisi ?? kuryeKonumTakipServisi,
+       _kuryeEntegrasyonServisi =
+           kuryeEntegrasyonServisi ?? KuryeEntegrasyonYonetimServisi();
 
   factory YonetimPaneliViewModel.servisKaydindan(ServisKaydi servisKaydi) {
     return YonetimPaneliViewModel(
@@ -89,6 +99,7 @@ class YonetimPaneliViewModel extends ChangeNotifier {
       yaziciEkleUseCase: servisKaydi.yaziciEkleUseCase,
       yaziciGuncelleUseCase: servisKaydi.yaziciGuncelleUseCase,
       yaziciSilUseCase: servisKaydi.yaziciSilUseCase,
+      kuryeEntegrasyonServisi: servisKaydi.kuryeEntegrasyonYonetimServisi,
     );
   }
 
@@ -105,6 +116,8 @@ class YonetimPaneliViewModel extends ChangeNotifier {
   final YaziciEkleUseCase _yaziciEkleUseCase;
   final YaziciGuncelleUseCase _yaziciGuncelleUseCase;
   final YaziciSilUseCase _yaziciSilUseCase;
+  final KuryeKonumTakipServisi _kuryeKonumTakipServisi;
+  final KuryeEntegrasyonYonetimServisi _kuryeEntegrasyonServisi;
 
   bool _yukleniyor = true;
   List<SiparisVarligi> _siparisler = const <SiparisVarligi>[];
@@ -229,6 +242,11 @@ class YonetimPaneliViewModel extends ChangeNotifier {
           await _kategorileriGetirUseCase();
       final List<UrunVarligi> menuUrunleri = await _urunleriGetirUseCase();
       final StokOzetiVarligi stokOzeti = await _stokOzetiGetirUseCase();
+      await KuryeTakipSenkronlayici.siparislerleEsitle(
+        takipServisi: _kuryeKonumTakipServisi,
+        siparisler: siparisler,
+        entegrasyonServisi: _kuryeEntegrasyonServisi,
+      );
 
       _siparisler = siparisler;
       _yazicilar = yazicilar;

@@ -1,9 +1,12 @@
 import 'package:flutter/foundation.dart';
 import 'package:restoran_app/bagimlilik_enjeksiyonu/servis_kaydi.dart';
+import 'package:restoran_app/ozellikler/kimlik/alan/roller/islem_yetkisi.dart';
 import 'package:restoran_app/ozellikler/siparis/alan/enumlar/siparis_durumu.dart';
 import 'package:restoran_app/ozellikler/siparis/alan/enumlar/teslimat_tipi.dart';
 import 'package:restoran_app/ozellikler/siparis/alan/varliklar/siparis_varligi.dart';
+import 'package:restoran_app/ozellikler/siparis/uygulama/servisler/kurye_entegrasyon_yonetim_servisi.dart';
 import 'package:restoran_app/ozellikler/siparis/uygulama/servisler/kurye_konum_takip_servisi.dart';
+import 'package:restoran_app/ozellikler/siparis/uygulama/servisler/kurye_takip_senkronlayici.dart';
 import 'package:restoran_app/ozellikler/siparis/uygulama/use_case/siparis_durumu_guncelle_use_case.dart';
 import 'package:restoran_app/ozellikler/siparis/uygulama/use_case/siparisleri_getir_use_case.dart';
 import 'package:restoran_app/ozellikler/yonetim/alan/varliklar/yazici_durumu_varligi.dart';
@@ -23,6 +26,7 @@ enum TeslimatFiltresi {
   final TeslimatTipi? teslimatTipi;
 }
 
+/// Mutfak ekranindaki siparis aksiyonlarinin sonucunu UI katmanina tasir.
 class MutfakSiparisIslemSonucu {
   const MutfakSiparisIslemSonucu.basarili([this.mesaj = '']) : basarili = true;
 
@@ -32,36 +36,50 @@ class MutfakSiparisIslemSonucu {
   final String mesaj;
 }
 
+/// Mutfak operasyon ekraninda siparis akisini, filtreleri ve durum ilerletmeyi yonetir.
 class MutfakSiparisViewModel extends ChangeNotifier {
   MutfakSiparisViewModel({
     required SiparisleriGetirUseCase siparisleriGetirUseCase,
     required YazicilariGetirUseCase yazicilariGetirUseCase,
     required SiparisDurumuGuncelleUseCase siparisDurumuGuncelleUseCase,
+    Future<bool> Function(IslemYetkisi yetki)? islemYetkisiSorgula,
     KuryeKonumTakipServisi? kuryeTakipServisi,
+    KuryeEntegrasyonYonetimServisi? kuryeEntegrasyonServisi,
   }) : _siparisleriGetirUseCase = siparisleriGetirUseCase,
        _yazicilariGetirUseCase = yazicilariGetirUseCase,
        _siparisDurumuGuncelleUseCase = siparisDurumuGuncelleUseCase,
-       _kuryeKonumTakipServisi = kuryeTakipServisi ?? kuryeKonumTakipServisi;
+       _islemYetkisiSorgula = islemYetkisiSorgula,
+       _kuryeKonumTakipServisi = kuryeTakipServisi ?? kuryeKonumTakipServisi,
+       _kuryeEntegrasyonServisi =
+           kuryeEntegrasyonServisi ?? KuryeEntegrasyonYonetimServisi();
 
   factory MutfakSiparisViewModel.servisKaydindan(ServisKaydi servisKaydi) {
     return MutfakSiparisViewModel(
       siparisleriGetirUseCase: servisKaydi.siparisleriGetirUseCase,
       yazicilariGetirUseCase: servisKaydi.yazicilariGetirUseCase,
       siparisDurumuGuncelleUseCase: servisKaydi.siparisDurumuGuncelleUseCase,
+      islemYetkisiSorgula: servisKaydi.islemYetkisiVarMi,
+      kuryeEntegrasyonServisi: servisKaydi.kuryeEntegrasyonYonetimServisi,
     );
   }
 
   final SiparisleriGetirUseCase _siparisleriGetirUseCase;
   final YazicilariGetirUseCase _yazicilariGetirUseCase;
   final SiparisDurumuGuncelleUseCase _siparisDurumuGuncelleUseCase;
+  final Future<bool> Function(IslemYetkisi yetki)? _islemYetkisiSorgula;
   final KuryeKonumTakipServisi _kuryeKonumTakipServisi;
+  final KuryeEntegrasyonYonetimServisi _kuryeEntegrasyonServisi;
 
   bool _yukleniyor = true;
+  bool _durumIlerletmeYetkisiVar = true;
+  bool _siparisIptalYetkisiVar = true;
   List<SiparisVarligi> _siparisler = const <SiparisVarligi>[];
   List<YaziciDurumuVarligi> _yazicilar = const <YaziciDurumuVarligi>[];
   TeslimatFiltresi _seciliFiltre = TeslimatFiltresi.tumu;
 
   bool get yukleniyor => _yukleniyor;
+  bool get siparisIptalYetkisiVar => _siparisIptalYetkisiVar;
+  bool get durumIlerletmeYetkisiVar => _durumIlerletmeYetkisiVar;
   List<SiparisVarligi> get siparisler => _siparisler;
   List<YaziciDurumuVarligi> get yazicilar => _yazicilar;
   TeslimatFiltresi get seciliFiltre => _seciliFiltre;
@@ -122,9 +140,24 @@ class MutfakSiparisViewModel extends ChangeNotifier {
     _yukleniyor = true;
     notifyListeners();
     try {
+      final Future<bool> Function(IslemYetkisi yetki)? islemYetkisiSorgula =
+          _islemYetkisiSorgula;
+      if (islemYetkisiSorgula != null) {
+        _durumIlerletmeYetkisiVar = await islemYetkisiSorgula(
+          IslemYetkisi.siparisDurumuIlerle,
+        );
+        _siparisIptalYetkisiVar = await islemYetkisiSorgula(
+          IslemYetkisi.siparisIptalEt,
+        );
+      }
       final List<SiparisVarligi> siparisler = await _siparisleriGetirUseCase();
       final List<YaziciDurumuVarligi> yazicilar =
           await _yazicilariGetirUseCase();
+      await KuryeTakipSenkronlayici.siparislerleEsitle(
+        takipServisi: _kuryeKonumTakipServisi,
+        siparisler: siparisler,
+        entegrasyonServisi: _kuryeEntegrasyonServisi,
+      );
       _siparisler = siparisler;
       _yazicilar = yazicilar;
       _yukleniyor = false;
@@ -143,6 +176,12 @@ class MutfakSiparisViewModel extends ChangeNotifier {
     SiparisVarligi siparis, {
     String? kuryeAdi,
   }) async {
+    if (!_durumIlerletmeYetkisiVar) {
+      return const MutfakSiparisIslemSonucu.hata(
+        'Siparis durumunu ilerletme yetkin bulunmuyor.',
+      );
+    }
+
     final SiparisDurumu? sonrakiDurum = _sonrakiDurum(siparis);
     if (sonrakiDurum == null) {
       return const MutfakSiparisIslemSonucu.hata(
@@ -158,7 +197,7 @@ class MutfakSiparisViewModel extends ChangeNotifier {
       );
       final String takipMesaji = await _kuryeTakibiniDurumaGoreYonet(
         siparisId: siparis.id,
-        kuryeKimligi: _kuryeKimliginiBelirle(siparis, kuryeAdi: kuryeAdi),
+        kuryeKimligi: await _kuryeKimliginiBelirle(siparis, kuryeAdi: kuryeAdi),
         yeniDurum: sonrakiDurum,
       );
       final MutfakSiparisIslemSonucu yenileSonucu = await yukle();
@@ -180,6 +219,12 @@ class MutfakSiparisViewModel extends ChangeNotifier {
   Future<MutfakSiparisIslemSonucu> siparisiIptalEt(
     SiparisVarligi siparis,
   ) async {
+    if (!_siparisIptalYetkisiVar) {
+      return const MutfakSiparisIslemSonucu.hata(
+        'Siparis iptal etme yetkin bulunmuyor.',
+      );
+    }
+
     try {
       await _siparisDurumuGuncelleUseCase(
         siparis.id,
@@ -225,10 +270,18 @@ class MutfakSiparisViewModel extends ChangeNotifier {
     }
   }
 
-  String _kuryeKimliginiBelirle(SiparisVarligi siparis, {String? kuryeAdi}) {
+  Future<String> _kuryeKimliginiBelirle(
+    SiparisVarligi siparis, {
+    String? kuryeAdi,
+  }) async {
     final String ham = kuryeAdi ?? siparis.kuryeAdi ?? '';
     final String temiz = ham.trim();
     if (temiz.isNotEmpty) {
+      final String? takipKimligi = await _kuryeEntegrasyonServisi
+          .kuryeTakipKimligiGetir(temiz);
+      if (takipKimligi != null && takipKimligi.trim().isNotEmpty) {
+        return takipKimligi;
+      }
       return temiz;
     }
     return 'Moto Kurye';

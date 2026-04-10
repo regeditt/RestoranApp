@@ -17,6 +17,8 @@ import 'package:restoran_app/ozellikler/sepet/veri/depolar/sepet_deposu_gercek.d
 import 'package:restoran_app/ozellikler/sepet/veri/depolar/sepet_deposu_mock.dart';
 import 'package:restoran_app/ozellikler/sepet/veri/depolar/sepet_deposu_sqlite.dart';
 import 'package:restoran_app/ozellikler/siparis/alan/depolar/siparis_deposu.dart';
+import 'package:restoran_app/ozellikler/siparis/uygulama/servisler/kurye_entegrasyon_yonetim_servisi.dart';
+import 'package:restoran_app/ozellikler/siparis/veri/depolar/kurye_entegrasyon_deposu_sqlite.dart';
 import 'package:restoran_app/ozellikler/siparis/veri/depolar/siparis_deposu_gercek.dart';
 import 'package:restoran_app/ozellikler/siparis/veri/depolar/siparis_deposu_mock.dart';
 import 'package:restoran_app/ozellikler/siparis/veri/depolar/siparis_deposu_sqlite.dart';
@@ -51,6 +53,8 @@ class ServisBagimlilikleri {
     required this.personelDeposu,
     required this.salonPlaniDeposu,
     required this.stokDeposu,
+    required this.kuryeEntegrasyonYonetimServisi,
+    required this.veritabani,
   });
 
   final LisansDeposu lisansDeposu;
@@ -62,6 +66,8 @@ class ServisBagimlilikleri {
   final PersonelDeposu personelDeposu;
   final SalonPlaniDeposu salonPlaniDeposu;
   final StokDeposu stokDeposu;
+  final KuryeEntegrasyonYonetimServisi kuryeEntegrasyonYonetimServisi;
+  final UygulamaVeritabani? veritabani;
 
   static final UygulamaVeritabani _sqliteVeritabani = UygulamaVeritabani();
   static final LisansAnahtariDogrulayici _lisansDogrulayici =
@@ -115,6 +121,8 @@ class ServisBagimlilikleri {
       personelDeposu: personelDeposu,
       salonPlaniDeposu: SalonPlaniDeposuMock(),
       stokDeposu: StokDeposuMock(),
+      kuryeEntegrasyonYonetimServisi: KuryeEntegrasyonYonetimServisi(),
+      veritabani: null,
     );
   }
 
@@ -130,6 +138,8 @@ class ServisBagimlilikleri {
       personelDeposu: PersonelDeposuGercek(),
       salonPlaniDeposu: SalonPlaniDeposuGercek(),
       stokDeposu: StokDeposuGercek(),
+      kuryeEntegrasyonYonetimServisi: KuryeEntegrasyonYonetimServisi(),
+      veritabani: null,
     );
   }
 
@@ -145,6 +155,10 @@ class ServisBagimlilikleri {
       personelDeposu: PersonelDeposuSqlite(_sqliteVeritabani),
       salonPlaniDeposu: SalonPlaniDeposuSqlite(_sqliteVeritabani),
       stokDeposu: StokDeposuSqlite(_sqliteVeritabani),
+      kuryeEntegrasyonYonetimServisi: KuryeEntegrasyonYonetimServisi(
+        depo: KuryeEntegrasyonDeposuSqlite(_sqliteVeritabani),
+      ),
+      veritabani: _sqliteVeritabani,
     );
   }
 

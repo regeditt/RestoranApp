@@ -1,8 +1,9 @@
-import 'package:restoran_app/ozellikler/siparis/alan/enumlar/paket_teslimat_durumu.dart';
+﻿import 'package:restoran_app/ozellikler/siparis/alan/enumlar/paket_teslimat_durumu.dart';
 import 'package:restoran_app/ozellikler/siparis/alan/enumlar/teslimat_tipi.dart';
 import 'package:restoran_app/ozellikler/siparis/alan/varliklar/siparis_varligi.dart';
 import 'package:restoran_app/ozellikler/yonetim/alan/varliklar/yazici_durumu_varligi.dart';
 
+/// Siparis ve yazici bilgisine gore termal fis metnini olusturur.
 class SiparisFisiOlusturucu {
   const SiparisFisiOlusturucu._();
 

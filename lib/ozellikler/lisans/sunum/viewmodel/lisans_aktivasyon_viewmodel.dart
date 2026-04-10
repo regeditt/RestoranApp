@@ -1,9 +1,10 @@
-import 'package:flutter/foundation.dart';
+﻿import 'package:flutter/foundation.dart';
 import 'package:restoran_app/bagimlilik_enjeksiyonu/servis_kaydi.dart';
 import 'package:restoran_app/ozellikler/lisans/alan/varliklar/lisans_durumu_varligi.dart';
 import 'package:restoran_app/ozellikler/lisans/uygulama/use_case/lisans_aktif_et_use_case.dart';
 import 'package:restoran_app/ozellikler/lisans/uygulama/use_case/lisans_durumu_getir_use_case.dart';
 
+/// Lisans durumunu yukleyip aktivasyon akisinin UI durumunu yonetir.
 class LisansAktivasyonViewModel extends ChangeNotifier {
   LisansAktivasyonViewModel({
     required LisansDurumuGetirUseCase lisansDurumuGetirUseCase,

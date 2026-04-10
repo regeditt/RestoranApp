@@ -17,6 +17,7 @@ import 'package:restoran_app/ozellikler/siparis/alan/varliklar/yazdirma_sonucu_v
 import 'package:restoran_app/ozellikler/siparis/uygulama/use_case/siparis_olustur_use_case.dart';
 import 'package:restoran_app/ozellikler/siparis/uygulama/use_case/siparisi_yazdir_use_case.dart';
 
+/// Siparis onay akisinin sonucunu, olusan siparis ve yazdirma bilgisini tasir.
 class SiparisOzetiIslemSonucu {
   const SiparisOzetiIslemSonucu.basarili({
     this.mesaj = '',
@@ -35,6 +36,7 @@ class SiparisOzetiIslemSonucu {
   final YazdirmaSonucuVarligi? yazdirmaSonucu;
 }
 
+/// Siparis ozet ekraninda teslimat secimi, adres/not ve siparis onay akislarini yonetir.
 class SiparisOzetiViewModel extends ChangeNotifier {
   SiparisOzetiViewModel({
     required SepetVarligi sepet,

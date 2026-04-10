@@ -1,13 +1,15 @@
-import 'package:restoran_app/ozellikler/siparis/alan/enumlar/siparis_durumu.dart';
+﻿import 'package:restoran_app/ozellikler/siparis/alan/enumlar/siparis_durumu.dart';
 import 'package:restoran_app/ozellikler/siparis/alan/enumlar/teslimat_tipi.dart';
 import 'package:restoran_app/ozellikler/siparis/alan/varliklar/siparis_varligi.dart';
 import 'package:restoran_app/ozellikler/yonetim/alan/varliklar/patron_raporu_ozeti_varligi.dart';
 import 'package:restoran_app/ozellikler/yonetim/alan/varliklar/saatlik_siparis_ozeti_varligi.dart';
 import 'package:restoran_app/ozellikler/yonetim/alan/varliklar/yonetim_paneli_ozeti_varligi.dart';
 
+/// Siparis verilerinden panel ozetleri, saatlik dagilim ve patron metriklerini hesaplar.
 class YonetimRaporuHesaplayici {
   const YonetimRaporuHesaplayici._();
 
+  /// Siparis listesinden yonetim paneli icin temel operasyon metriklerini uretir.
   static YonetimPaneliOzetiVarligi panelOzetiniHesapla(
     List<SiparisVarligi> siparisler,
   ) {
@@ -55,6 +57,7 @@ class YonetimRaporuHesaplayici {
     );
   }
 
+  /// Siparisleri olusturma saatine gore gruplandirip saatlik adet dagilimi cikarir.
   static List<SaatlikSiparisOzetiVarligi> saatlikVeriUret(
     List<SiparisVarligi> siparisler,
   ) {
@@ -95,6 +98,7 @@ class YonetimRaporuHesaplayici {
     return sonuc;
   }
 
+  /// Panel verilerinden patron gorunumu icin ozet KPI metriklerini hesaplar.
   static PatronRaporuOzetiVarligi patronRaporunuHesapla({
     required List<SiparisVarligi> siparisler,
     required List<SaatlikSiparisOzetiVarligi> saatlikVeriler,

@@ -3,9 +3,11 @@ import 'package:restoran_app/ozellikler/siparis/alan/enumlar/teslimat_tipi.dart'
 import 'package:restoran_app/ozellikler/siparis/alan/varliklar/siparis_varligi.dart';
 import 'package:restoran_app/ozellikler/yonetim/alan/varliklar/yazici_is_kuyrugu_varligi.dart';
 
+/// Aktif siparislerden yazici bazli ozet is kuyrugu gorunumunu uretir.
 class YaziciIsKuyruguHesaplayici {
   const YaziciIsKuyruguHesaplayici._();
 
+  /// Aktif siparisleri yazici odakli ozet kuyruk satirlarina donusturur.
   static List<YaziciIsKuyruguVarligi> kuyruguHazirla(
     List<SiparisVarligi> siparisler,
   ) {

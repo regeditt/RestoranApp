@@ -1,5 +1,5 @@
 param(
-  [ValidateSet('format', 'analyze', 'test', 'all')]
+  [ValidateSet('format', 'analyze', 'test', 'solid', 'all')]
   [string]$Task = 'all'
 )
 
@@ -31,6 +31,10 @@ function Invoke-Analyze {
   & $dartExe analyze lib test
 }
 
+function Invoke-Solid {
+  & $dartExe run tool/solid_kural_kontrolu.dart
+}
+
 function Invoke-Tests {
   & $flutterCommand.Source test --reporter compact
 }
@@ -39,8 +43,10 @@ switch ($Task) {
   'format' { Invoke-Format }
   'analyze' { Invoke-Analyze }
   'test' { Invoke-Tests }
+  'solid' { Invoke-Solid }
   'all' {
     Invoke-Format
+    Invoke-Solid
     Invoke-Analyze
     Invoke-Tests
   }

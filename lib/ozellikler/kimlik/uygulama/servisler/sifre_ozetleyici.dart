@@ -1,8 +1,9 @@
-import 'dart:convert';
+﻿import 'dart:convert';
 import 'dart:math';
 
 import 'package:crypto/crypto.dart';
 
+/// Sifreleme sonucu olusan hash ve tuz bilgisini birlikte tasir.
 class SifreOzeti {
   const SifreOzeti({required this.hash, required this.tuz});
 
@@ -10,6 +11,7 @@ class SifreOzeti {
   final String tuz;
 }
 
+/// Sifre icin guvenli ozet (hash+tuz) uretir ve sabit zamanli dogrulama yapar.
 class SifreOzetleyici {
   const SifreOzetleyici();
 

@@ -16,6 +16,7 @@ import 'package:restoran_app/ozellikler/sepet/uygulama/use_case/sepete_urun_ekle
 import 'package:restoran_app/ozellikler/yonetim/alan/varliklar/salon_bolumu_varligi.dart';
 import 'package:restoran_app/ozellikler/yonetim/uygulama/use_case/salon_bolumlerini_getir_use_case.dart';
 
+/// Musteri menu akisindaki UI islemleri icin basari/hata sonucunu tasir.
 class MusteriMenuIslemSonucu {
   const MusteriMenuIslemSonucu.basarili([this.mesaj = '']) : basarili = true;
 
@@ -25,6 +26,7 @@ class MusteriMenuIslemSonucu {
   final String mesaj;
 }
 
+/// POS menu ekraninda kategori, urun, masa/salon ve sepet durumunu yonetir.
 class MusteriMenuViewModel extends ChangeNotifier {
   MusteriMenuViewModel({
     required KategorileriGetirUseCase kategorileriGetirUseCase,

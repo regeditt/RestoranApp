@@ -1,8 +1,9 @@
-import 'package:restoran_app/ozellikler/menu/alan/varliklar/urun_varligi.dart';
+﻿import 'package:restoran_app/ozellikler/menu/alan/varliklar/urun_varligi.dart';
 import 'package:restoran_app/ozellikler/stok/alan/depolar/stok_deposu.dart';
 import 'package:restoran_app/ozellikler/stok/alan/varliklar/hammadde_stok_varligi.dart';
 import 'package:restoran_app/ozellikler/stok/alan/varliklar/recete_kalemi_varligi.dart';
 
+/// Urunleri recete-hammadde stok uygunluguna gore stokta/stokta degil olarak hazirlar.
 class StokDurumluUrunHazirlayici {
   const StokDurumluUrunHazirlayici._();
 
@@ -30,7 +31,8 @@ class StokDurumluUrunHazirlayici {
 
       bool uretilebilirMi = true;
       for (final ReceteKalemiVarligi kalem in recete) {
-        final HammaddeStokVarligi? hammadde = hammaddeHaritasi[kalem.hammaddeId];
+        final HammaddeStokVarligi? hammadde =
+            hammaddeHaritasi[kalem.hammaddeId];
         if (hammadde == null || hammadde.mevcutMiktar < kalem.miktar) {
           uretilebilirMi = false;
           break;
