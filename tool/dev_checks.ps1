@@ -1,5 +1,5 @@
 param(
-  [ValidateSet('format', 'analyze', 'test', 'solid', 'all')]
+  [ValidateSet('format', 'analyze', 'test', 'solid', 'all', 'winfix')]
   [string]$Task = 'all'
 )
 
@@ -39,11 +39,36 @@ function Invoke-Tests {
   & $flutterCommand.Source test --reporter compact
 }
 
+function Invoke-WinFix {
+  $onWindows = ($env:OS -eq 'Windows_NT')
+  if (-not $onWindows) {
+    throw 'winfix gorevi sadece Windows icin tasarlanmistir.'
+  }
+
+  $runnerExePattern = [IO.Path]::Combine($projectRoot, 'build', 'windows', 'x64', 'runner', 'Debug', 'restoran_app.exe')
+  Get-Process -Name 'restoran_app' -ErrorAction SilentlyContinue |
+    ForEach-Object {
+      try {
+        if ($_.Path -and $_.Path -like "$runnerExePattern*") {
+          Stop-Process -Id $_.Id -Force -ErrorAction SilentlyContinue
+        }
+      }
+      catch {
+        # Yol okunamazsa sessizce gec.
+      }
+    }
+
+  & $flutterCommand.Source clean
+  & $flutterCommand.Source pub get
+  & $flutterCommand.Source build windows --debug
+}
+
 switch ($Task) {
   'format' { Invoke-Format }
   'analyze' { Invoke-Analyze }
   'test' { Invoke-Tests }
   'solid' { Invoke-Solid }
+  'winfix' { Invoke-WinFix }
   'all' {
     Invoke-Format
     Invoke-Solid

@@ -32,6 +32,7 @@ powershell -ExecutionPolicy Bypass -File .\tool\dev_checks.ps1 -Task solid
 powershell -ExecutionPolicy Bypass -File .\tool\dev_checks.ps1 -Task analyze
 powershell -ExecutionPolicy Bypass -File .\tool\dev_checks.ps1 -Task test
 powershell -ExecutionPolicy Bypass -File .\tool\dev_checks.ps1 -Task all
+powershell -ExecutionPolicy Bypass -File .\tool\dev_checks.ps1 -Task winfix
 ```
 
 JavaDoc benzeri API dokumani uretimi:
@@ -50,3 +51,4 @@ Script su islemleri yapar:
 - `APPDATA` yolunu proje ici izole bir klasore alir.
 - `flutter` komutundan Dart SDK yolunu cozer.
 - `format`, `solid`, `analyze` ve `test` komutlarini tutarli ayarlarla calistirir.
+- `winfix` ile Windows icin `clean + pub get + build windows --debug` zincirini tek adimda calistirir.
