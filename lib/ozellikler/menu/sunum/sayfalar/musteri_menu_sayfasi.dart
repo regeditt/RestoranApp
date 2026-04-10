@@ -1,9 +1,14 @@
+import 'dart:convert';
 import 'dart:math' as math;
+import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
+import 'package:restoran_app/ortak/bagimlilik/servis_saglayici.dart';
 import 'package:restoran_app/ortak/bilesenler/ana_sayfaya_donus.dart';
 import 'package:restoran_app/ortak/responsive/ekran_boyutu.dart';
 import 'package:restoran_app/ortak/yonlendirme/rota_yapisi.dart';
+import 'package:restoran_app/ozellikler/kimlik/sunum/bilesenler/giris_asistani_dialogu.dart';
+import 'package:restoran_app/ozellikler/kimlik/sunum/viewmodel/giris_asistani_viewmodel.dart';
 import 'package:restoran_app/ozellikler/menu/alan/varliklar/kategori_varligi.dart';
 import 'package:restoran_app/ozellikler/menu/alan/varliklar/pos_masa_urun_baglami_varligi.dart';
 import 'package:restoran_app/ozellikler/menu/alan/varliklar/qr_menu_baglami_varligi.dart';
@@ -173,6 +178,17 @@ class _MusteriMenuSayfasiState extends State<MusteriMenuSayfasi> {
       return;
     }
     _hataBildir(sonuc.mesaj);
+  }
+
+  Future<void> _chatbotuAc() {
+    final GirisAsistaniViewModel asistanViewModel =
+        GirisAsistaniViewModel.servisKaydindan(ServisSaglayici.of(context));
+    return showDialog<void>(
+      context: context,
+      builder: (BuildContext context) {
+        return GirisAsistaniDialog(viewModel: asistanViewModel);
+      },
+    );
   }
 
   void _salonBolumuSec(String bolumId) {
@@ -384,6 +400,7 @@ class _MusteriMenuSayfasiState extends State<MusteriMenuSayfasi> {
                                     ? _PosMasaustuYerlesim(
                                         qrModu: widget.qrModu,
                                         ferahMod: ferahMasaustu,
+                                        chatbotuAc: _chatbotuAc,
                                         seciliKategoriAdi:
                                             viewModel.seciliKategoriAdi,
                                         toplamUrunAdedi:
@@ -418,6 +435,7 @@ class _MusteriMenuSayfasiState extends State<MusteriMenuSayfasi> {
                                       )
                                     : _PosMobilYerlesim(
                                         qrModu: widget.qrModu,
+                                        chatbotuAc: _chatbotuAc,
                                         seciliKategoriAdi:
                                             viewModel.seciliKategoriAdi,
                                         toplamUrunAdedi:
@@ -493,6 +511,7 @@ class _PosMasaustuYerlesim extends StatelessWidget {
   const _PosMasaustuYerlesim({
     required this.qrModu,
     required this.ferahMod,
+    required this.chatbotuAc,
     required this.seciliKategoriAdi,
     required this.toplamUrunAdedi,
     required this.salonMasaPaneli,
@@ -505,6 +524,7 @@ class _PosMasaustuYerlesim extends StatelessWidget {
 
   final bool qrModu;
   final bool ferahMod;
+  final VoidCallback chatbotuAc;
   final String seciliKategoriAdi;
   final int toplamUrunAdedi;
   final Widget salonMasaPaneli;
@@ -540,6 +560,7 @@ class _PosMasaustuYerlesim extends StatelessWidget {
               SizedBox(width: ferahMod ? 16 : 12),
               Expanded(
                 child: _PosSagPanel(
+                  chatbotuAc: chatbotuAc,
                   seciliKategoriAdi: seciliKategoriAdi,
                   toplamUrunAdedi: toplamUrunAdedi,
                   urunMerkezi: urunMerkezi,
@@ -557,6 +578,7 @@ class _PosMasaustuYerlesim extends StatelessWidget {
 class _PosMobilYerlesim extends StatelessWidget {
   const _PosMobilYerlesim({
     required this.qrModu,
+    required this.chatbotuAc,
     required this.seciliKategoriAdi,
     required this.toplamUrunAdedi,
     required this.baglamPaneli,
@@ -568,6 +590,7 @@ class _PosMobilYerlesim extends StatelessWidget {
   });
 
   final bool qrModu;
+  final VoidCallback chatbotuAc;
   final String seciliKategoriAdi;
   final int toplamUrunAdedi;
   final Widget? baglamPaneli;
@@ -584,6 +607,7 @@ class _PosMobilYerlesim extends StatelessWidget {
       children: [
         _PosMobilUstKart(
           qrModu: qrModu,
+          chatbotuAc: chatbotuAc,
           seciliKategoriAdi: seciliKategoriAdi,
           toplamUrunAdedi: toplamUrunAdedi,
         ),
@@ -684,12 +708,14 @@ class _PosSolPanel extends StatelessWidget {
 
 class _PosSagPanel extends StatelessWidget {
   const _PosSagPanel({
+    required this.chatbotuAc,
     required this.seciliKategoriAdi,
     required this.toplamUrunAdedi,
     required this.urunMerkezi,
     required this.kategoriPaneli,
   });
 
+  final VoidCallback chatbotuAc;
   final String seciliKategoriAdi;
   final int toplamUrunAdedi;
   final Widget urunMerkezi;
@@ -700,6 +726,7 @@ class _PosSagPanel extends StatelessWidget {
     return Column(
       children: [
         _PosUstKart(
+          chatbotuAc: chatbotuAc,
           seciliKategoriAdi: seciliKategoriAdi,
           toplamUrunAdedi: toplamUrunAdedi,
         ),
@@ -721,10 +748,12 @@ class _PosSagPanel extends StatelessWidget {
 
 class _PosUstKart extends StatelessWidget {
   const _PosUstKart({
+    required this.chatbotuAc,
     required this.seciliKategoriAdi,
     required this.toplamUrunAdedi,
   });
 
+  final VoidCallback chatbotuAc;
   final String seciliKategoriAdi;
   final int toplamUrunAdedi;
 
@@ -794,6 +823,11 @@ class _PosUstKart extends StatelessWidget {
                 tikla: () =>
                     Navigator.of(context).pushNamed(RotaYapisi.personelGiris),
               ),
+              _PosUstAksiyon(
+                ikon: Icons.smart_toy_rounded,
+                etiket: 'Chatbot',
+                tikla: chatbotuAc,
+              ),
             ],
           ),
         ],
@@ -805,11 +839,13 @@ class _PosUstKart extends StatelessWidget {
 class _PosMobilUstKart extends StatelessWidget {
   const _PosMobilUstKart({
     required this.qrModu,
+    required this.chatbotuAc,
     required this.seciliKategoriAdi,
     required this.toplamUrunAdedi,
   });
 
   final bool qrModu;
+  final VoidCallback chatbotuAc;
   final String seciliKategoriAdi;
   final int toplamUrunAdedi;
 
@@ -875,6 +911,19 @@ class _PosMobilUstKart extends StatelessWidget {
                 ),
                 icon: const Icon(Icons.badge_outlined, size: 18),
                 label: const Text('Personel girisi'),
+              ),
+              OutlinedButton.icon(
+                onPressed: chatbotuAc,
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: Colors.white,
+                  side: BorderSide(color: Colors.white.withValues(alpha: 0.18)),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 12,
+                  ),
+                ),
+                icon: const Icon(Icons.smart_toy_rounded, size: 18),
+                label: const Text('Chatbot'),
               ),
             ],
           ),
@@ -2233,6 +2282,7 @@ class _UrunKarti extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final List<Color> renkler = _urunRenkleri(urun.id);
+    final String? gorselUrl = _temizGorselUrl(urun.gorselUrl);
     final bool etkilesimeAcik = urun.stoktaMi && !islemedeMi;
     final bool kompaktKart = MediaQuery.sizeOf(context).width < 480;
 
@@ -2261,11 +2311,39 @@ class _UrunKarti extends StatelessWidget {
                 ),
                 child: Stack(
                   children: [
+                    if (gorselUrl != null)
+                      Positioned.fill(
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(14),
+                          child: _MenuUrunGorseli(gorselUrl: gorselUrl),
+                        ),
+                      ),
                     Positioned.fill(
-                      child: CustomPaint(
-                        painter: _TabakDeseniPainter(renk: Colors.white),
+                      child: DecoratedBox(
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(14),
+                          gradient: LinearGradient(
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                            colors: gorselUrl == null
+                                ? <Color>[
+                                    Colors.transparent,
+                                    Colors.transparent,
+                                  ]
+                                : <Color>[
+                                    Colors.black.withValues(alpha: 0.18),
+                                    Colors.black.withValues(alpha: 0.30),
+                                  ],
+                          ),
+                        ),
                       ),
                     ),
+                    if (gorselUrl == null)
+                      Positioned.fill(
+                        child: CustomPaint(
+                          painter: _TabakDeseniPainter(renk: Colors.white),
+                        ),
+                      ),
                     Positioned(
                       top: 10,
                       right: 10,
@@ -2459,6 +2537,7 @@ class _UrunDetayAltSayfasiState extends State<_UrunDetayAltSayfasi> {
   @override
   Widget build(BuildContext context) {
     final double altBosluk = MediaQuery.of(context).viewInsets.bottom;
+    final String? gorselUrl = _temizGorselUrl(widget.urun.gorselUrl);
 
     return Padding(
       padding: EdgeInsets.fromLTRB(16, 16, 16, altBosluk + 16),
@@ -2486,6 +2565,17 @@ class _UrunDetayAltSayfasiState extends State<_UrunDetayAltSayfasi> {
                   ),
                 ),
                 const SizedBox(height: 18),
+                if (gorselUrl != null) ...[
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(18),
+                    child: SizedBox(
+                      width: double.infinity,
+                      height: 170,
+                      child: _MenuUrunGorseli(gorselUrl: gorselUrl),
+                    ),
+                  ),
+                  const SizedBox(height: 14),
+                ],
                 Row(
                   children: [
                     Expanded(
@@ -2736,6 +2826,101 @@ class _SepeteEkleTalebi {
   final int adet;
   final String? secenekId;
   final String? notMetni;
+}
+
+String? _temizGorselUrl(String? gorselUrl) {
+  if (gorselUrl == null) {
+    return null;
+  }
+  final String temiz = gorselUrl.trim();
+  if (temiz.isEmpty) {
+    return null;
+  }
+  return temiz;
+}
+
+class _MenuUrunGorseli extends StatelessWidget {
+  const _MenuUrunGorseli({required this.gorselUrl});
+
+  final String gorselUrl;
+
+  @override
+  Widget build(BuildContext context) {
+    final Uint8List? dataBytes = _veriUriBytesiniCoz(gorselUrl);
+    if (dataBytes != null) {
+      return Image.memory(
+        dataBytes,
+        fit: BoxFit.cover,
+        errorBuilder: (BuildContext context, Object hata, StackTrace? iz) {
+          return _GorselYokAlani();
+        },
+      );
+    }
+
+    final Uri? uri = Uri.tryParse(gorselUrl);
+    final bool agBaglantisi =
+        uri != null &&
+        (uri.scheme == 'http' || uri.scheme == 'https') &&
+        uri.host.isNotEmpty;
+    if (!agBaglantisi) {
+      return _GorselYokAlani();
+    }
+
+    return Image.network(
+      gorselUrl,
+      fit: BoxFit.cover,
+      errorBuilder: (BuildContext context, Object hata, StackTrace? iz) {
+        return _GorselYokAlani();
+      },
+      loadingBuilder:
+          (BuildContext context, Widget child, ImageChunkEvent? progress) {
+            if (progress == null) {
+              return child;
+            }
+            return const Center(
+              child: SizedBox(
+                width: 22,
+                height: 22,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              ),
+            );
+          },
+    );
+  }
+
+  Uint8List? _veriUriBytesiniCoz(String kaynak) {
+    final String temiz = kaynak.trim();
+    if (!temiz.startsWith('data:image/')) {
+      return null;
+    }
+    final int ayirac = temiz.indexOf(',');
+    if (ayirac <= 0 || ayirac >= temiz.length - 1) {
+      return null;
+    }
+    final String baslik = temiz.substring(0, ayirac).toLowerCase();
+    if (!baslik.contains(';base64')) {
+      return null;
+    }
+    try {
+      return base64Decode(temiz.substring(ayirac + 1));
+    } catch (_) {
+      return null;
+    }
+  }
+}
+
+class _GorselYokAlani extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      color: const Color(0x3321162D),
+      alignment: Alignment.center,
+      child: const Icon(
+        Icons.image_not_supported_outlined,
+        color: Color(0xFFE3D7EE),
+      ),
+    );
+  }
 }
 
 class _TabakDeseniPainter extends CustomPainter {

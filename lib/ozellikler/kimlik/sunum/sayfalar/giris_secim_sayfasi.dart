@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:restoran_app/ortak/bagimlilik/servis_saglayici.dart';
 import 'package:restoran_app/ortak/bilesenler/ana_sayfaya_donus.dart';
 import 'package:restoran_app/ortak/yonlendirme/rota_yapisi.dart';
+import 'package:restoran_app/ozellikler/kimlik/sunum/bilesenler/giris_asistani_dialogu.dart';
+import 'package:restoran_app/ozellikler/kimlik/sunum/viewmodel/giris_asistani_viewmodel.dart';
 import 'package:restoran_app/ozellikler/kimlik/sunum/viewmodel/giris_secim_viewmodel.dart';
 
 typedef _PersonelGirisModu = PersonelGirisModu;
@@ -64,6 +67,17 @@ class _GirisSecimSayfasiState extends State<GirisSecimSayfasi> {
 
   void _uyari(String mesaj) {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(mesaj)));
+  }
+
+  Future<void> _chatbotuAc() {
+    final GirisAsistaniViewModel asistanViewModel =
+        GirisAsistaniViewModel.servisKaydindan(ServisSaglayici.of(context));
+    return showDialog<void>(
+      context: context,
+      builder: (BuildContext context) {
+        return GirisAsistaniDialog(viewModel: asistanViewModel);
+      },
+    );
   }
 
   @override
@@ -160,6 +174,24 @@ class _GirisSecimSayfasiState extends State<GirisSecimSayfasi> {
                                   size: 18,
                                 ),
                                 label: const Text('QR menuye don'),
+                              ),
+                              OutlinedButton.icon(
+                                onPressed: _chatbotuAc,
+                                style: OutlinedButton.styleFrom(
+                                  foregroundColor: Colors.white,
+                                  side: BorderSide(
+                                    color: Colors.white.withValues(alpha: 0.2),
+                                  ),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 16,
+                                    vertical: 14,
+                                  ),
+                                ),
+                                icon: const Icon(
+                                  Icons.smart_toy_rounded,
+                                  size: 18,
+                                ),
+                                label: const Text('Chatbot'),
                               ),
                             ],
                           ),

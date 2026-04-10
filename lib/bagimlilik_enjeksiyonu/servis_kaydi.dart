@@ -1,10 +1,25 @@
 import 'package:restoran_app/bagimlilik_enjeksiyonu/servis_bagimlilikleri.dart';
+import 'package:restoran_app/ozellikler/kimlik/alan/depolar/asistan_backend_ayar_deposu.dart';
 import 'package:restoran_app/ozellikler/kimlik/alan/depolar/kimlik_deposu.dart';
+import 'package:restoran_app/ozellikler/kimlik/alan/roller/islem_yetkisi.dart';
+import 'package:restoran_app/ozellikler/kimlik/alan/servisler/api_destekli_ayar_asistani_yanitlayici.dart';
+import 'package:restoran_app/ozellikler/kimlik/alan/servisler/asistan_api_istemcisi.dart';
+import 'package:restoran_app/ozellikler/kimlik/alan/servisler/ayar_asistani_yanitlayici.dart';
+import 'package:restoran_app/ozellikler/kimlik/alan/servisler/kuralli_ayar_asistani_yanitlayici.dart';
+import 'package:restoran_app/ozellikler/kimlik/alan/servisler/rol_yetki_politikasi.dart';
+import 'package:restoran_app/ozellikler/kimlik/alan/servisler/rol_yetki_politikasi_varsayilan.dart';
 import 'package:restoran_app/ozellikler/kimlik/uygulama/use_case/aktif_kullanici_getir_use_case.dart';
+import 'package:restoran_app/ozellikler/kimlik/uygulama/use_case/asistan_backend_ayarini_getir_use_case.dart';
+import 'package:restoran_app/ozellikler/kimlik/uygulama/use_case/asistan_backend_ayarini_kaydet_use_case.dart';
+import 'package:restoran_app/ozellikler/kimlik/uygulama/use_case/asistan_backend_baglanti_test_et_use_case.dart';
+import 'package:restoran_app/ozellikler/kimlik/uygulama/use_case/ayar_asistani_yanit_uret_use_case.dart';
 import 'package:restoran_app/ozellikler/kimlik/uygulama/use_case/cikis_yap_use_case.dart';
 import 'package:restoran_app/ozellikler/kimlik/uygulama/use_case/giris_yap_use_case.dart';
 import 'package:restoran_app/ozellikler/kimlik/uygulama/use_case/hesap_olustur_use_case.dart';
+import 'package:restoran_app/ozellikler/kimlik/uygulama/use_case/islem_yetkisi_kontrol_et_use_case.dart';
 import 'package:restoran_app/ozellikler/kimlik/uygulama/use_case/misafir_olustur_use_case.dart';
+import 'package:restoran_app/ozellikler/kimlik/veri/depolar/asistan_backend_ayar_deposu_sqlite.dart';
+import 'package:restoran_app/ozellikler/kimlik/veri/servisler/http_asistan_api_istemcisi.dart';
 import 'package:restoran_app/ozellikler/lisans/alan/depolar/lisans_deposu.dart';
 import 'package:restoran_app/ozellikler/lisans/uygulama/servisler/lisans_anahtari_dogrulayici.dart';
 import 'package:restoran_app/ozellikler/lisans/uygulama/use_case/lisans_aktif_et_use_case.dart';
@@ -26,6 +41,7 @@ import 'package:restoran_app/ozellikler/sepet/uygulama/use_case/sepet_kalemi_sil
 import 'package:restoran_app/ozellikler/sepet/uygulama/use_case/sepeti_getir_use_case.dart';
 import 'package:restoran_app/ozellikler/sepet/uygulama/use_case/sepeti_temizle_use_case.dart';
 import 'package:restoran_app/ozellikler/siparis/alan/depolar/siparis_deposu.dart';
+import 'package:restoran_app/ozellikler/siparis/uygulama/servisler/kurye_entegrasyon_yonetim_servisi.dart';
 import 'package:restoran_app/ozellikler/siparis/uygulama/use_case/siparis_olustur_use_case.dart';
 import 'package:restoran_app/ozellikler/siparis/uygulama/use_case/siparis_durumu_guncelle_use_case.dart';
 import 'package:restoran_app/ozellikler/siparis/uygulama/use_case/siparisi_yazdir_use_case.dart';
@@ -58,6 +74,7 @@ import 'package:restoran_app/ozellikler/yonetim/uygulama/use_case/yazici_sil_use
 import 'package:restoran_app/ozellikler/yonetim/uygulama/use_case/yazicilari_getir_use_case.dart';
 import 'package:restoran_app/ortak/platform/yazici_cikti_platformu.dart';
 import 'package:restoran_app/ortak/veri/veri_kaynagi_tipi.dart';
+import 'package:restoran_app/ortak/veri/veritabani.dart';
 
 class ServisKaydi {
   ServisKaydi._(ServisBagimlilikleri bagimlilikler) {
@@ -70,6 +87,21 @@ class ServisKaydi {
     _personelDeposu = bagimlilikler.personelDeposu;
     _salonPlaniDeposu = bagimlilikler.salonPlaniDeposu;
     _stokDeposu = bagimlilikler.stokDeposu;
+    kuryeEntegrasyonYonetimServisi =
+        bagimlilikler.kuryeEntegrasyonYonetimServisi;
+    veritabani = bagimlilikler.veritabani;
+    _rolYetkiPolitikasi = const RolYetkiPolitikasiVarsayilan();
+    final AyarAsistaniYanitlayici yedekYanitlayici =
+        const KuralliAyarAsistaniYanitlayici();
+    _asistanBackendAyarDeposu = veritabani == null
+        ? AsistanBackendAyarDeposuBellek()
+        : AsistanBackendAyarDeposuSqlite(veritabani!);
+    _asistanApiIstemcisi = HttpAsistanApiIstemcisi();
+    _ayarAsistaniYanitlayici = ApiDestekliAyarAsistaniYanitlayici(
+      backendAyarDeposu: _asistanBackendAyarDeposu,
+      apiIstemcisi: _asistanApiIstemcisi,
+      yedekYanitlayici: yedekYanitlayici,
+    );
 
     const LisansAnahtariDogrulayici lisansDogrulayici =
         LisansAnahtariDogrulayici();
@@ -86,6 +118,22 @@ class ServisKaydi {
     hesapOlusturUseCase = HesapOlusturUseCase(_kimlikDeposu);
     cikisYapUseCase = CikisYapUseCase(_kimlikDeposu);
     misafirOlusturUseCase = MisafirOlusturUseCase(_kimlikDeposu);
+    islemYetkisiKontrolEtUseCase = IslemYetkisiKontrolEtUseCase(
+      _kimlikDeposu,
+      _rolYetkiPolitikasi,
+    );
+    asistanBackendAyariniGetirUseCase = AsistanBackendAyariniGetirUseCase(
+      _asistanBackendAyarDeposu,
+    );
+    asistanBackendAyariniKaydetUseCase = AsistanBackendAyariniKaydetUseCase(
+      _asistanBackendAyarDeposu,
+    );
+    asistanBackendBaglantiTestEtUseCase = AsistanBackendBaglantiTestEtUseCase(
+      _asistanApiIstemcisi,
+    );
+    ayarAsistaniYanitUretUseCase = AyarAsistaniYanitUretUseCase(
+      _ayarAsistaniYanitlayici,
+    );
     kategorileriGetirUseCase = KategorileriGetirUseCase(_menuDeposu);
     kategoriEkleUseCase = KategoriEkleUseCase(_menuDeposu);
     kategoriGuncelleUseCase = KategoriGuncelleUseCase(_menuDeposu);
@@ -170,6 +218,12 @@ class ServisKaydi {
   late final PersonelDeposu _personelDeposu;
   late final SalonPlaniDeposu _salonPlaniDeposu;
   late final StokDeposu _stokDeposu;
+  late final RolYetkiPolitikasi _rolYetkiPolitikasi;
+  late final AsistanBackendAyarDeposu _asistanBackendAyarDeposu;
+  late final AsistanApiIstemcisi _asistanApiIstemcisi;
+  late final AyarAsistaniYanitlayici _ayarAsistaniYanitlayici;
+  late final KuryeEntegrasyonYonetimServisi kuryeEntegrasyonYonetimServisi;
+  late final UygulamaVeritabani? veritabani;
 
   late final LisansDurumuGetirUseCase lisansDurumuGetirUseCase;
   late final LisansAktifEtUseCase lisansAktifEtUseCase;
@@ -178,6 +232,14 @@ class ServisKaydi {
   late final HesapOlusturUseCase hesapOlusturUseCase;
   late final CikisYapUseCase cikisYapUseCase;
   late final MisafirOlusturUseCase misafirOlusturUseCase;
+  late final IslemYetkisiKontrolEtUseCase islemYetkisiKontrolEtUseCase;
+  late final AsistanBackendAyariniGetirUseCase
+  asistanBackendAyariniGetirUseCase;
+  late final AsistanBackendAyariniKaydetUseCase
+  asistanBackendAyariniKaydetUseCase;
+  late final AsistanBackendBaglantiTestEtUseCase
+  asistanBackendBaglantiTestEtUseCase;
+  late final AyarAsistaniYanitUretUseCase ayarAsistaniYanitUretUseCase;
   late final KategorileriGetirUseCase kategorileriGetirUseCase;
   late final KategoriEkleUseCase kategoriEkleUseCase;
   late final KategoriGuncelleUseCase kategoriGuncelleUseCase;
@@ -218,4 +280,8 @@ class ServisKaydi {
   late final ReceteyiKaydetUseCase receteyiKaydetUseCase;
   late final StokOzetiGetirUseCase stokOzetiGetirUseCase;
   late final SipariseGoreStokDusUseCase sipariseGoreStokDusUseCase;
+
+  Future<bool> islemYetkisiVarMi(IslemYetkisi yetki) {
+    return islemYetkisiKontrolEtUseCase(yetki);
+  }
 }
