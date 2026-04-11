@@ -24,4 +24,7 @@ abstract class SepetDeposu {
 
   /// Sepeti tum kalemlerden temizler.
   Future<void> sepetiTemizle();
+
+  /// Sepette kupon kodunu gunceller. `null` verilirse kupon temizlenir.
+  Future<SepetVarligi> kuponKoduGuncelle(String? kuponKodu);
 }

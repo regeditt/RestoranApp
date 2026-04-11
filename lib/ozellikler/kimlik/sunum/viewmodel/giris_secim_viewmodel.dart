@@ -35,7 +35,7 @@ enum PersonelGirisModu {
 
 enum KimlikEkranModu {
   girisYap('Giris yap', 'Mevcut personel hesabi ile devam et.'),
-  hesapOlustur('Hesap olustur', 'Secili rol icin yeni personel hesabi ac.');
+  hesapOlustur('Hesap olustur', 'Secilecek rol icin yeni personel hesabi ac.');
 
   const KimlikEkranModu(this.baslik, this.aciklama);
 
@@ -82,27 +82,31 @@ class GirisSecimViewModel extends ChangeNotifier {
 
   PersonelGirisModu _seciliMod = PersonelGirisModu.garson;
   KimlikEkranModu _ekranModu = KimlikEkranModu.girisYap;
+  KullaniciRolu _hesapOlusturmaRolu = KullaniciRolu.garson;
   bool _islemde = false;
 
   PersonelGirisModu get seciliMod => _seciliMod;
   KimlikEkranModu get ekranModu => _ekranModu;
+  KullaniciRolu get seciliHesapOlusturmaRolu => _hesapOlusturmaRolu;
+  List<KullaniciRolu> get secilebilirHesapRolleri => const <KullaniciRolu>[
+    KullaniciRolu.garson,
+    KullaniciRolu.yonetici,
+  ];
   bool get islemde => _islemde;
   bool get hesapOlusturmaModu => _ekranModu == KimlikEkranModu.hesapOlustur;
   List<KimlikEkranModu> get kullanilabilirEkranModlari =>
-      _seciliMod == PersonelGirisModu.yonetici
-      ? KimlikEkranModu.values
-      : const <KimlikEkranModu>[KimlikEkranModu.girisYap];
+      KimlikEkranModu.values;
 
   String get formBaslik => hesapOlusturmaModu
-      ? '${_seciliMod.baslik} hesabi olustur'
+      ? '${rolEtiketi(_hesapOlusturmaRolu)} hesabi olustur'
       : _seciliMod.baslik;
 
   String get formAciklama => hesapOlusturmaModu
-      ? '${_seciliMod.aciklama} Yeni hesap olusturuldugunda oturum acilip ilgili ekrana gecilir.'
+      ? 'Yeni ${rolEtiketi(_hesapOlusturmaRolu).toLowerCase()} hesabi olusturuldugunda oturum acilip ilgili ekrana gecilir.'
       : _seciliMod.aciklama;
 
   String get anaAksiyonMetni => hesapOlusturmaModu
-      ? '${_seciliMod.baslik} olustur'
+      ? '${rolEtiketi(_hesapOlusturmaRolu)} hesabi olustur'
       : _seciliMod.butonMetni;
 
   void modSec(PersonelGirisModu mod) {
@@ -110,10 +114,7 @@ class GirisSecimViewModel extends ChangeNotifier {
       return;
     }
     _seciliMod = mod;
-    if (_seciliMod != PersonelGirisModu.yonetici &&
-        _ekranModu == KimlikEkranModu.hesapOlustur) {
-      _ekranModu = KimlikEkranModu.girisYap;
-    }
+    _hesapOlusturmaRolu = _seciliModaGoreRol(mod);
     notifyListeners();
   }
 
@@ -126,6 +127,27 @@ class GirisSecimViewModel extends ChangeNotifier {
     }
     _ekranModu = mod;
     notifyListeners();
+  }
+
+  void hesapOlusturmaRoluSec(KullaniciRolu rol) {
+    if (!secilebilirHesapRolleri.contains(rol)) {
+      return;
+    }
+    if (_hesapOlusturmaRolu == rol) {
+      return;
+    }
+    _hesapOlusturmaRolu = rol;
+    notifyListeners();
+  }
+
+  String rolEtiketi(KullaniciRolu rol) {
+    return switch (rol) {
+      KullaniciRolu.garson => 'Garson',
+      KullaniciRolu.yonetici => 'Yonetici',
+      KullaniciRolu.patron => 'Patron',
+      KullaniciRolu.musteri => 'Musteri',
+      KullaniciRolu.misafir => 'Misafir',
+    };
   }
 
   Future<GirisSecimIslemSonucu> devamEt({
@@ -158,7 +180,7 @@ class GirisSecimViewModel extends ChangeNotifier {
           telefon: temizKullaniciAdi,
           sifre: temizSifre,
           adSoyad: temizAdSoyad,
-          rol: _seciliRol,
+          rol: _hesapOlusturmaRolu,
         );
       } else {
         await _girisYapUseCase(
@@ -168,9 +190,7 @@ class GirisSecimViewModel extends ChangeNotifier {
           adSoyad: temizKullaniciAdi,
         );
       }
-      return GirisSecimIslemSonucu.basarili(
-        hedef: hedef ?? _seciliMod.ilkHedef,
-      );
+      return GirisSecimIslemSonucu.basarili(hedef: hedef ?? _varsayilanHedef);
     } on StateError catch (hata) {
       return GirisSecimIslemSonucu.hata(
         _hataMesajiniIyilestir(hata.message.toString()),
@@ -181,6 +201,24 @@ class GirisSecimViewModel extends ChangeNotifier {
       _islemde = false;
       notifyListeners();
     }
+  }
+
+  GirisHedefi get _varsayilanHedef => hesapOlusturmaModu
+      ? _roleGoreVarsayilanHedef(_hesapOlusturmaRolu)
+      : _seciliMod.ilkHedef;
+
+  GirisHedefi _roleGoreVarsayilanHedef(KullaniciRolu rol) {
+    return switch (rol) {
+      KullaniciRolu.garson => GirisHedefi.pos,
+      KullaniciRolu.yonetici || KullaniciRolu.patron => GirisHedefi.yonetim,
+      _ => GirisHedefi.pos,
+    };
+  }
+
+  KullaniciRolu _seciliModaGoreRol(PersonelGirisModu mod) {
+    return mod == PersonelGirisModu.garson
+        ? KullaniciRolu.garson
+        : KullaniciRolu.yonetici;
   }
 
   String _hataMesajiniIyilestir(String mesaj) {

@@ -3,14 +3,13 @@ import 'package:restoran_app/ortak/veri/veri_kaynagi_tipi.dart';
 import 'package:restoran_app/uygulama_kabugu/uygulama_kabugu.dart';
 
 void main() {
-  testWidgets('Lisans yoksa aktivasyon ekrani acilir', (tester) async {
+  testWidgets('Ilk acilista deneme surumu ile uygulama acilir', (tester) async {
     await tester.pumpWidget(
       const UygulamaKabugu(veriKaynagi: VeriKaynagiTipi.api),
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('Lisans Korumasi'), findsOneWidget);
-    expect(find.text('Lisansi aktif et'), findsOneWidget);
+    expect(find.text('Lisans Korumasi'), findsNothing);
     expect(tester.takeException(), isNull);
   });
 }

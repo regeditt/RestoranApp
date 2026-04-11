@@ -20,6 +20,8 @@ class SiparisVarligi {
     this.masaNo,
     this.bolumAdi,
     this.kaynak,
+    this.kuponKodu,
+    this.indirimTutari = 0,
   });
 
   final String id;
@@ -36,9 +38,14 @@ class SiparisVarligi {
   final String? masaNo;
   final String? bolumAdi;
   final String? kaynak;
+  final String? kuponKodu;
+  final double indirimTutari;
+
+  double get araToplam =>
+      kalemler.fold<double>(0, (toplam, kalem) => toplam + kalem.araToplam);
 
   double get toplamTutar =>
-      kalemler.fold<double>(0, (toplam, kalem) => toplam + kalem.araToplam);
+      (araToplam - indirimTutari).clamp(0, double.infinity).toDouble();
 
   SiparisVarligi copyWith({
     String? id,
@@ -55,6 +62,8 @@ class SiparisVarligi {
     String? masaNo,
     String? bolumAdi,
     String? kaynak,
+    String? kuponKodu,
+    double? indirimTutari,
   }) {
     return SiparisVarligi(
       id: id ?? this.id,
@@ -71,6 +80,8 @@ class SiparisVarligi {
       masaNo: masaNo ?? this.masaNo,
       bolumAdi: bolumAdi ?? this.bolumAdi,
       kaynak: kaynak ?? this.kaynak,
+      kuponKodu: kuponKodu ?? this.kuponKodu,
+      indirimTutari: indirimTutari ?? this.indirimTutari,
     );
   }
 }

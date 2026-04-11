@@ -94,6 +94,8 @@ class SiparisKayitlari extends Table {
   TextColumn get masaNo => text().nullable()();
   TextColumn get bolumAdi => text().nullable()();
   TextColumn get kaynak => text().nullable()();
+  TextColumn get kuponKodu => text().nullable()();
+  RealColumn get indirimTutari => real().withDefault(const Constant(0.0))();
   BoolColumn get sahipMisafir => boolean()();
   TextColumn get sahipAdSoyad => text()();
   TextColumn get sahipTelefon => text()();
@@ -179,8 +181,24 @@ class HammaddeKayitlari extends Table {
   TextColumn get ad => text()();
   TextColumn get birim => text()();
   RealColumn get mevcutMiktar => real()();
+  RealColumn get uyariEsigi => real().withDefault(const Constant(0.0))();
   RealColumn get kritikEsik => real()();
   RealColumn get birimMaliyet => real()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+class StokAlarmGecmisKayitlari extends Table {
+  TextColumn get id => text()();
+  DateTimeColumn get zaman => dateTime()();
+  TextColumn get hammaddeId => text()();
+  TextColumn get hammaddeAdi => text()();
+  RealColumn get oncekiMiktar => real()();
+  RealColumn get yeniMiktar => real()();
+  IntColumn get oncekiDurum => integer()();
+  IntColumn get yeniDurum => integer()();
+  TextColumn get tetikleyenIslem => text()();
 
   @override
   Set<Column> get primaryKey => {id};
@@ -213,6 +231,7 @@ class ReceteKalemKayitlari extends Table {
     SalonBolumKayitlari,
     MasaKayitlari,
     HammaddeKayitlari,
+    StokAlarmGecmisKayitlari,
     ReceteKalemKayitlari,
   ],
 )
@@ -223,7 +242,7 @@ class UygulamaVeritabani extends _$UygulamaVeritabani
   static final RegExp _sayisalKimlikDeseni = RegExp(r'^\d+$');
 
   @override
-  int get schemaVersion => 7;
+  int get schemaVersion => 10;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -246,6 +265,30 @@ class UygulamaVeritabani extends _$UygulamaVeritabani
       if (from < 7) {
         await _kullaniciKimlikTablosunuHazirla();
         await _kullaniciKayitlariniTekillestirVeIndeksle();
+      }
+      if (from < 8) {
+        await migrator.addColumn(
+          hammaddeKayitlari,
+          hammaddeKayitlari.uyariEsigi,
+        );
+        await customStatement(
+          'UPDATE hammadde_kayitlari '
+          'SET uyari_esigi = CASE '
+          'WHEN kritik_esik <= 0 THEN 0 '
+          'ELSE kritik_esik * 1.35 '
+          'END '
+          'WHERE uyari_esigi = 0 OR uyari_esigi < kritik_esik',
+        );
+      }
+      if (from < 9) {
+        await _indeksleriOlustur();
+      }
+      if (from < 10) {
+        await migrator.addColumn(siparisKayitlari, siparisKayitlari.kuponKodu);
+        await migrator.addColumn(
+          siparisKayitlari,
+          siparisKayitlari.indirimTutari,
+        );
       }
     },
     beforeOpen: (details) async {
@@ -606,6 +649,14 @@ class UygulamaVeritabani extends _$UygulamaVeritabani
       'CREATE INDEX IF NOT EXISTS idx_recete_kalem_kayitlari_hammadde '
       'ON recete_kalem_kayitlari (hammadde_id)',
     );
+    await customStatement(
+      'CREATE INDEX IF NOT EXISTS idx_stok_alarm_gecmis_zaman '
+      'ON stok_alarm_gecmis_kayitlari (zaman)',
+    );
+    await customStatement(
+      'CREATE INDEX IF NOT EXISTS idx_stok_alarm_gecmis_hammadde '
+      'ON stok_alarm_gecmis_kayitlari (hammadde_id)',
+    );
   }
 
   Future<void> _eskiJsonVerisiniYeniTablolaraTasi() async {
@@ -750,6 +801,10 @@ class UygulamaVeritabani extends _$UygulamaVeritabani
           ad: Value(hammadde['ad'] as String),
           birim: Value(hammadde['birim'] as String),
           mevcutMiktar: Value((hammadde['mevcutMiktar'] as num).toDouble()),
+          uyariEsigi: Value(
+            (hammadde['uyariEsigi'] as num?)?.toDouble() ??
+                ((hammadde['kritikEsik'] as num).toDouble() * 1.35),
+          ),
           kritikEsik: Value((hammadde['kritikEsik'] as num).toDouble()),
           birimMaliyet: Value((hammadde['birimMaliyet'] as num).toDouble()),
         ),
@@ -984,6 +1039,8 @@ class UygulamaVeritabani extends _$UygulamaVeritabani
                 masaNo: Value(kayit.masaNo),
                 bolumAdi: Value(kayit.bolumAdi),
                 kaynak: Value(kayit.kaynak),
+                kuponKodu: Value(kayit.kuponKodu),
+                indirimTutari: Value(kayit.indirimTutari),
                 sahipMisafir: kayit.sahipMisafir,
                 sahipAdSoyad: kayit.sahipAdSoyad,
                 sahipTelefon: kayit.sahipTelefon,
@@ -1014,6 +1071,7 @@ class UygulamaVeritabani extends _$UygulamaVeritabani
                 ad: kayit.ad,
                 birim: kayit.birim,
                 mevcutMiktar: kayit.mevcutMiktar,
+                uyariEsigi: Value(kayit.uyariEsigi),
                 kritikEsik: kayit.kritikEsik,
                 birimMaliyet: kayit.birimMaliyet,
               ),

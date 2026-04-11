@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:restoran_app/ortak/bilesenler/ana_sayfaya_donus.dart';
 import 'package:restoran_app/ortak/bilesenler/suruklenebilir_dialog_kapsayici.dart';
-import 'package:restoran_app/ortak/responsive/ekran_boyutu.dart';
+import 'package:restoran_app/ortak/tema/ana_sayfa_renk_sablonu.dart';
 import 'package:restoran_app/ozellikler/menu/alan/varliklar/qr_menu_baglami_varligi.dart';
 import 'package:restoran_app/ozellikler/sepet/alan/varliklar/sepet_kalemi_varligi.dart';
 import 'package:restoran_app/ozellikler/sepet/alan/varliklar/sepet_varligi.dart';
@@ -22,20 +22,28 @@ class _SiparisOzetiSayfasiState extends State<SiparisOzetiSayfasi> {
   final TextEditingController _adresDenetleyici = TextEditingController();
   final TextEditingController _teslimatNotuDenetleyici =
       TextEditingController();
+  final TextEditingController _kuponDenetleyici = TextEditingController();
 
   SepetVarligi get _sepet => widget.viewModel.sepet;
   QrMenuBaglamiVarligi? get _qrBaglami => widget.viewModel.qrBaglami;
   bool get _kaydediliyor => widget.viewModel.kaydediliyor;
+  bool get _kuponIsleniyor => widget.viewModel.kuponIsleniyor;
   TeslimatTipi get _seciliTeslimatTipi => widget.viewModel.seciliTeslimatTipi;
   bool get _paketServisSeciliMi => widget.viewModel.paketServisSeciliMi;
   String get _teslimatEtiketi => widget.viewModel.teslimatEtiketi;
   String get _adresKisaOzet => widget.viewModel.adresKisaOzet;
+  bool get _kuponUygulandiMi => widget.viewModel.kuponUygulandiMi;
+  bool get _kuponHataliMi => widget.viewModel.kuponHataliMi;
+  String? get _kuponMesaji => widget.viewModel.kuponMesaji;
+  double get _indirimTutari => widget.viewModel.indirimTutari;
+  double get _genelToplam => widget.viewModel.genelToplam;
 
   @override
   void initState() {
     super.initState();
     _adresDenetleyici.addListener(_adresDegisimiDinle);
     _teslimatNotuDenetleyici.addListener(_teslimatNotuDegisimiDinle);
+    _kuponDenetleyici.text = widget.viewModel.aktifKuponKodu;
     _varsayilanBilgileriYukle();
   }
 
@@ -46,6 +54,7 @@ class _SiparisOzetiSayfasiState extends State<SiparisOzetiSayfasi> {
       oldWidget.viewModel.dispose();
       _adresDenetleyici.text = widget.viewModel.adresMetni;
       _teslimatNotuDenetleyici.text = widget.viewModel.teslimatNotu;
+      _kuponDenetleyici.text = widget.viewModel.aktifKuponKodu;
       _varsayilanBilgileriYukle();
     }
   }
@@ -56,6 +65,7 @@ class _SiparisOzetiSayfasiState extends State<SiparisOzetiSayfasi> {
     _teslimatNotuDenetleyici.removeListener(_teslimatNotuDegisimiDinle);
     _adresDenetleyici.dispose();
     _teslimatNotuDenetleyici.dispose();
+    _kuponDenetleyici.dispose();
     widget.viewModel.dispose();
     super.dispose();
   }
@@ -76,6 +86,7 @@ class _SiparisOzetiSayfasiState extends State<SiparisOzetiSayfasi> {
 
     _adresDenetleyici.text = widget.viewModel.adresMetni;
     _teslimatNotuDenetleyici.text = widget.viewModel.teslimatNotu;
+    _kuponDenetleyici.text = widget.viewModel.aktifKuponKodu;
   }
 
   void _adresDegisimiDinle() {
@@ -84,6 +95,47 @@ class _SiparisOzetiSayfasiState extends State<SiparisOzetiSayfasi> {
 
   void _teslimatNotuDegisimiDinle() {
     widget.viewModel.teslimatNotuDegisti(_teslimatNotuDenetleyici.text);
+  }
+
+  Future<void> _kuponUygula() async {
+    final SiparisOzetiIslemSonucu sonuc = await widget.viewModel.kuponUygula(
+      _kuponDenetleyici.text,
+    );
+    if (!mounted) {
+      return;
+    }
+    _kuponDenetleyici.text = widget.viewModel.aktifKuponKodu;
+    if (sonuc.basarili) {
+      if (sonuc.mesaj.isNotEmpty) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(sonuc.mesaj)));
+      }
+      return;
+    }
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(sonuc.mesaj)));
+  }
+
+  Future<void> _kuponTemizle() async {
+    final SiparisOzetiIslemSonucu sonuc = await widget.viewModel.kuponTemizle();
+    if (!mounted) {
+      return;
+    }
+    _kuponDenetleyici.clear();
+    if (sonuc.mesaj.isNotEmpty) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(sonuc.mesaj)));
+    }
+  }
+
+  void _hizliKuponSec(String kuponKodu) {
+    _kuponDenetleyici.text = kuponKodu;
+    _kuponDenetleyici.selection = TextSelection.fromPosition(
+      TextPosition(offset: _kuponDenetleyici.text.length),
+    );
   }
 
   Future<void> _siparisiOnayla() async {
@@ -115,7 +167,7 @@ class _SiparisOzetiSayfasiState extends State<SiparisOzetiSayfasi> {
               '${kaydedilenSiparis.siparisNo} numarali siparis kaydedildi. '
               '${_siparisBilgisi(kaydedilenSiparis)}. '
               '${yazdirmaSonucu.ozetMetni}. '
-              'Toplam ${kaydedilenSiparis.toplamTutar.toStringAsFixed(0)} TL.',
+              'Toplam ${_genelToplam.toStringAsFixed(0)} TL.',
             ),
             actions: [
               TextButton(
@@ -139,10 +191,8 @@ class _SiparisOzetiSayfasiState extends State<SiparisOzetiSayfasi> {
     return AnimatedBuilder(
       animation: widget.viewModel,
       builder: (BuildContext context, Widget? child) {
-        final bool masaustu = EkranBoyutu.masaustu(context);
-
         return Scaffold(
-          backgroundColor: const Color(0xFF140B20),
+          backgroundColor: AnaSayfaRenkSablonu.arkaPlanKoyu,
           appBar: AppBar(
             backgroundColor: Colors.transparent,
             foregroundColor: Colors.white,
@@ -161,9 +211,7 @@ class _SiparisOzetiSayfasiState extends State<SiparisOzetiSayfasi> {
                 constraints: const BoxConstraints(maxWidth: 920),
                 child: Padding(
                   padding: const EdgeInsets.all(20),
-                  child: masaustu
-                      ? _ozetKartlari()
-                      : ListView(children: [_ozetKartlari()]),
+                  child: SingleChildScrollView(child: _ozetKartlari()),
                 ),
               ),
             ),
@@ -176,7 +224,7 @@ class _SiparisOzetiSayfasiState extends State<SiparisOzetiSayfasi> {
   Widget _ozetKartlari() {
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: const Color(0xFF241036),
+        color: AnaSayfaRenkSablonu.panelKoyu,
         borderRadius: BorderRadius.circular(24),
         border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
       ),
@@ -217,6 +265,13 @@ class _SiparisOzetiSayfasiState extends State<SiparisOzetiSayfasi> {
                 children: [
                   _ozetRakam('Ara toplam', _paraYaz(_sepet.araToplam)),
                   _ozetRakam('Teslimat', _teslimatEtiketi),
+                  _ozetRakam(
+                    'Kupon',
+                    widget.viewModel.aktifKuponKodu.isEmpty
+                        ? '-'
+                        : widget.viewModel.aktifKuponKodu,
+                  ),
+                  _ozetRakam('Indirim', _paraYaz(_indirimTutari)),
                   if (_paketServisSeciliMi) _ozetRakam('Adres', _adresKisaOzet),
                   if (_qrBaglami?.masaNo != null)
                     _ozetRakam('Masa', _qrBaglami!.masaNo!),
@@ -224,9 +279,107 @@ class _SiparisOzetiSayfasiState extends State<SiparisOzetiSayfasi> {
                     _ozetRakam('Bolum', _qrBaglami!.bolumAdi!),
                   _ozetRakam(
                     'Genel toplam',
-                    _paraYaz(_sepet.araToplam),
+                    _paraYaz(_genelToplam),
                     vurgu: true,
                   ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 18),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(18),
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.04),
+                borderRadius: BorderRadius.circular(18),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Kampanya ve kupon',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 18,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Ornek kuponlar: HOSGELDIN50, YUZDE10, IKIALBIR, HAFTAICI15',
+                    style: TextStyle(
+                      color: Colors.white.withValues(alpha: 0.72),
+                      height: 1.45,
+                    ),
+                  ),
+                  const SizedBox(height: 14),
+                  TextField(
+                    controller: _kuponDenetleyici,
+                    textCapitalization: TextCapitalization.characters,
+                    decoration: const InputDecoration(
+                      labelText: 'Kupon kodu',
+                      hintText: 'Kod girip uygula',
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      _hizliKuponCipi('HOSGELDIN50'),
+                      _hizliKuponCipi('YUZDE10'),
+                      _hizliKuponCipi('IKIALBIR'),
+                      _hizliKuponCipi('HAFTAICI15'),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  Wrap(
+                    spacing: 10,
+                    runSpacing: 10,
+                    children: [
+                      FilledButton.icon(
+                        onPressed: _kuponIsleniyor ? null : _kuponUygula,
+                        icon: _kuponIsleniyor
+                            ? const SizedBox(
+                                width: 14,
+                                height: 14,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: Colors.white,
+                                ),
+                              )
+                            : const Icon(Icons.local_offer_rounded),
+                        label: const Text('Kuponu uygula'),
+                      ),
+                      FilledButton.tonalIcon(
+                        onPressed: _kuponIsleniyor ? null : _kuponTemizle,
+                        icon: const Icon(Icons.clear_rounded),
+                        label: const Text('Temizle'),
+                      ),
+                    ],
+                  ),
+                  if (_kuponMesaji != null) ...[
+                    const SizedBox(height: 10),
+                    Text(
+                      _kuponMesaji!,
+                      style: TextStyle(
+                        color: _kuponHataliMi
+                            ? AnaSayfaRenkSablonu.panelAlarm
+                            : AnaSayfaRenkSablonu.metinIkincil,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ],
+                  if (_kuponUygulandiMi) ...[
+                    const SizedBox(height: 6),
+                    Text(
+                      'Kupon indirimi: -${_paraYaz(_indirimTutari)}',
+                      style: const TextStyle(
+                        color: AnaSayfaRenkSablonu.metinIkincil,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ],
                 ],
               ),
             ),
@@ -302,7 +455,7 @@ class _SiparisOzetiSayfasiState extends State<SiparisOzetiSayfasi> {
                     child: FilledButton(
                       onPressed: _kaydediliyor ? null : _siparisiOnayla,
                       style: FilledButton.styleFrom(
-                        backgroundColor: const Color(0xFFFF5D8F),
+                        backgroundColor: AnaSayfaRenkSablonu.birincilAksiyon,
                         foregroundColor: Colors.white,
                         padding: const EdgeInsets.symmetric(vertical: 18),
                       ),
@@ -313,7 +466,7 @@ class _SiparisOzetiSayfasiState extends State<SiparisOzetiSayfasi> {
                               child: CircularProgressIndicator(strokeWidth: 2),
                             )
                           : Text(
-                              '${_paraYaz(_sepet.araToplam)} ile siparisi tamamla',
+                              '${_paraYaz(_genelToplam)} ile siparisi tamamla',
                             ),
                     ),
                   ),
@@ -340,7 +493,9 @@ class _SiparisOzetiSayfasiState extends State<SiparisOzetiSayfasi> {
             width: 42,
             height: 42,
             decoration: BoxDecoration(
-              color: const Color(0xFFFF5D8F).withValues(alpha: 0.16),
+              color: AnaSayfaRenkSablonu.birincilAksiyon.withValues(
+                alpha: 0.16,
+              ),
               borderRadius: BorderRadius.circular(14),
             ),
             alignment: Alignment.center,
@@ -371,7 +526,7 @@ class _SiparisOzetiSayfasiState extends State<SiparisOzetiSayfasi> {
                     child: Text(
                       kalem.secenekAdi!,
                       style: const TextStyle(
-                        color: Color(0xFFFFB6CB),
+                        color: AnaSayfaRenkSablonu.metinIkincil,
                         fontWeight: FontWeight.w700,
                       ),
                     ),
@@ -417,7 +572,7 @@ class _SiparisOzetiSayfasiState extends State<SiparisOzetiSayfasi> {
         Text(
           deger,
           style: TextStyle(
-            color: vurgu ? const Color(0xFFFFB6CB) : Colors.white,
+            color: vurgu ? AnaSayfaRenkSablonu.metinIkincil : Colors.white,
             fontSize: vurgu ? 22 : 18,
             fontWeight: FontWeight.w800,
           ),
@@ -436,10 +591,23 @@ class _SiparisOzetiSayfasiState extends State<SiparisOzetiSayfasi> {
       label: Text(etiket),
       onSelected: (_) => widget.viewModel.teslimatTipiSec(teslimatTipi),
       labelStyle: TextStyle(
-        color: secili ? const Color(0xFF140B20) : Colors.white,
+        color: secili ? AnaSayfaRenkSablonu.arkaPlanKoyu : Colors.white,
         fontWeight: FontWeight.w800,
       ),
-      selectedColor: const Color(0xFFFFB6CB),
+      selectedColor: AnaSayfaRenkSablonu.metinIkincil,
+      backgroundColor: Colors.white.withValues(alpha: 0.08),
+      side: BorderSide(color: Colors.white.withValues(alpha: 0.12)),
+    );
+  }
+
+  Widget _hizliKuponCipi(String kuponKodu) {
+    return ActionChip(
+      label: Text(kuponKodu),
+      onPressed: () => _hizliKuponSec(kuponKodu),
+      labelStyle: const TextStyle(
+        color: Colors.white,
+        fontWeight: FontWeight.w700,
+      ),
       backgroundColor: Colors.white.withValues(alpha: 0.08),
       side: BorderSide(color: Colors.white.withValues(alpha: 0.12)),
     );

@@ -12,7 +12,7 @@ void main() {
 
       final String yanit = await useCase('Lisans anahtari nasil girilir?');
 
-      expect(yanit, contains('RST-YYYYMMDD-XXXXXX'));
+      expect(yanit, contains('VP-YYYYMMDD-CCCCCC-XXXXXX'));
     },
   );
 

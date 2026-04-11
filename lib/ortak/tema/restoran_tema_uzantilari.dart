@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:restoran_app/ortak/tema/ana_sayfa_renk_sablonu.dart';
 
 @immutable
 class RestoranTemaRenkleri extends ThemeExtension<RestoranTemaRenkleri> {
@@ -118,18 +119,18 @@ extension RestoranTemaUzantisi on BuildContext {
   RestoranTemaRenkleri get restoranTema {
     return Theme.of(this).extension<RestoranTemaRenkleri>() ??
         const RestoranTemaRenkleri(
-          anaArkaPlan: Color(0xFF110D18),
-          anaArkaPlanIkincil: Color(0xFF1A1324),
-          anaArkaPlanUcuncul: Color(0xFF2B1B3A),
-          popupYuzey: Color(0xFFF1EBF3),
-          popupAltYuzey: Color(0xFFF1EBF3),
-          kartYuzey: Color(0xFFF1EBF3),
-          inceKenar: Color(0xFFE3D6CD),
-          metinBirincilKoyu: Color(0xFF2D2140),
-          metinIkincilKoyu: Color(0xFF6D6079),
-          metinBirincilAcik: Color(0xFFF8F3FB),
-          metinIkincilAcik: Color(0xFFD8CDE3),
-          suruklemeTutamaci: Color(0x806D6079),
+          anaArkaPlan: AnaSayfaRenkSablonu.arkaPlanKoyu,
+          anaArkaPlanIkincil: AnaSayfaRenkSablonu.arkaPlanOrta,
+          anaArkaPlanUcuncul: AnaSayfaRenkSablonu.arkaPlanUst,
+          popupYuzey: AnaSayfaRenkSablonu.panelKoyu,
+          popupAltYuzey: AnaSayfaRenkSablonu.panelYuksek,
+          kartYuzey: AnaSayfaRenkSablonu.panelKoyu,
+          inceKenar: AnaSayfaRenkSablonu.cerceve,
+          metinBirincilKoyu: AnaSayfaRenkSablonu.metinAna,
+          metinIkincilKoyu: AnaSayfaRenkSablonu.metinIkincil,
+          metinBirincilAcik: AnaSayfaRenkSablonu.metinAna,
+          metinIkincilAcik: AnaSayfaRenkSablonu.metinIkincil,
+          suruklemeTutamaci: Color(0x80FFFFFF),
         );
   }
 }

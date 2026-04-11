@@ -34,8 +34,17 @@ import 'package:restoran_app/ozellikler/menu/uygulama/use_case/urun_ekle_use_cas
 import 'package:restoran_app/ozellikler/menu/uygulama/use_case/urun_guncelle_use_case.dart';
 import 'package:restoran_app/ozellikler/menu/uygulama/use_case/urun_sil_use_case.dart';
 import 'package:restoran_app/ozellikler/menu/uygulama/use_case/urunleri_getir_use_case.dart';
+import 'package:restoran_app/ozellikler/odeme_kasa/alan/depolar/odeme_kasa_deposu.dart';
+import 'package:restoran_app/ozellikler/odeme_kasa/uygulama/use_case/kasa_hareketi_ekle_use_case.dart';
+import 'package:restoran_app/ozellikler/odeme_kasa/uygulama/use_case/kasa_ozeti_getir_use_case.dart';
+import 'package:restoran_app/ozellikler/rezervasyon/alan/depolar/rezervasyon_deposu.dart';
+import 'package:restoran_app/ozellikler/rezervasyon/uygulama/use_case/rezervasyon_durumu_guncelle_use_case.dart';
+import 'package:restoran_app/ozellikler/rezervasyon/uygulama/use_case/rezervasyon_ekle_use_case.dart';
+import 'package:restoran_app/ozellikler/rezervasyon/uygulama/use_case/rezervasyon_sil_use_case.dart';
+import 'package:restoran_app/ozellikler/rezervasyon/uygulama/use_case/rezervasyonlari_getir_use_case.dart';
 import 'package:restoran_app/ozellikler/sepet/alan/depolar/sepet_deposu.dart';
 import 'package:restoran_app/ozellikler/sepet/uygulama/use_case/sepete_urun_ekle_use_case.dart';
+import 'package:restoran_app/ozellikler/sepet/uygulama/use_case/sepet_kupon_kodunu_guncelle_use_case.dart';
 import 'package:restoran_app/ozellikler/sepet/uygulama/use_case/sepet_kalemi_guncelle_use_case.dart';
 import 'package:restoran_app/ozellikler/sepet/uygulama/use_case/sepet_kalemi_sil_use_case.dart';
 import 'package:restoran_app/ozellikler/sepet/uygulama/use_case/sepeti_getir_use_case.dart';
@@ -50,10 +59,12 @@ import 'package:restoran_app/ozellikler/siparis/uygulama/servisler/yazici_hedefl
 import 'package:restoran_app/ozellikler/stok/alan/depolar/stok_deposu.dart';
 import 'package:restoran_app/ozellikler/stok/uygulama/use_case/hammadde_ekle_use_case.dart';
 import 'package:restoran_app/ozellikler/stok/uygulama/use_case/hammadde_guncelle_use_case.dart';
+import 'package:restoran_app/ozellikler/stok/uygulama/use_case/hammadde_uyarilarini_getir_use_case.dart';
 import 'package:restoran_app/ozellikler/stok/uygulama/use_case/hammaddeleri_getir_use_case.dart';
 import 'package:restoran_app/ozellikler/stok/uygulama/use_case/receteyi_getir_use_case.dart';
 import 'package:restoran_app/ozellikler/stok/uygulama/use_case/receteyi_kaydet_use_case.dart';
 import 'package:restoran_app/ozellikler/stok/uygulama/use_case/siparise_gore_stok_dus_use_case.dart';
+import 'package:restoran_app/ozellikler/stok/uygulama/use_case/stok_alarm_gecmisini_getir_use_case.dart';
 import 'package:restoran_app/ozellikler/stok/uygulama/use_case/stok_ozeti_getir_use_case.dart';
 import 'package:restoran_app/ozellikler/yonetim/alan/depolar/personel_deposu.dart';
 import 'package:restoran_app/ozellikler/yonetim/alan/depolar/salon_plani_deposu.dart';
@@ -72,6 +83,7 @@ import 'package:restoran_app/ozellikler/yonetim/uygulama/use_case/yazici_ekle_us
 import 'package:restoran_app/ozellikler/yonetim/uygulama/use_case/yazici_guncelle_use_case.dart';
 import 'package:restoran_app/ozellikler/yonetim/uygulama/use_case/yazici_sil_use_case.dart';
 import 'package:restoran_app/ozellikler/yonetim/uygulama/use_case/yazicilari_getir_use_case.dart';
+import 'package:restoran_app/ortak/platform/cihaz_kimligi_saglayici.dart';
 import 'package:restoran_app/ortak/platform/yazici_cikti_platformu.dart';
 import 'package:restoran_app/ortak/veri/veri_kaynagi_tipi.dart';
 import 'package:restoran_app/ortak/veri/veritabani.dart';
@@ -87,6 +99,8 @@ class ServisKaydi {
     _personelDeposu = bagimlilikler.personelDeposu;
     _salonPlaniDeposu = bagimlilikler.salonPlaniDeposu;
     _stokDeposu = bagimlilikler.stokDeposu;
+    _odemeKasaDeposu = bagimlilikler.odemeKasaDeposu;
+    _rezervasyonDeposu = bagimlilikler.rezervasyonDeposu;
     kuryeEntegrasyonYonetimServisi =
         bagimlilikler.kuryeEntegrasyonYonetimServisi;
     veritabani = bagimlilikler.veritabani;
@@ -108,10 +122,12 @@ class ServisKaydi {
     lisansDurumuGetirUseCase = LisansDurumuGetirUseCase(
       _lisansDeposu,
       lisansDogrulayici,
+      cihazKimligiSaglayici,
     );
     lisansAktifEtUseCase = LisansAktifEtUseCase(
       _lisansDeposu,
       lisansDogrulayici,
+      cihazKimligiSaglayici,
     );
     aktifKullaniciGetirUseCase = AktifKullaniciGetirUseCase(_kimlikDeposu);
     girisYapUseCase = GirisYapUseCase(_kimlikDeposu);
@@ -148,6 +164,9 @@ class ServisKaydi {
     urunSilUseCase = UrunSilUseCase(_menuDeposu);
     sepetiGetirUseCase = SepetiGetirUseCase(_sepetDeposu);
     sepeteUrunEkleUseCase = SepeteUrunEkleUseCase(_sepetDeposu);
+    sepetKuponKodunuGuncelleUseCase = SepetKuponKodunuGuncelleUseCase(
+      _sepetDeposu,
+    );
     sepetKalemiGuncelleUseCase = SepetKalemiGuncelleUseCase(_sepetDeposu);
     sepetKalemiSilUseCase = SepetKalemiSilUseCase(_sepetDeposu);
     sepetiTemizleUseCase = SepetiTemizleUseCase(_sepetDeposu);
@@ -179,12 +198,28 @@ class ServisKaydi {
     masaGuncelleUseCase = MasaGuncelleUseCase(_salonPlaniDeposu);
     masaSilUseCase = MasaSilUseCase(_salonPlaniDeposu);
     hammaddeleriGetirUseCase = HammaddeleriGetirUseCase(_stokDeposu);
+    hammaddeleriUyariyaGoreGetirUseCase = HammaddeleriUyariyaGoreGetirUseCase(
+      _stokDeposu,
+    );
     hammaddeEkleUseCase = HammaddeEkleUseCase(_stokDeposu);
     hammaddeGuncelleUseCase = HammaddeGuncelleUseCase(_stokDeposu);
+    stokAlarmGecmisiniGetirUseCase = StokAlarmGecmisiniGetirUseCase(
+      _stokDeposu,
+    );
     receteyiGetirUseCase = ReceteyiGetirUseCase(_stokDeposu);
     receteyiKaydetUseCase = ReceteyiKaydetUseCase(_stokDeposu);
     stokOzetiGetirUseCase = StokOzetiGetirUseCase(_stokDeposu, _menuDeposu);
     sipariseGoreStokDusUseCase = SipariseGoreStokDusUseCase(_stokDeposu);
+    kasaOzetiGetirUseCase = KasaOzetiGetirUseCase(_odemeKasaDeposu);
+    kasaHareketiEkleUseCase = KasaHareketiEkleUseCase(_odemeKasaDeposu);
+    rezervasyonlariGetirUseCase = RezervasyonlariGetirUseCase(
+      _rezervasyonDeposu,
+    );
+    rezervasyonEkleUseCase = RezervasyonEkleUseCase(_rezervasyonDeposu);
+    rezervasyonDurumuGuncelleUseCase = RezervasyonDurumuGuncelleUseCase(
+      _rezervasyonDeposu,
+    );
+    rezervasyonSilUseCase = RezervasyonSilUseCase(_rezervasyonDeposu);
   }
 
   static final ServisKaydi ortak = ServisKaydi._(ServisBagimlilikleri.gercek());
@@ -218,6 +253,8 @@ class ServisKaydi {
   late final PersonelDeposu _personelDeposu;
   late final SalonPlaniDeposu _salonPlaniDeposu;
   late final StokDeposu _stokDeposu;
+  late final OdemeKasaDeposu _odemeKasaDeposu;
+  late final RezervasyonDeposu _rezervasyonDeposu;
   late final RolYetkiPolitikasi _rolYetkiPolitikasi;
   late final AsistanBackendAyarDeposu _asistanBackendAyarDeposu;
   late final AsistanApiIstemcisi _asistanApiIstemcisi;
@@ -252,6 +289,7 @@ class ServisKaydi {
   late final UrunSilUseCase urunSilUseCase;
   late final SepetiGetirUseCase sepetiGetirUseCase;
   late final SepeteUrunEkleUseCase sepeteUrunEkleUseCase;
+  late final SepetKuponKodunuGuncelleUseCase sepetKuponKodunuGuncelleUseCase;
   late final SepetKalemiGuncelleUseCase sepetKalemiGuncelleUseCase;
   late final SepetKalemiSilUseCase sepetKalemiSilUseCase;
   late final SepetiTemizleUseCase sepetiTemizleUseCase;
@@ -274,12 +312,21 @@ class ServisKaydi {
   late final MasaGuncelleUseCase masaGuncelleUseCase;
   late final MasaSilUseCase masaSilUseCase;
   late final HammaddeleriGetirUseCase hammaddeleriGetirUseCase;
+  late final HammaddeleriUyariyaGoreGetirUseCase
+  hammaddeleriUyariyaGoreGetirUseCase;
   late final HammaddeEkleUseCase hammaddeEkleUseCase;
   late final HammaddeGuncelleUseCase hammaddeGuncelleUseCase;
+  late final StokAlarmGecmisiniGetirUseCase stokAlarmGecmisiniGetirUseCase;
   late final ReceteyiGetirUseCase receteyiGetirUseCase;
   late final ReceteyiKaydetUseCase receteyiKaydetUseCase;
   late final StokOzetiGetirUseCase stokOzetiGetirUseCase;
   late final SipariseGoreStokDusUseCase sipariseGoreStokDusUseCase;
+  late final KasaOzetiGetirUseCase kasaOzetiGetirUseCase;
+  late final KasaHareketiEkleUseCase kasaHareketiEkleUseCase;
+  late final RezervasyonlariGetirUseCase rezervasyonlariGetirUseCase;
+  late final RezervasyonEkleUseCase rezervasyonEkleUseCase;
+  late final RezervasyonDurumuGuncelleUseCase rezervasyonDurumuGuncelleUseCase;
+  late final RezervasyonSilUseCase rezervasyonSilUseCase;
 
   Future<bool> islemYetkisiVarMi(IslemYetkisi yetki) {
     return islemYetkisiKontrolEtUseCase(yetki);

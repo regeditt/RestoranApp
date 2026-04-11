@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:restoran_app/ortak/responsive/ekran_boyutu.dart';
 import 'package:restoran_app/ortak/sabitler/uygulama_sabitleri.dart';
+import 'package:restoran_app/ortak/tema/ana_sayfa_renk_sablonu.dart';
 import 'package:restoran_app/ortak/yonlendirme/rota_yapisi.dart';
 import 'package:restoran_app/ozellikler/menu/alan/varliklar/qr_menu_baglami_varligi.dart';
 
@@ -29,13 +30,17 @@ class MusteriMenuUstCubugu extends StatelessWidget {
         gradient: const LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [Color(0xFFC24971), Color(0xFF6F38B8), Color(0xFF2C173F)],
+          colors: [
+            AnaSayfaRenkSablonu.birincilAksiyon,
+            AnaSayfaRenkSablonu.ikincilAksiyon,
+            AnaSayfaRenkSablonu.panelKoyu,
+          ],
         ),
         borderRadius: BorderRadius.circular(26),
         border: Border.all(color: Colors.white.withValues(alpha: 0.10)),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF000000).withValues(alpha: 0.18),
+            color: AnaSayfaRenkSablonu.arkaPlanKoyu.withValues(alpha: 0.18),
             blurRadius: 18,
             offset: const Offset(0, 12),
           ),
@@ -109,7 +114,9 @@ class MusteriMenuUstCubugu extends StatelessWidget {
                       ),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.12),
+                          color: AnaSayfaRenkSablonu.arkaPlanKoyu.withValues(
+                            alpha: 0.12,
+                          ),
                           blurRadius: 10,
                           offset: const Offset(0, 6),
                         ),
@@ -358,7 +365,7 @@ class MusteriMenuUstCubugu extends StatelessWidget {
             border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha: 0.10),
+                color: AnaSayfaRenkSablonu.arkaPlanKoyu.withValues(alpha: 0.10),
                 blurRadius: 10,
                 offset: const Offset(0, 6),
               ),

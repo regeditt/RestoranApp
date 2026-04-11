@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:restoran_app/bagimlilik_enjeksiyonu/servis_kaydi.dart';
+import 'package:restoran_app/ozellikler/kimlik/alan/roller/kullanici_rolu.dart';
 import 'package:restoran_app/ozellikler/kimlik/sunum/viewmodel/giris_secim_viewmodel.dart';
 
 void main() {
@@ -50,19 +51,17 @@ void main() {
   });
 
   test(
-    'GirisSecimViewModel garson modunda sadece giris yap secenegi sunar',
+    'GirisSecimViewModel her modda giris ve hesap olustur secenegi sunar',
     () {
       final GirisSecimViewModel viewModel = GirisSecimViewModel.servisKaydindan(
         ServisKaydi.mock(),
       );
 
-      expect(viewModel.kullanilabilirEkranModlari, const <KimlikEkranModu>[
-        KimlikEkranModu.girisYap,
-      ]);
+      expect(viewModel.kullanilabilirEkranModlari, KimlikEkranModu.values);
 
       viewModel.ekranModuSec(KimlikEkranModu.hesapOlustur);
 
-      expect(viewModel.ekranModu, KimlikEkranModu.girisYap);
+      expect(viewModel.ekranModu, KimlikEkranModu.hesapOlustur);
     },
   );
 
@@ -83,6 +82,27 @@ void main() {
 
       expect(sonuc.basarili, isTrue);
       expect(sonuc.hedef, GirisHedefi.yonetim);
+    },
+  );
+
+  test(
+    'GirisSecimViewModel hesap olusturmada secilen role gore hedef belirler',
+    () async {
+      final GirisSecimViewModel viewModel = GirisSecimViewModel.servisKaydindan(
+        ServisKaydi.mock(),
+      );
+      viewModel.modSec(PersonelGirisModu.yonetici);
+      viewModel.ekranModuSec(KimlikEkranModu.hesapOlustur);
+      viewModel.hesapOlusturmaRoluSec(KullaniciRolu.garson);
+
+      final GirisSecimIslemSonucu sonuc = await viewModel.devamEt(
+        kullaniciAdi: 'garson_yeni',
+        sifre: '123456',
+        adSoyad: 'Yeni Garson',
+      );
+
+      expect(sonuc.basarili, isTrue);
+      expect(sonuc.hedef, GirisHedefi.pos);
     },
   );
 }

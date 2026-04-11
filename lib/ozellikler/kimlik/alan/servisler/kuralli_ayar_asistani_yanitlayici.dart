@@ -24,7 +24,7 @@ class KuralliAyarAsistaniYanitlayici implements AyarAsistaniYanitlayici {
       return 'Bu cihazda kullanici kaydi yoksa giris yaparken hata alirsin. Yonetici rolu ile Hesap olustur modunu acip once hesap olusturabilirsin.';
     }
     if (metin.contains('lisans') || metin.contains('anahtar')) {
-      return 'Lisans anahtari formati RST-YYYYMMDD-XXXXXX. Gecerli anahtari girip Lisansi aktif et butonuna basman yeterli.';
+      return 'Lisans anahtari formati VP-YYYYMMDD-CCCCCC-XXXXXX. Cihaz kodunu lisans olustururken kullanip anahtari girerek aktivasyon yapabilirsin.';
     }
     if (metin.contains('sifre')) {
       return 'Sifreyi dogru role (garson/yonetici) ile dene. Rol farkliysa sistem girise izin vermez.';

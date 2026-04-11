@@ -41,6 +41,10 @@ void main() {
           ),
           isTrue,
         );
+        expect(
+          denetleyici.yetkiliMi(rol: rol, yetki: IslemYetkisi.stokYonetimi),
+          isTrue,
+        );
       }
     });
   });

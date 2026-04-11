@@ -85,7 +85,7 @@ void main() {
       );
 
       final String yanit = await useCase('Lisans');
-      expect(yanit, contains('RST-YYYYMMDD-XXXXXX'));
+      expect(yanit, contains('VP-YYYYMMDD-CCCCCC-XXXXXX'));
     },
   );
 
@@ -110,7 +110,7 @@ void main() {
 
       final String yanit = await useCase('Lisans');
       expect(yanit, contains('AI servisi'));
-      expect(yanit, isNot(contains('RST-YYYYMMDD-XXXXXX')));
+      expect(yanit, isNot(contains('VP-YYYYMMDD-CCCCCC-XXXXXX')));
     },
   );
 }
@@ -138,7 +138,10 @@ class _SahteApiIstemcisi implements AsistanApiIstemcisi {
   String sonYanitIstekApiAnahtari = '';
 
   @override
-  Future<bool> baglantiTestEt(String tabanUrl, {String apiAnahtari = ''}) async {
+  Future<bool> baglantiTestEt(
+    String tabanUrl, {
+    String apiAnahtari = '',
+  }) async {
     sonBaglantiTestApiAnahtari = apiAnahtari;
     return baglantiVar;
   }

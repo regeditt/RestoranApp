@@ -4,10 +4,13 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:http/http.dart' as http;
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:restoran_app/bagimlilik_enjeksiyonu/servis_kaydi.dart';
 import 'package:restoran_app/ortak/bilesenler/suruklenebilir_dialog_kapsayici.dart';
+import 'package:restoran_app/ortak/platform/cihaz_kimligi_saglayici.dart';
 import 'package:restoran_app/ortak/sabitler/uygulama_sabitleri.dart';
+import 'package:restoran_app/ortak/tema/ana_sayfa_renk_sablonu.dart';
 import 'package:restoran_app/ortak/veri/veri_aktarim_servisi.dart';
 import 'package:restoran_app/ozellikler/kimlik/alan/roller/islem_yetkisi.dart';
 import 'package:restoran_app/ozellikler/kimlik/alan/varliklar/asistan_backend_ayar_varligi.dart';
@@ -16,10 +19,12 @@ import 'package:restoran_app/ozellikler/kimlik/sunum/viewmodel/giris_asistani_vi
 import 'package:restoran_app/ozellikler/menu/alan/varliklar/kategori_varligi.dart';
 import 'package:restoran_app/ozellikler/menu/alan/varliklar/qr_menu_karti_varligi.dart';
 import 'package:restoran_app/ozellikler/menu/alan/varliklar/urun_varligi.dart';
+import 'package:restoran_app/ozellikler/lisans/uygulama/servisler/lisans_anahtari_dogrulayici.dart';
 import 'package:restoran_app/ozellikler/menu/uygulama/servisler/qr_menu_baglami_cozumleyici.dart';
 import 'package:restoran_app/ozellikler/menu/uygulama/servisler/qr_menu_pdf_servisi.dart';
 import 'package:restoran_app/ozellikler/siparis/alan/varliklar/kurye_takip_entegrasyon_varliklari.dart';
 import 'package:restoran_app/ozellikler/siparis/uygulama/servisler/kurye_entegrasyon_yonetim_servisi.dart';
+import 'package:restoran_app/ozellikler/stok/alan/enumlar/stok_uyari_filtresi.dart';
 import 'package:restoran_app/ozellikler/stok/alan/varliklar/hammadde_stok_varligi.dart';
 import 'package:restoran_app/ozellikler/stok/alan/varliklar/recete_kalemi_varligi.dart';
 import 'package:restoran_app/ozellikler/yonetim/alan/varliklar/salon_bolumu_varligi.dart';
@@ -28,6 +33,463 @@ import 'package:restoran_app/ozellikler/yonetim/sunum/bilesenler/yonetim_ayarlar
 import 'package:url_launcher/url_launcher.dart';
 
 enum _MenuYedekAktarimKapsami { tumu, sadeceKategoriler, sadeceUrunler }
+
+class _OnlineKanalSaglayiciAyari {
+  const _OnlineKanalSaglayiciAyari({
+    required this.id,
+    required this.ad,
+    required this.aktifMi,
+    required this.webhookYolu,
+    required this.secret,
+  });
+
+  final String id;
+  final String ad;
+  final bool aktifMi;
+  final String webhookYolu;
+  final String secret;
+
+  factory _OnlineKanalSaglayiciAyari.mapten({
+    required Map<String, dynamic> kaynak,
+    required int index,
+  }) {
+    final String varsayilanAd = 'Saglayici ${index + 1}';
+    final String ad = (kaynak['ad'] is String ? kaynak['ad'] as String : '')
+        .trim();
+    final String id = (kaynak['id'] is String ? kaynak['id'] as String : '')
+        .trim();
+    final String webhookYolu =
+        (kaynak['webhookYolu'] is String ? kaynak['webhookYolu'] as String : '')
+            .trim();
+    final String secret =
+        (kaynak['secret'] is String ? kaynak['secret'] as String : '').trim();
+    final bool aktifMi = kaynak['aktifMi'] is bool
+        ? kaynak['aktifMi'] as bool
+        : true;
+    final String sonAd = ad.isEmpty ? varsayilanAd : ad;
+    final String sonId = id.isEmpty ? 'kanal_${index + 1}' : id;
+    final String sonWebhookYolu = webhookYolu.isEmpty
+        ? '/webhook/${_slugYap(sonAd)}'
+        : _webhookYolunuDuzenle(webhookYolu);
+    return _OnlineKanalSaglayiciAyari(
+      id: sonId,
+      ad: sonAd,
+      aktifMi: aktifMi,
+      webhookYolu: sonWebhookYolu,
+      secret: secret,
+    );
+  }
+
+  Map<String, Object?> mapaDonustur() {
+    return <String, Object?>{
+      'id': id,
+      'ad': ad,
+      'aktifMi': aktifMi,
+      'webhookYolu': webhookYolu,
+      'secret': secret,
+    };
+  }
+
+  static String _slugYap(String metin) {
+    final String normalize = metin.trim().toLowerCase().replaceAll(
+      RegExp(r'[^a-z0-9]+'),
+      '-',
+    );
+    final String slug = normalize.replaceAll(RegExp(r'^-+|-+$'), '');
+    return slug.isEmpty ? 'kanal' : slug;
+  }
+
+  static String _webhookYolunuDuzenle(String yol) {
+    final String temiz = yol.trim();
+    if (temiz.isEmpty) {
+      return '/webhook/kanal';
+    }
+    return temiz.startsWith('/') ? temiz : '/$temiz';
+  }
+}
+
+class _OnlineKanalSaglayiciFormu {
+  _OnlineKanalSaglayiciFormu({
+    required this.id,
+    required String ad,
+    required this.aktifMi,
+    required String webhookYolu,
+    required String secret,
+  }) : adDenetleyici = TextEditingController(text: ad),
+       webhookYoluDenetleyici = TextEditingController(text: webhookYolu),
+       secretDenetleyici = TextEditingController(text: secret);
+
+  final String id;
+  final TextEditingController adDenetleyici;
+  final TextEditingController webhookYoluDenetleyici;
+  final TextEditingController secretDenetleyici;
+  bool aktifMi;
+  bool secretGoster = false;
+
+  factory _OnlineKanalSaglayiciFormu.ayardan(_OnlineKanalSaglayiciAyari ayar) {
+    return _OnlineKanalSaglayiciFormu(
+      id: ayar.id,
+      ad: ayar.ad,
+      aktifMi: ayar.aktifMi,
+      webhookYolu: ayar.webhookYolu,
+      secret: ayar.secret,
+    );
+  }
+
+  _OnlineKanalSaglayiciAyari ayaraDonustur() {
+    final String ad = adDenetleyici.text.trim().isEmpty
+        ? 'Yeni Saglayici'
+        : adDenetleyici.text.trim();
+    final String webhook = _OnlineKanalSaglayiciAyari._webhookYolunuDuzenle(
+      webhookYoluDenetleyici.text.trim().isEmpty
+          ? '/webhook/${_OnlineKanalSaglayiciAyari._slugYap(ad)}'
+          : webhookYoluDenetleyici.text.trim(),
+    );
+    return _OnlineKanalSaglayiciAyari(
+      id: id,
+      ad: ad,
+      aktifMi: aktifMi,
+      webhookYolu: webhook,
+      secret: secretDenetleyici.text.trim(),
+    );
+  }
+
+  void dispose() {
+    adDenetleyici.dispose();
+    webhookYoluDenetleyici.dispose();
+    secretDenetleyici.dispose();
+  }
+}
+
+class _OnlineSaglayiciEkleFormSonucu {
+  const _OnlineSaglayiciEkleFormSonucu({
+    required this.ad,
+    required this.webhookYolu,
+    required this.secret,
+    required this.aktifMi,
+  });
+
+  final String ad;
+  final String webhookYolu;
+  final String secret;
+  final bool aktifMi;
+}
+
+class _OnlineSaglayiciEkleFormDialog extends StatefulWidget {
+  const _OnlineSaglayiciEkleFormDialog({
+    required this.baslangicAd,
+    required this.baslangicWebhookYolu,
+    required this.baslangicAktifMi,
+  });
+
+  final String baslangicAd;
+  final String baslangicWebhookYolu;
+  final bool baslangicAktifMi;
+
+  @override
+  State<_OnlineSaglayiciEkleFormDialog> createState() =>
+      _OnlineSaglayiciEkleFormDialogState();
+}
+
+class _OnlineSaglayiciEkleFormDialogState
+    extends State<_OnlineSaglayiciEkleFormDialog> {
+  late final TextEditingController _adDenetleyici;
+  late final TextEditingController _webhookYoluDenetleyici;
+  late final TextEditingController _secretDenetleyici;
+  late bool _aktifMi;
+  bool _secretGoster = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _adDenetleyici = TextEditingController(text: widget.baslangicAd);
+    _webhookYoluDenetleyici = TextEditingController(
+      text: widget.baslangicWebhookYolu,
+    );
+    _secretDenetleyici = TextEditingController();
+    _aktifMi = widget.baslangicAktifMi;
+  }
+
+  @override
+  void dispose() {
+    _adDenetleyici.dispose();
+    _webhookYoluDenetleyici.dispose();
+    _secretDenetleyici.dispose();
+    super.dispose();
+  }
+
+  String get _onizlemeWebhookYolu {
+    final String ad = _adDenetleyici.text.trim();
+    final String webhookYolu = _webhookYoluDenetleyici.text.trim();
+    final String varsayilanWebhookYolu =
+        '/webhook/${_OnlineKanalSaglayiciAyari._slugYap(ad)}';
+    return _OnlineKanalSaglayiciAyari._webhookYolunuDuzenle(
+      webhookYolu.isEmpty ? varsayilanWebhookYolu : webhookYolu,
+    );
+  }
+
+  bool get _kaydetAktif => _adDenetleyici.text.trim().isNotEmpty;
+
+  @override
+  Widget build(BuildContext context) {
+    return SuruklenebilirPopupSablonu(
+      materialKullan: false,
+      child: AlertDialog(
+        title: const Text('Online saglayici ekle'),
+        content: SizedBox(
+          width: 420,
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: <Widget>[
+                TextField(
+                  controller: _adDenetleyici,
+                  decoration: const InputDecoration(
+                    labelText: 'Saglayici adi',
+                    hintText: 'Ornek: Uber Eats',
+                  ),
+                  onChanged: (_) {
+                    setState(() {});
+                  },
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: _webhookYoluDenetleyici,
+                  decoration: const InputDecoration(
+                    labelText: 'Webhook yolu',
+                    hintText: '/webhook/ornek',
+                  ),
+                  onChanged: (_) {
+                    setState(() {});
+                  },
+                ),
+                const SizedBox(height: 8),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    'Onizleme: $_onizlemeWebhookYolu',
+                    style: const TextStyle(color: Color(0xFF6D6079)),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: _secretDenetleyici,
+                  obscureText: !_secretGoster,
+                  decoration: InputDecoration(
+                    labelText: 'Webhook secret',
+                    hintText: 'Imza dogrulama anahtari',
+                    suffixIcon: IconButton(
+                      tooltip: _secretGoster ? 'Secret gizle' : 'Secret goster',
+                      onPressed: () {
+                        setState(() {
+                          _secretGoster = !_secretGoster;
+                        });
+                      },
+                      icon: Icon(
+                        _secretGoster ? Icons.visibility_off : Icons.visibility,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 6),
+                SwitchListTile.adaptive(
+                  contentPadding: EdgeInsets.zero,
+                  title: const Text('Aktif olarak baslat'),
+                  value: _aktifMi,
+                  onChanged: (bool deger) {
+                    setState(() {
+                      _aktifMi = deger;
+                    });
+                  },
+                ),
+              ],
+            ),
+          ),
+        ),
+        actions: <Widget>[
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Vazgec'),
+          ),
+          FilledButton(
+            onPressed: !_kaydetAktif
+                ? null
+                : () {
+                    Navigator.of(context).pop(
+                      _OnlineSaglayiciEkleFormSonucu(
+                        ad: _adDenetleyici.text.trim(),
+                        webhookYolu: _onizlemeWebhookYolu,
+                        secret: _secretDenetleyici.text.trim(),
+                        aktifMi: _aktifMi,
+                      ),
+                    );
+                  },
+            child: const Text('Ekle'),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _OnlineSiparisEntegrasyonAyari {
+  const _OnlineSiparisEntegrasyonAyari({
+    required this.gatewayUrl,
+    required this.saglayicilar,
+  });
+
+  static const String varsayilanGatewayUrl = 'http://127.0.0.1:8787';
+
+  final String gatewayUrl;
+  final List<_OnlineKanalSaglayiciAyari> saglayicilar;
+
+  factory _OnlineSiparisEntegrasyonAyari.varsayilan() {
+    return _OnlineSiparisEntegrasyonAyari(
+      gatewayUrl: varsayilanGatewayUrl,
+      saglayicilar: <_OnlineKanalSaglayiciAyari>[
+        const _OnlineKanalSaglayiciAyari(
+          id: 'yemeksepeti',
+          ad: 'Yemeksepeti',
+          aktifMi: true,
+          webhookYolu: '/webhook/yemeksepeti',
+          secret: '',
+        ),
+        const _OnlineKanalSaglayiciAyari(
+          id: 'getir',
+          ad: 'Getir',
+          aktifMi: true,
+          webhookYolu: '/webhook/getir',
+          secret: '',
+        ),
+        const _OnlineKanalSaglayiciAyari(
+          id: 'trendyol',
+          ad: 'Trendyol',
+          aktifMi: true,
+          webhookYolu: '/webhook/trendyol',
+          secret: '',
+        ),
+      ],
+    );
+  }
+
+  factory _OnlineSiparisEntegrasyonAyari.jsondan(String jsonMetni) {
+    final Object? ham = jsonDecode(jsonMetni);
+    if (ham is! Map<String, dynamic>) {
+      throw const FormatException('Online siparis ayari formati gecersiz.');
+    }
+    final _OnlineSiparisEntegrasyonAyari varsayilan =
+        _OnlineSiparisEntegrasyonAyari.varsayilan();
+    final List<_OnlineKanalSaglayiciAyari> saglayicilar = _saglayicilariCoz(
+      ham,
+      varsayilan.saglayicilar,
+    );
+    return _OnlineSiparisEntegrasyonAyari(
+      gatewayUrl: _stringDeger(ham, 'gatewayUrl', varsayilan.gatewayUrl).trim(),
+      saglayicilar: saglayicilar,
+    );
+  }
+
+  static List<_OnlineKanalSaglayiciAyari> _saglayicilariCoz(
+    Map<String, dynamic> ham,
+    List<_OnlineKanalSaglayiciAyari> varsayilanlar,
+  ) {
+    final Object? hamSaglayicilar = ham['saglayicilar'];
+    if (hamSaglayicilar is List) {
+      final List<_OnlineKanalSaglayiciAyari> sonuc =
+          <_OnlineKanalSaglayiciAyari>[];
+      for (int i = 0; i < hamSaglayicilar.length; i++) {
+        final Object? oge = hamSaglayicilar[i];
+        if (oge is! Map<String, dynamic>) {
+          continue;
+        }
+        sonuc.add(_OnlineKanalSaglayiciAyari.mapten(kaynak: oge, index: i));
+      }
+      if (sonuc.isNotEmpty) {
+        return sonuc;
+      }
+    }
+    return <_OnlineKanalSaglayiciAyari>[
+      _OnlineKanalSaglayiciAyari(
+        id: varsayilanlar[0].id,
+        ad: varsayilanlar[0].ad,
+        aktifMi: _boolDeger(ham, 'yemeksepetiAktif', varsayilanlar[0].aktifMi),
+        webhookYolu: _OnlineKanalSaglayiciAyari._webhookYolunuDuzenle(
+          _stringDeger(
+            ham,
+            'yemeksepetiWebhookYolu',
+            varsayilanlar[0].webhookYolu,
+          ).trim(),
+        ),
+        secret: _stringDeger(
+          ham,
+          'yemeksepetiSecret',
+          varsayilanlar[0].secret,
+        ).trim(),
+      ),
+      _OnlineKanalSaglayiciAyari(
+        id: varsayilanlar[1].id,
+        ad: varsayilanlar[1].ad,
+        aktifMi: _boolDeger(ham, 'getirAktif', varsayilanlar[1].aktifMi),
+        webhookYolu: _OnlineKanalSaglayiciAyari._webhookYolunuDuzenle(
+          _stringDeger(
+            ham,
+            'getirWebhookYolu',
+            varsayilanlar[1].webhookYolu,
+          ).trim(),
+        ),
+        secret: _stringDeger(
+          ham,
+          'getirSecret',
+          varsayilanlar[1].secret,
+        ).trim(),
+      ),
+      _OnlineKanalSaglayiciAyari(
+        id: varsayilanlar[2].id,
+        ad: varsayilanlar[2].ad,
+        aktifMi: _boolDeger(ham, 'trendyolAktif', varsayilanlar[2].aktifMi),
+        webhookYolu: _OnlineKanalSaglayiciAyari._webhookYolunuDuzenle(
+          _stringDeger(
+            ham,
+            'trendyolWebhookYolu',
+            varsayilanlar[2].webhookYolu,
+          ).trim(),
+        ),
+        secret: _stringDeger(
+          ham,
+          'trendyolSecret',
+          varsayilanlar[2].secret,
+        ).trim(),
+      ),
+    ];
+  }
+
+  static String _stringDeger(
+    Map<String, dynamic> kaynak,
+    String anahtar,
+    String varsayilan,
+  ) {
+    final Object? deger = kaynak[anahtar];
+    return deger is String ? deger : varsayilan;
+  }
+
+  static bool _boolDeger(
+    Map<String, dynamic> kaynak,
+    String anahtar,
+    bool varsayilan,
+  ) {
+    final Object? deger = kaynak[anahtar];
+    return deger is bool ? deger : varsayilan;
+  }
+
+  String jsonaDonustur() {
+    return jsonEncode(<String, Object?>{
+      'gatewayUrl': gatewayUrl,
+      'saglayicilar': saglayicilar
+          .map((saglayici) => saglayici.mapaDonustur())
+          .toList(growable: false),
+    });
+  }
+}
 
 class YonetimAyarlariDialog extends StatefulWidget {
   const YonetimAyarlariDialog({
@@ -53,11 +515,15 @@ class YonetimAyarlariDialog extends StatefulWidget {
 
 class _YonetimAyarlariDialogState extends State<YonetimAyarlariDialog> {
   late final KuryeEntegrasyonYonetimServisi _kuryeEntegrasyonServisi;
+  late final LisansAnahtariDogrulayici _lisansDogrulayici;
 
   late List<SalonBolumuVarligi> _salonBolumleri;
   late List<KategoriVarligi> _menuKategorileri;
   late List<UrunVarligi> _menuUrunleri;
   List<HammaddeStokVarligi> _hammaddeler = const <HammaddeStokVarligi>[];
+  List<HammaddeStokVarligi> _stokEkraniHammaddeleri =
+      const <HammaddeStokVarligi>[];
+  StokUyariFiltresi _seciliStokFiltresi = StokUyariFiltresi.tum;
   Map<String, List<ReceteKalemiVarligi>> _urunReceteleri =
       const <String, List<ReceteKalemiVarligi>>{};
   List<KuryeTakipSaglayiciVarligi> _kuryeSaglayicilari =
@@ -76,30 +542,57 @@ class _YonetimAyarlariDialogState extends State<YonetimAyarlariDialog> {
   bool _asistanBaglantiTestSuruyor = false;
   String _asistanBaglantiDurumu =
       'Chatbot backend URL tanimlanmadi. Sohbet yerel modda calisir.';
+  static const String _onlineSiparisAyarAnahtari =
+      'online_siparis_entegrasyon_v1';
+  final TextEditingController _onlineGatewayUrlDenetleyici =
+      TextEditingController();
+  List<_OnlineKanalSaglayiciFormu> _onlineSaglayiciFormlari =
+      <_OnlineKanalSaglayiciFormu>[];
+  bool _onlineAyarKaydediliyor = false;
+  bool _onlineBaglantiTestSuruyor = false;
+  String _onlineDurumMesaji = 'Online siparis entegrasyon ayarlari yukleniyor.';
+  final TextEditingController _lisansCihazKoduDenetleyici =
+      TextEditingController();
+  DateTime _lisansGecerlilikTarihi = DateTime.now().add(
+    const Duration(days: 365),
+  );
+  String _uretilenLisansAnahtari = '';
+  String _lisansUretimDurumu =
+      'Cihaz kodunu gir, gecerlilik tarihini sec ve lisansi uret.';
+  static const bool _dagiticiModuAktif = UygulamaSabitleri.dagiticiModu;
 
   @override
   void initState() {
     super.initState();
     _kuryeEntegrasyonServisi =
         widget.servisKaydi.kuryeEntegrasyonYonetimServisi;
+    _lisansDogrulayici = const LisansAnahtariDogrulayici();
+    _lisansCihazKoduDenetleyici.text = cihazKimligiSaglayici.cihazKoduGetir();
     _salonBolumleri = widget.salonBolumleri;
     _menuKategorileri = widget.menuKategorileri;
     _menuUrunleri = widget.menuUrunleri;
     _stokVerileriniYukle();
     _kuryeEntegrasyonVerileriniYukle();
     _asistanBackendAyariniYukle();
+    _onlineSiparisEntegrasyonAyariniYukle();
   }
 
   @override
   void dispose() {
     _asistanBackendUrlDenetleyici.dispose();
     _asistanApiAnahtariDenetleyici.dispose();
+    _onlineGatewayUrlDenetleyici.dispose();
+    _onlineSaglayiciFormlariniTemizle();
+    _lisansCihazKoduDenetleyici.dispose();
     super.dispose();
   }
 
   Future<void> _stokVerileriniYukle() async {
     final List<HammaddeStokVarligi> hammaddeler = await widget.servisKaydi
         .hammaddeleriGetirUseCase();
+    final List<HammaddeStokVarligi> stokEkraniHammaddeleri = await widget
+        .servisKaydi
+        .hammaddeleriUyariyaGoreGetirUseCase(filtre: _seciliStokFiltresi);
     final Map<String, List<ReceteKalemiVarligi>> urunReceteleri =
         await _urunReceteleriniYukle(_menuUrunleri);
     if (!mounted) {
@@ -107,6 +600,7 @@ class _YonetimAyarlariDialogState extends State<YonetimAyarlariDialog> {
     }
     setState(() {
       _hammaddeler = hammaddeler;
+      _stokEkraniHammaddeleri = stokEkraniHammaddeleri;
       _urunReceteleri = urunReceteleri;
     });
   }
@@ -206,6 +700,243 @@ class _YonetimAyarlariDialogState extends State<YonetimAyarlariDialog> {
     });
   }
 
+  Future<void> _onlineSiparisEntegrasyonAyariniYukle() async {
+    final _OnlineSiparisEntegrasyonAyari varsayilanAyar =
+        _OnlineSiparisEntegrasyonAyari.varsayilan();
+    final bool sqliteAktif = widget.servisKaydi.veritabani != null;
+    _OnlineSiparisEntegrasyonAyari ayar = varsayilanAyar;
+    String durumMesaji = sqliteAktif
+        ? 'Kayitli online siparis ayarlari yuklendi.'
+        : 'SQLite kapali oldugu icin online siparis ayarlari sadece bu oturumda kalir.';
+    if (sqliteAktif) {
+      try {
+        final String? jsonAyar = await widget.servisKaydi.veritabani!.ayarOku(
+          _onlineSiparisAyarAnahtari,
+        );
+        if (jsonAyar == null || jsonAyar.trim().isEmpty) {
+          durumMesaji =
+              'Kayitli ayar bulunamadi. Varsayilan degerler yuklendi.';
+        } else {
+          ayar = _OnlineSiparisEntegrasyonAyari.jsondan(jsonAyar);
+        }
+      } catch (_) {
+        ayar = varsayilanAyar;
+        durumMesaji =
+            'Kayitli ayarlar okunamadi. Varsayilan degerlerle devam ediliyor.';
+      }
+    }
+    if (!mounted) {
+      return;
+    }
+    setState(() {
+      _onlineGatewayUrlDenetleyici.text = ayar.gatewayUrl;
+      _onlineSaglayiciFormlariniTemizle();
+      _onlineSaglayiciFormlari = ayar.saglayicilar
+          .map(_OnlineKanalSaglayiciFormu.ayardan)
+          .toList();
+      _onlineDurumMesaji = durumMesaji;
+    });
+  }
+
+  void _onlineSaglayiciFormlariniTemizle() {
+    for (final _OnlineKanalSaglayiciFormu form in _onlineSaglayiciFormlari) {
+      form.dispose();
+    }
+    _onlineSaglayiciFormlari = <_OnlineKanalSaglayiciFormu>[];
+  }
+
+  _OnlineKanalSaglayiciFormu _onlineYeniSaglayiciFormu({
+    String? ad,
+    bool? aktifMi,
+    String? webhookYolu,
+    String? secret,
+  }) {
+    final int sira = _onlineSaglayiciFormlari.length + 1;
+    final String sonAd = (ad ?? '').trim().isEmpty
+        ? 'Yeni Saglayici $sira'
+        : ad!.trim();
+    final String sonWebhookYolu =
+        _OnlineKanalSaglayiciAyari._webhookYolunuDuzenle(
+          (webhookYolu ?? '').trim().isEmpty
+              ? '/webhook/${_OnlineKanalSaglayiciAyari._slugYap(sonAd)}'
+              : webhookYolu!.trim(),
+        );
+    return _OnlineKanalSaglayiciFormu(
+      id: 'kanal_${DateTime.now().microsecondsSinceEpoch}',
+      ad: sonAd,
+      aktifMi: aktifMi ?? true,
+      webhookYolu: sonWebhookYolu,
+      secret: secret?.trim() ?? '',
+    );
+  }
+
+  Future<void> _onlineSaglayiciEkle() async {
+    final int sira = _onlineSaglayiciFormlari.length + 1;
+    final String varsayilanAd = 'Yeni Saglayici $sira';
+    final _OnlineSaglayiciEkleFormSonucu? sonuc =
+        await showDialog<_OnlineSaglayiciEkleFormSonucu>(
+          context: context,
+          builder: (BuildContext context) => _OnlineSaglayiciEkleFormDialog(
+            baslangicAd: varsayilanAd,
+            baslangicWebhookYolu:
+                '/webhook/${_OnlineKanalSaglayiciAyari._slugYap(varsayilanAd)}',
+            baslangicAktifMi: true,
+          ),
+        );
+    if (sonuc == null || !mounted) {
+      return;
+    }
+    setState(() {
+      _onlineSaglayiciFormlari = <_OnlineKanalSaglayiciFormu>[
+        ..._onlineSaglayiciFormlari,
+        _onlineYeniSaglayiciFormu(
+          ad: sonuc.ad,
+          aktifMi: sonuc.aktifMi,
+          webhookYolu: sonuc.webhookYolu,
+          secret: sonuc.secret,
+        ),
+      ];
+    });
+  }
+
+  void _onlineSaglayiciSil(_OnlineKanalSaglayiciFormu form) {
+    setState(() {
+      _onlineSaglayiciFormlari = _onlineSaglayiciFormlari
+          .where((mevcut) => mevcut.id != form.id)
+          .toList();
+      form.dispose();
+    });
+  }
+
+  _OnlineSiparisEntegrasyonAyari _onlineAyarModeliniOlustur() {
+    return _OnlineSiparisEntegrasyonAyari(
+      gatewayUrl: _onlineGatewayUrlDenetleyici.text.trim(),
+      saglayicilar: _onlineSaglayiciFormlari
+          .map((form) => form.ayaraDonustur())
+          .toList(growable: false),
+    );
+  }
+
+  Future<void> _onlineSiparisEntegrasyonAyariniKaydet() async {
+    if (_onlineSaglayiciFormlari.isEmpty) {
+      setState(() {
+        _onlineDurumMesaji =
+            'Kaydetmeden once en az bir online saglayici eklemelisin.';
+      });
+      return;
+    }
+    final bool sqliteAktif = widget.servisKaydi.veritabani != null;
+    if (!sqliteAktif) {
+      setState(() {
+        _onlineDurumMesaji =
+            'SQLite kapali oldugu icin ayarlar kalici saklanamadi.';
+      });
+      return;
+    }
+    setState(() {
+      _onlineAyarKaydediliyor = true;
+      _onlineDurumMesaji = 'Ayarlar kaydediliyor...';
+    });
+    bool kayitBasarili = true;
+    try {
+      final _OnlineSiparisEntegrasyonAyari ayar = _onlineAyarModeliniOlustur();
+      await widget.servisKaydi.veritabani!.ayarYaz(
+        _onlineSiparisAyarAnahtari,
+        ayar.jsonaDonustur(),
+      );
+    } catch (_) {
+      kayitBasarili = false;
+    }
+    if (!mounted) {
+      return;
+    }
+    setState(() {
+      _onlineAyarKaydediliyor = false;
+      _onlineDurumMesaji = kayitBasarili
+          ? 'Online siparis entegrasyon ayarlari kaydedildi.'
+          : 'Kaydetme sirasinda hata olustu. Tekrar deneyebilirsin.';
+    });
+  }
+
+  Future<void> _onlineSiparisGatewayBaglantisiniTestEt() async {
+    final String tabanUrl = _onlineGatewayUrlDenetleyici.text.trim();
+    final Uri? url = Uri.tryParse(tabanUrl);
+    if (tabanUrl.isEmpty ||
+        url == null ||
+        !url.hasScheme ||
+        url.host.trim().isEmpty) {
+      setState(() {
+        _onlineDurumMesaji =
+            'Gateway URL gecersiz. Ornek: http://127.0.0.1:8787';
+      });
+      return;
+    }
+    setState(() {
+      _onlineBaglantiTestSuruyor = true;
+      _onlineDurumMesaji = 'Gateway baglantisi test ediliyor...';
+    });
+    String durumMesaji;
+    try {
+      final Uri saglikUrl = url.resolve('/health');
+      final http.Response yanit = await http
+          .get(saglikUrl)
+          .timeout(const Duration(seconds: 7));
+      durumMesaji = yanit.statusCode == 200
+          ? 'Gateway baglantisi basarili: ${saglikUrl.toString()}'
+          : 'Gateway yaniti alindi fakat durum kodu ${yanit.statusCode}.';
+    } catch (_) {
+      durumMesaji =
+          'Gateway baglantisi basarisiz. Adresi ve gateway servisinin calistigini kontrol et.';
+    }
+    if (!mounted) {
+      return;
+    }
+    setState(() {
+      _onlineBaglantiTestSuruyor = false;
+      _onlineDurumMesaji = durumMesaji;
+    });
+  }
+
+  String _onlineWebhookTamAdresi(String webhookYolu) {
+    final String tabanUrl = _onlineGatewayUrlDenetleyici.text.trim();
+    if (tabanUrl.isEmpty) {
+      return webhookYolu;
+    }
+    final Uri? url = Uri.tryParse(tabanUrl);
+    if (url == null || !url.hasScheme || url.host.trim().isEmpty) {
+      return '$tabanUrl${webhookYolu.startsWith('/') ? '' : '/'}$webhookYolu';
+    }
+    final String normalizedPath = webhookYolu.startsWith('/')
+        ? webhookYolu
+        : '/$webhookYolu';
+    return url.resolve(normalizedPath).toString();
+  }
+
+  Future<void> _onlineWebhookAdresleriniKopyala() async {
+    if (_onlineSaglayiciFormlari.isEmpty) {
+      setState(() {
+        _onlineDurumMesaji =
+            'Kopyalamak icin once en az bir online saglayici eklemelisin.';
+      });
+      return;
+    }
+    final List<String> satirlar = _onlineSaglayiciFormlari.map((form) {
+      final String ad = form.adDenetleyici.text.trim().isEmpty
+          ? 'Saglayici'
+          : form.adDenetleyici.text.trim();
+      final String webhookYolu = form.webhookYoluDenetleyici.text.trim();
+      return '$ad: ${_onlineWebhookTamAdresi(webhookYolu)}';
+    }).toList();
+    final String metin = satirlar.join('\n');
+    await Clipboard.setData(ClipboardData(text: metin));
+    if (!mounted) {
+      return;
+    }
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Webhook adresleri kopyalandi.')),
+    );
+  }
+
   Future<Map<String, List<ReceteKalemiVarligi>>> _urunReceteleriniYukle(
     List<UrunVarligi> urunler,
   ) async {
@@ -229,6 +960,9 @@ class _YonetimAyarlariDialogState extends State<YonetimAyarlariDialog> {
         .urunleriGetirUseCase();
     final List<HammaddeStokVarligi> hammaddeler = await widget.servisKaydi
         .hammaddeleriGetirUseCase();
+    final List<HammaddeStokVarligi> stokEkraniHammaddeleri = await widget
+        .servisKaydi
+        .hammaddeleriUyariyaGoreGetirUseCase(filtre: _seciliStokFiltresi);
     final Map<String, List<ReceteKalemiVarligi>> urunReceteleri =
         await _urunReceteleriniYukle(menuUrunleri);
     final List<KuryeTakipSaglayiciVarligi> saglayicilar =
@@ -245,9 +979,28 @@ class _YonetimAyarlariDialogState extends State<YonetimAyarlariDialog> {
       _menuKategorileri = menuKategorileri;
       _menuUrunleri = menuUrunleri;
       _hammaddeler = hammaddeler;
+      _stokEkraniHammaddeleri = stokEkraniHammaddeleri;
       _urunReceteleri = urunReceteleri;
       _kuryeSaglayicilari = saglayicilar;
       _kuryeEslesmeleri = eslesmeler;
+    });
+  }
+
+  Future<void> _stokFiltresiSec(StokUyariFiltresi filtre) async {
+    if (_seciliStokFiltresi == filtre) {
+      return;
+    }
+    setState(() {
+      _seciliStokFiltresi = filtre;
+    });
+    final List<HammaddeStokVarligi> stokEkraniHammaddeleri = await widget
+        .servisKaydi
+        .hammaddeleriUyariyaGoreGetirUseCase(filtre: filtre);
+    if (!mounted) {
+      return;
+    }
+    setState(() {
+      _stokEkraniHammaddeleri = stokEkraniHammaddeleri;
     });
   }
 
@@ -831,6 +1584,16 @@ class _YonetimAyarlariDialogState extends State<YonetimAyarlariDialog> {
   }
 
   Future<void> _hammaddeEkle() async {
+    final bool yetkili = await _yetkiyiDogrula(
+      IslemYetkisi.stokYonetimi,
+      hataMesaji: 'Stok yonetimi yetkin bulunmuyor.',
+    );
+    if (!yetkili) {
+      return;
+    }
+    if (!mounted) {
+      return;
+    }
     final HammaddeFormSonucu? sonuc = await showDialog<HammaddeFormSonucu>(
       context: context,
       builder: (BuildContext context) => const HammaddeFormDialog(),
@@ -844,6 +1607,7 @@ class _YonetimAyarlariDialogState extends State<YonetimAyarlariDialog> {
         ad: sonuc.ad,
         birim: sonuc.birim,
         mevcutMiktar: sonuc.mevcutMiktar,
+        uyariEsigi: sonuc.uyariEsigi,
         kritikEsik: sonuc.kritikEsik,
         birimMaliyet: sonuc.birimMaliyet,
       ),
@@ -852,6 +1616,16 @@ class _YonetimAyarlariDialogState extends State<YonetimAyarlariDialog> {
   }
 
   Future<void> _hammaddeDuzenle(HammaddeStokVarligi hammadde) async {
+    final bool yetkili = await _yetkiyiDogrula(
+      IslemYetkisi.stokYonetimi,
+      hataMesaji: 'Stok duzenleme yetkin bulunmuyor.',
+    );
+    if (!yetkili) {
+      return;
+    }
+    if (!mounted) {
+      return;
+    }
     final HammaddeFormSonucu? sonuc = await showDialog<HammaddeFormSonucu>(
       context: context,
       builder: (BuildContext context) =>
@@ -865,6 +1639,7 @@ class _YonetimAyarlariDialogState extends State<YonetimAyarlariDialog> {
         ad: sonuc.ad,
         birim: sonuc.birim,
         mevcutMiktar: sonuc.mevcutMiktar,
+        uyariEsigi: sonuc.uyariEsigi,
         kritikEsik: sonuc.kritikEsik,
         birimMaliyet: sonuc.birimMaliyet,
       ),
@@ -1644,17 +2419,8 @@ class _YonetimAyarlariDialogState extends State<YonetimAyarlariDialog> {
               kapsamDegisti(deger);
             }
           },
-          decoration: InputDecoration(
-            filled: true,
-            fillColor: const Color(0xFFF8F5FB),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide.none,
-            ),
-            contentPadding: const EdgeInsets.symmetric(
-              horizontal: 12,
-              vertical: 10,
-            ),
+          decoration: const InputDecoration(
+            contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
           ),
         ),
       ],
@@ -1873,19 +2639,15 @@ class _YonetimAyarlariDialogState extends State<YonetimAyarlariDialog> {
             decoration: const InputDecoration(
               labelText: 'Backend URL',
               hintText: 'Ornek: https://api.ornek.com',
-              border: OutlineInputBorder(),
-              isDense: true,
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 12),
           TextField(
             controller: _asistanApiAnahtariDenetleyici,
             obscureText: !_asistanApiAnahtariGoster,
             decoration: InputDecoration(
               labelText: 'API anahtari',
               hintText: 'Ornek: sk-canli-anahtar',
-              border: const OutlineInputBorder(),
-              isDense: true,
               suffixIcon: IconButton(
                 tooltip: _asistanApiAnahtariGoster
                     ? 'Anahtari gizle'
@@ -1903,7 +2665,7 @@ class _YonetimAyarlariDialogState extends State<YonetimAyarlariDialog> {
               ),
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 12),
           if (_asistanAyarKaydediliyor || _asistanBaglantiTestSuruyor)
             const Padding(
               padding: EdgeInsets.only(bottom: 8),
@@ -1919,6 +2681,421 @@ class _YonetimAyarlariDialogState extends State<YonetimAyarlariDialog> {
           Text(
             _asistanBaglantiDurumu,
             style: const TextStyle(color: Color(0xFF6D6079)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _onlineKanalAyarKarti({
+    required _OnlineKanalSaglayiciFormu form,
+    required VoidCallback saglayiciSil,
+  }) {
+    final String baslik = form.adDenetleyici.text.trim().isEmpty
+        ? 'Yeni saglayici'
+        : form.adDenetleyici.text.trim();
+    final String webhookBaslikDegeri = _onlineWebhookTamAdresi(
+      form.webhookYoluDenetleyici.text.trim(),
+    );
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(
+          color: form.aktifMi
+              ? const Color(0xFFB9F2DC)
+              : const Color(0xFFE8E0F0),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          Row(
+            children: <Widget>[
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    Text(
+                      baslik,
+                      style: const TextStyle(fontWeight: FontWeight.w900),
+                    ),
+                    const SizedBox(height: 2),
+                    const Text(
+                      'Webhook siparis saglayici ayari',
+                      style: TextStyle(color: Color(0xFF6D6079)),
+                    ),
+                  ],
+                ),
+              ),
+              Switch.adaptive(
+                value: form.aktifMi,
+                onChanged: (bool deger) {
+                  setState(() {
+                    form.aktifMi = deger;
+                  });
+                },
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          TextField(
+            controller: form.adDenetleyici,
+            decoration: const InputDecoration(
+              labelText: 'Saglayici adi',
+              hintText: 'Ornek: UberEats',
+            ),
+            onChanged: (_) {
+              setState(() {});
+            },
+          ),
+          const SizedBox(height: 8),
+          TextField(
+            controller: form.webhookYoluDenetleyici,
+            decoration: const InputDecoration(
+              labelText: 'Webhook yolu',
+              hintText: '/webhook/ornek',
+            ),
+            onChanged: (_) {
+              setState(() {});
+            },
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Tam adres: $webhookBaslikDegeri',
+            style: const TextStyle(
+              color: Color(0xFF6D6079),
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: 8),
+          TextField(
+            controller: form.secretDenetleyici,
+            obscureText: !form.secretGoster,
+            decoration: InputDecoration(
+              labelText: 'Webhook secret',
+              hintText: 'Imza dogrulama anahtari',
+              suffixIcon: IconButton(
+                tooltip: form.secretGoster ? 'Secret gizle' : 'Secret goster',
+                onPressed: () {
+                  setState(() {
+                    form.secretGoster = !form.secretGoster;
+                  });
+                },
+                icon: Icon(
+                  form.secretGoster ? Icons.visibility_off : Icons.visibility,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 8),
+          Align(
+            alignment: Alignment.centerRight,
+            child: TextButton.icon(
+              onPressed: saglayiciSil,
+              icon: const Icon(Icons.delete_outline_rounded),
+              label: const Text('Saglayiciyi sil'),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _onlineSiparisEntegrasyonKarti() {
+    return AyarlarKarti(
+      baslik: 'Online siparis entegrasyonlari',
+      aciklama:
+          'Saglayicilari dinamik ekle/sil; yarin yeni bir platform geldiginde kod degistirmeden ekleyebil.',
+      eylem: Wrap(
+        spacing: 8,
+        runSpacing: 8,
+        children: <Widget>[
+          FilledButton.icon(
+            onPressed: (_onlineAyarKaydediliyor || _onlineBaglantiTestSuruyor)
+                ? null
+                : _onlineSiparisEntegrasyonAyariniKaydet,
+            icon: const Icon(Icons.save_rounded),
+            label: const Text('Kaydet'),
+          ),
+          FilledButton.tonalIcon(
+            onPressed: (_onlineAyarKaydediliyor || _onlineBaglantiTestSuruyor)
+                ? null
+                : _onlineSiparisGatewayBaglantisiniTestEt,
+            icon: const Icon(Icons.network_check_rounded),
+            label: const Text('Gateway test et'),
+          ),
+          FilledButton.tonalIcon(
+            onPressed: (_onlineAyarKaydediliyor || _onlineBaglantiTestSuruyor)
+                ? null
+                : _onlineSaglayiciEkle,
+            icon: const Icon(Icons.add_link_rounded),
+            label: const Text('Saglayici ekle'),
+          ),
+          FilledButton.tonalIcon(
+            onPressed: _onlineWebhookAdresleriniKopyala,
+            icon: const Icon(Icons.copy_rounded),
+            label: const Text('Webhook adresleri'),
+          ),
+        ],
+      ),
+      child: ListView(
+        padding: const EdgeInsets.only(top: 8),
+        children: <Widget>[
+          TextField(
+            controller: _onlineGatewayUrlDenetleyici,
+            decoration: const InputDecoration(
+              labelText: 'Gateway URL',
+              hintText: 'Ornek: http://127.0.0.1:8787',
+            ),
+          ),
+          const SizedBox(height: 12),
+          if (_onlineSaglayiciFormlari.isEmpty)
+            const Padding(
+              padding: EdgeInsets.only(bottom: 8),
+              child: Text(
+                'Henuz saglayici eklenmedi. "Saglayici ekle" ile yeni kanal olustur.',
+                style: TextStyle(color: Color(0xFF6D6079)),
+              ),
+            ),
+          ..._onlineSaglayiciFormlari.map((form) {
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 10),
+              child: _onlineKanalAyarKarti(
+                form: form,
+                saglayiciSil: () => _onlineSaglayiciSil(form),
+              ),
+            );
+          }),
+          const SizedBox(height: 12),
+          if (_onlineAyarKaydediliyor || _onlineBaglantiTestSuruyor)
+            const Padding(
+              padding: EdgeInsets.only(bottom: 8),
+              child: Chip(
+                avatar: SizedBox(
+                  width: 14,
+                  height: 14,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                ),
+                label: Text('Islem suruyor'),
+              ),
+            ),
+          Text(
+            _onlineDurumMesaji,
+            style: const TextStyle(color: Color(0xFF6D6079)),
+          ),
+          const SizedBox(height: 12),
+          const Text(
+            'Not: Webhook imza dogrulamasi icin her platformun secret degerini gateway ile ayni tutmalisin.',
+            style: TextStyle(color: Color(0xFF6D6079), height: 1.4),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _lisansGecerlilikTarihiSec() async {
+    final DateTime simdi = DateTime.now();
+    final DateTime? secilen = await showDatePicker(
+      context: context,
+      initialDate: _lisansGecerlilikTarihi.isBefore(simdi)
+          ? simdi
+          : _lisansGecerlilikTarihi,
+      firstDate: DateTime(simdi.year - 1, 1, 1),
+      lastDate: DateTime(simdi.year + 10, 12, 31),
+    );
+    if (secilen == null || !mounted) {
+      return;
+    }
+    setState(() {
+      _lisansGecerlilikTarihi = secilen;
+    });
+  }
+
+  void _lisansAnahtariUret() {
+    final String cihazKodu = _lisansDogrulayici.cihazKoduDuzenle(
+      _lisansCihazKoduDenetleyici.text,
+    );
+    try {
+      final String lisansAnahtari = _lisansDogrulayici.lisansAnahtariOlustur(
+        _lisansGecerlilikTarihi,
+        cihazKodu: cihazKodu,
+      );
+      setState(() {
+        _lisansCihazKoduDenetleyici.text = cihazKodu;
+        _uretilenLisansAnahtari = lisansAnahtari;
+        _lisansUretimDurumu = 'Lisans anahtari hazir.';
+      });
+    } on ArgumentError catch (hata) {
+      setState(() {
+        _uretilenLisansAnahtari = '';
+        _lisansUretimDurumu = '${hata.message}';
+      });
+    }
+  }
+
+  Future<void> _lisansAnahtariniKopyala() async {
+    if (_uretilenLisansAnahtari.trim().isEmpty) {
+      return;
+    }
+    await Clipboard.setData(ClipboardData(text: _uretilenLisansAnahtari));
+    if (!mounted) {
+      return;
+    }
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Lisans anahtari kopyalandi.')),
+    );
+  }
+
+  Widget _lisansSekmesiIcerigi() {
+    return AyarlarKarti(
+      baslik: 'Lisans uretim paneli',
+      aciklama:
+          'Musteriden gelen cihaz kodu ve gecerlilik tarihiyle lisans anahtari uret.',
+      eylem: Wrap(
+        spacing: 8,
+        runSpacing: 8,
+        children: <Widget>[
+          FilledButton.icon(
+            onPressed: _lisansAnahtariUret,
+            icon: const Icon(Icons.key_rounded),
+            label: const Text('Lisans uret'),
+          ),
+          FilledButton.tonalIcon(
+            onPressed: _lisansGecerlilikTarihiSec,
+            icon: const Icon(Icons.event_rounded),
+            label: const Text('Tarih sec'),
+          ),
+          FilledButton.tonalIcon(
+            onPressed: () {
+              setState(() {
+                _lisansCihazKoduDenetleyici.text = cihazKimligiSaglayici
+                    .cihazKoduGetir();
+              });
+            },
+            icon: const Icon(Icons.computer_rounded),
+            label: const Text('Bu cihaz kodu'),
+          ),
+          if (_uretilenLisansAnahtari.isNotEmpty)
+            FilledButton.tonalIcon(
+              onPressed: _lisansAnahtariniKopyala,
+              icon: const Icon(Icons.copy_rounded),
+              label: const Text('Anahtari kopyala'),
+            ),
+        ],
+      ),
+      child: ListView(
+        children: <Widget>[
+          TextField(
+            controller: _lisansCihazKoduDenetleyici,
+            textCapitalization: TextCapitalization.characters,
+            inputFormatters: <TextInputFormatter>[
+              FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z0-9]')),
+            ],
+            decoration: const InputDecoration(
+              labelText: 'Cihaz kodu',
+              hintText: 'Ornek: A1B2C3',
+            ),
+          ),
+          const SizedBox(height: 12),
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: const Color(0xFFE4D8EE)),
+            ),
+            child: Row(
+              children: <Widget>[
+                const Icon(Icons.calendar_month_rounded, size: 18),
+                const SizedBox(width: 8),
+                Text(
+                  'Gecerlilik: ${_tarihiEtiketle(_lisansGecerlilikTarihi)}',
+                  style: const TextStyle(fontWeight: FontWeight.w700),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 12),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: const Color(0xFFFDFBFE),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: const Color(0xFFE4D8EE)),
+            ),
+            child: SelectableText(
+              _uretilenLisansAnahtari.isEmpty
+                  ? 'Uretilen lisans anahtari burada gorunur.'
+                  : _uretilenLisansAnahtari,
+              style: TextStyle(
+                color: _uretilenLisansAnahtari.isEmpty
+                    ? const Color(0xFF8C7A99)
+                    : const Color(0xFF22162C),
+                fontWeight: FontWeight.w700,
+                fontFamily: 'monospace',
+              ),
+            ),
+          ),
+          const SizedBox(height: 12),
+          Text(
+            _lisansUretimDurumu,
+            style: const TextStyle(color: Color(0xFF6D6079)),
+          ),
+          const SizedBox(height: 12),
+          const Text(
+            'Not: Musteri lisans ekranindan cihaz kodunu kopyalayip sana iletmeli. '
+            'Anahtar formati VP-YYYYMMDD-CCCCCC-XXXXXX olacak.',
+            style: TextStyle(color: Color(0xFF6D6079), height: 1.4),
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _tarihiEtiketle(DateTime tarih) {
+    return '${tarih.year.toString().padLeft(4, '0')}-'
+        '${tarih.month.toString().padLeft(2, '0')}-'
+        '${tarih.day.toString().padLeft(2, '0')}';
+  }
+
+  Widget _entegrasyonSekmesiIcerigi() {
+    const Color altSekmeArkaPlanRengi = Color(0xFFF4EEF8);
+    final Color altSekmeKontrastRengi =
+        AnaSayfaRenkSablonu.kontrastliMetinRengi(altSekmeArkaPlanRengi);
+    return DefaultTabController(
+      length: 3,
+      child: Column(
+        children: <Widget>[
+          Container(
+            decoration: BoxDecoration(
+              color: altSekmeArkaPlanRengi,
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: TabBar(
+              labelColor: AnaSayfaRenkSablonu.birincilAksiyon,
+              unselectedLabelColor: altSekmeKontrastRengi.withValues(
+                alpha: 0.82,
+              ),
+              indicatorColor: AnaSayfaRenkSablonu.birincilAksiyon,
+              tabs: const <Widget>[
+                Tab(text: 'Chatbox'),
+                Tab(text: 'Kurye'),
+                Tab(text: 'Online Siparis'),
+              ],
+            ),
+          ),
+          const SizedBox(height: 12),
+          Expanded(
+            child: TabBarView(
+              children: <Widget>[
+                _chatbotEntegrasyonKarti(),
+                _kuryeEntegrasyonKarti(),
+                _onlineSiparisEntegrasyonKarti(),
+              ],
+            ),
           ),
         ],
       ),
@@ -2015,238 +3192,293 @@ class _YonetimAyarlariDialogState extends State<YonetimAyarlariDialog> {
 
   @override
   Widget build(BuildContext context) {
-    return DefaultTabController(
-      length: 5,
-      initialIndex: widget.baslangicSekmesi,
-      child: SuruklenebilirPopupSablonu(
-        materialKullan: false,
-        tutamacUstOfset: 140,
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Center(
-            child: Material(
-              color: Theme.of(context).colorScheme.surface,
-              borderRadius: BorderRadius.circular(28),
-              clipBehavior: Clip.antiAlias,
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(
-                  maxWidth: 1120,
-                  maxHeight: 760,
+    const Color sekmeArkaPlanRengi = Color(0xFFF4EEF8);
+    final Color sekmeKontrastRengi = AnaSayfaRenkSablonu.kontrastliMetinRengi(
+      sekmeArkaPlanRengi,
+    );
+    final ThemeData temelTema = Theme.of(context);
+    const Color ayarlarInputDolguRengi = Color(0xFFFAF8FD);
+    const Color ayarlarInputKenarRengi = Color(0xFFD7CBE5);
+    final ThemeData ayarlarTema = temelTema.copyWith(
+      colorScheme: temelTema.colorScheme.copyWith(
+        surface: const Color(0xFFF8F5FB),
+        onSurface: AnaSayfaRenkSablonu.metinAcikZemin,
+        primary: AnaSayfaRenkSablonu.birincilAksiyon,
+      ),
+      textTheme: temelTema.textTheme.apply(
+        bodyColor: AnaSayfaRenkSablonu.metinAcikZemin,
+        displayColor: AnaSayfaRenkSablonu.metinAcikZemin,
+      ),
+      iconTheme: const IconThemeData(color: AnaSayfaRenkSablonu.metinAcikZemin),
+      inputDecorationTheme: temelTema.inputDecorationTheme.copyWith(
+        filled: true,
+        fillColor: ayarlarInputDolguRengi,
+        labelStyle: const TextStyle(
+          color: Color(0xFF615074),
+          fontWeight: FontWeight.w700,
+        ),
+        floatingLabelStyle: const TextStyle(
+          color: AnaSayfaRenkSablonu.birincilAksiyon,
+          fontWeight: FontWeight.w800,
+        ),
+        hintStyle: const TextStyle(
+          color: Color(0xFF8B7A9D),
+          fontWeight: FontWeight.w500,
+        ),
+        prefixIconColor: const Color(0xFF7B6B8F),
+        suffixIconColor: const Color(0xFF7B6B8F),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 14,
+          vertical: 14,
+        ),
+        border: const OutlineInputBorder(
+          borderRadius: BorderRadius.all(Radius.circular(12)),
+          borderSide: BorderSide(color: ayarlarInputKenarRengi),
+        ),
+        enabledBorder: const OutlineInputBorder(
+          borderRadius: BorderRadius.all(Radius.circular(12)),
+          borderSide: BorderSide(color: ayarlarInputKenarRengi),
+        ),
+        focusedBorder: const OutlineInputBorder(
+          borderRadius: BorderRadius.all(Radius.circular(12)),
+          borderSide: BorderSide(
+            color: AnaSayfaRenkSablonu.birincilAksiyon,
+            width: 1.8,
+          ),
+        ),
+      ),
+    );
+
+    final List<Widget> ustSekmeler = <Widget>[
+      const Tab(text: 'Salon'),
+      const Tab(text: 'Menu'),
+      const Tab(text: 'Stok'),
+      const Tab(text: 'Entegrasyon'),
+      const Tab(text: 'Yedekleme'),
+      if (_dagiticiModuAktif) const Tab(text: 'Lisans'),
+    ];
+    final List<Widget> sekmeIcerikleri = <Widget>[
+      AyarlarKarti(
+        baslik: 'Salon ve masa yonetimi',
+        aciklama:
+            'Bolum ekle, masa kapasitesini tanimla ve gerekmeyen masalari kaldir.',
+        eylem: Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: [
+            FilledButton.icon(
+              onPressed: _bolumEkle,
+              icon: const Icon(Icons.add_business_rounded),
+              label: const Text('Bolum ekle'),
+            ),
+            FilledButton.tonalIcon(
+              onPressed: _topluQrSayfasiniAc,
+              icon: const Icon(Icons.qr_code_2_rounded),
+              label: const Text('Toplu QR sayfasi'),
+            ),
+          ],
+        ),
+        child: ListView(
+          children: _salonBolumleri
+              .map(
+                (SalonBolumuVarligi bolum) => Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: AdminBolumKarti(
+                    bolum: bolum,
+                    masaEkle: () => _masaEkle(bolum),
+                    bolumDuzenle: () => _bolumDuzenle(bolum),
+                    bolumSil: () => _bolumSil(bolum),
+                    qrBaglamiAc: (MasaTanimiVarligi masa) =>
+                        _masaQrBaglamiAc(bolum, masa),
+                    masaDuzenle: (MasaTanimiVarligi masa) =>
+                        _masaDuzenle(bolum, masa),
+                    masaSil: (MasaTanimiVarligi masa) => _masaSil(bolum, masa),
+                  ),
                 ),
-                child: Padding(
-                  padding: const EdgeInsets.all(22),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          const Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'Admin ayarlari',
-                                  style: TextStyle(
-                                    fontSize: 24,
-                                    fontWeight: FontWeight.w900,
-                                  ),
-                                ),
-                                SizedBox(height: 6),
-                                Text(
-                                  'Salon, masa, menu ve stok duzenini buradan yonetebilirsin.',
-                                ),
-                              ],
-                            ),
-                          ),
-                          FilledButton.tonalIcon(
-                            onPressed: _chatbotuAc,
-                            icon: const Icon(Icons.smart_toy_rounded),
-                            label: const Text('Chatbot'),
-                          ),
-                          const SizedBox(width: 8),
-                          IconButton(
-                            onPressed: () => Navigator.of(context).pop(),
-                            icon: const Icon(Icons.close_rounded),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 18),
-                      Container(
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFF4EEF8),
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        child: const TabBar(
-                          tabs: [
-                            Tab(text: 'Salon'),
-                            Tab(text: 'Menu'),
-                            Tab(text: 'Stok'),
-                            Tab(text: 'Entegrasyon'),
-                            Tab(text: 'Yedekleme'),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 18),
-                      Expanded(
-                        child: TabBarView(
+              )
+              .toList(),
+        ),
+      ),
+      AyarlarKarti(
+        baslik: 'Menu yonetimi',
+        aciklama:
+            'Kategori ve urunleri canli olarak duzenle, fiyatlari guncelle.',
+        eylem: Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: [
+            FilledButton.icon(
+              onPressed: _kategoriEkle,
+              icon: const Icon(Icons.add_rounded),
+              label: const Text('Kategori ekle'),
+            ),
+            FilledButton.tonalIcon(
+              onPressed: () => _urunEkle(),
+              icon: const Icon(Icons.restaurant_menu_rounded),
+              label: const Text('Urun ekle'),
+            ),
+          ],
+        ),
+        child: ListView(
+          children: [
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: _menuKategorileri
+                  .map(
+                    (KategoriVarligi kategori) => InputChip(
+                      label: Text(kategori.ad),
+                      onPressed: () => _kategoriDuzenle(kategori),
+                      onDeleted: () => _kategoriSil(kategori),
+                    ),
+                  )
+                  .toList(),
+            ),
+            const SizedBox(height: 16),
+            ..._menuUrunleri.map(
+              (UrunVarligi urun) => Padding(
+                padding: const EdgeInsets.only(bottom: 12),
+                child: AdminUrunSatiri(
+                  urun: urun,
+                  kategoriAdi: _kategoriAdiBul(urun.kategoriId),
+                  receteOzeti: _receteOzetiniOlustur(urun.id),
+                  urunDuzenle: () => _urunEkle(urun),
+                  receteDuzenle: () => _urunRecetesiniDuzenle(urun),
+                  urunSil: () => _urunSil(urun),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+      AyarlarKarti(
+        baslik: 'Stok girisi',
+        aciklama: 'Hammadde ekle ve kritik seviyeye yaklasan kalemleri izle.',
+        eylem: Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: [
+            FilledButton.icon(
+              onPressed: _hammaddeEkle,
+              icon: const Icon(Icons.inventory_2_rounded),
+              label: const Text('Hammadde ekle'),
+            ),
+            ...StokUyariFiltresi.values.map(
+              (StokUyariFiltresi filtre) => ChoiceChip(
+                label: Text(_stokFiltresiEtiketi(filtre)),
+                selected: _seciliStokFiltresi == filtre,
+                onSelected: (_) => _stokFiltresiSec(filtre),
+              ),
+            ),
+          ],
+        ),
+        child: ListView(
+          children: _stokEkraniHammaddeleri
+              .map(
+                (HammaddeStokVarligi hammadde) => Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: AdminHammaddeSatiri(
+                    hammadde: hammadde,
+                    duzenle: () => _hammaddeDuzenle(hammadde),
+                  ),
+                ),
+              )
+              .toList(),
+        ),
+      ),
+      _entegrasyonSekmesiIcerigi(),
+      AyarlarKarti(
+        baslik: 'Yedekleme ve veri aktarim',
+        aciklama:
+            'Menu verisini JSON olarak disa aktar, gerekirse tek adimda geri yukle.',
+        eylem: const SizedBox.shrink(),
+        child: _yedeklemeIcerigi(),
+      ),
+      if (_dagiticiModuAktif) _lisansSekmesiIcerigi(),
+    ];
+    final int sekmeSayisi = ustSekmeler.length;
+    final int baslangicSekmesi = widget.baslangicSekmesi < 0
+        ? 0
+        : widget.baslangicSekmesi >= sekmeSayisi
+        ? sekmeSayisi - 1
+        : widget.baslangicSekmesi;
+
+    return DefaultTabController(
+      length: sekmeSayisi,
+      initialIndex: baslangicSekmesi,
+      child: Theme(
+        data: ayarlarTema,
+        child: SuruklenebilirPopupSablonu(
+          materialKullan: false,
+          tutamacUstOfset: 140,
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Center(
+              child: Material(
+                color: ayarlarTema.colorScheme.surface,
+                borderRadius: BorderRadius.circular(28),
+                clipBehavior: Clip.antiAlias,
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(
+                    maxWidth: 1120,
+                    maxHeight: 760,
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(22),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
                           children: [
-                            AyarlarKarti(
-                              baslik: 'Salon ve masa yonetimi',
-                              aciklama:
-                                  'Bolum ekle, masa kapasitesini tanimla ve gerekmeyen masalari kaldir.',
-                              eylem: Wrap(
-                                spacing: 8,
-                                runSpacing: 8,
+                            const Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  FilledButton.icon(
-                                    onPressed: _bolumEkle,
-                                    icon: const Icon(
-                                      Icons.add_business_rounded,
+                                  Text(
+                                    'Admin ayarlari',
+                                    style: TextStyle(
+                                      fontSize: 24,
+                                      fontWeight: FontWeight.w900,
                                     ),
-                                    label: const Text('Bolum ekle'),
                                   ),
-                                  FilledButton.tonalIcon(
-                                    onPressed: _topluQrSayfasiniAc,
-                                    icon: const Icon(Icons.qr_code_2_rounded),
-                                    label: const Text('Toplu QR sayfasi'),
-                                  ),
-                                ],
-                              ),
-                              child: ListView(
-                                children: _salonBolumleri
-                                    .map(
-                                      (SalonBolumuVarligi bolum) => Padding(
-                                        padding: const EdgeInsets.only(
-                                          bottom: 12,
-                                        ),
-                                        child: AdminBolumKarti(
-                                          bolum: bolum,
-                                          masaEkle: () => _masaEkle(bolum),
-                                          bolumDuzenle: () =>
-                                              _bolumDuzenle(bolum),
-                                          bolumSil: () => _bolumSil(bolum),
-                                          qrBaglamiAc:
-                                              (MasaTanimiVarligi masa) =>
-                                                  _masaQrBaglamiAc(bolum, masa),
-                                          masaDuzenle:
-                                              (MasaTanimiVarligi masa) =>
-                                                  _masaDuzenle(bolum, masa),
-                                          masaSil: (MasaTanimiVarligi masa) =>
-                                              _masaSil(bolum, masa),
-                                        ),
-                                      ),
-                                    )
-                                    .toList(),
-                              ),
-                            ),
-                            AyarlarKarti(
-                              baslik: 'Menu yonetimi',
-                              aciklama:
-                                  'Kategori ve urunleri canli olarak duzenle, fiyatlari guncelle.',
-                              eylem: Wrap(
-                                spacing: 8,
-                                runSpacing: 8,
-                                children: [
-                                  FilledButton.icon(
-                                    onPressed: _kategoriEkle,
-                                    icon: const Icon(Icons.add_rounded),
-                                    label: const Text('Kategori ekle'),
-                                  ),
-                                  FilledButton.tonalIcon(
-                                    onPressed: () => _urunEkle(),
-                                    icon: const Icon(
-                                      Icons.restaurant_menu_rounded,
-                                    ),
-                                    label: const Text('Urun ekle'),
-                                  ),
-                                ],
-                              ),
-                              child: ListView(
-                                children: [
-                                  Wrap(
-                                    spacing: 8,
-                                    runSpacing: 8,
-                                    children: _menuKategorileri
-                                        .map(
-                                          (KategoriVarligi kategori) =>
-                                              InputChip(
-                                                label: Text(kategori.ad),
-                                                onPressed: () =>
-                                                    _kategoriDuzenle(kategori),
-                                                onDeleted: () =>
-                                                    _kategoriSil(kategori),
-                                              ),
-                                        )
-                                        .toList(),
-                                  ),
-                                  const SizedBox(height: 16),
-                                  ..._menuUrunleri.map(
-                                    (UrunVarligi urun) => Padding(
-                                      padding: const EdgeInsets.only(
-                                        bottom: 12,
-                                      ),
-                                      child: AdminUrunSatiri(
-                                        urun: urun,
-                                        kategoriAdi: _kategoriAdiBul(
-                                          urun.kategoriId,
-                                        ),
-                                        receteOzeti: _receteOzetiniOlustur(
-                                          urun.id,
-                                        ),
-                                        urunDuzenle: () => _urunEkle(urun),
-                                        receteDuzenle: () =>
-                                            _urunRecetesiniDuzenle(urun),
-                                        urunSil: () => _urunSil(urun),
-                                      ),
-                                    ),
+                                  SizedBox(height: 6),
+                                  Text(
+                                    'Salon, masa, menu ve stok duzenini buradan yonetebilirsin.',
                                   ),
                                 ],
                               ),
                             ),
-                            AyarlarKarti(
-                              baslik: 'Stok girisi',
-                              aciklama:
-                                  'Hammadde ekle ve kritik seviyeye yaklasan kalemleri izle.',
-                              eylem: FilledButton.icon(
-                                onPressed: _hammaddeEkle,
-                                icon: const Icon(Icons.inventory_2_rounded),
-                                label: const Text('Hammadde ekle'),
-                              ),
-                              child: ListView(
-                                children: _hammaddeler
-                                    .map(
-                                      (HammaddeStokVarligi hammadde) => Padding(
-                                        padding: const EdgeInsets.only(
-                                          bottom: 12,
-                                        ),
-                                        child: AdminHammaddeSatiri(
-                                          hammadde: hammadde,
-                                          duzenle: () =>
-                                              _hammaddeDuzenle(hammadde),
-                                        ),
-                                      ),
-                                    )
-                                    .toList(),
-                              ),
+                            FilledButton.tonalIcon(
+                              onPressed: _chatbotuAc,
+                              icon: const Icon(Icons.smart_toy_rounded),
+                              label: const Text('Chatbot'),
                             ),
-                            Column(
-                              children: <Widget>[
-                                Expanded(child: _chatbotEntegrasyonKarti()),
-                                const SizedBox(height: 12),
-                                Expanded(child: _kuryeEntegrasyonKarti()),
-                              ],
-                            ),
-                            AyarlarKarti(
-                              baslik: 'Yedekleme ve veri aktarim',
-                              aciklama:
-                                  'Menu verisini JSON olarak disa aktar, gerekirse tek adimda geri yukle.',
-                              eylem: const SizedBox.shrink(),
-                              child: _yedeklemeIcerigi(),
+                            const SizedBox(width: 8),
+                            IconButton(
+                              onPressed: () => Navigator.of(context).pop(),
+                              icon: const Icon(Icons.close_rounded),
                             ),
                           ],
                         ),
-                      ),
-                    ],
+                        const SizedBox(height: 18),
+                        Container(
+                          decoration: BoxDecoration(
+                            color: sekmeArkaPlanRengi,
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          child: TabBar(
+                            labelColor: AnaSayfaRenkSablonu.birincilAksiyon,
+                            unselectedLabelColor: sekmeKontrastRengi.withValues(
+                              alpha: 0.82,
+                            ),
+                            indicatorColor: AnaSayfaRenkSablonu.birincilAksiyon,
+                            tabs: ustSekmeler,
+                          ),
+                        ),
+                        const SizedBox(height: 18),
+                        Expanded(child: TabBarView(children: sekmeIcerikleri)),
+                      ],
+                    ),
                   ),
                 ),
               ),
@@ -2273,6 +3505,19 @@ class _YonetimAyarlariDialogState extends State<YonetimAyarlariDialog> {
       }
     }
     return 'Silinmis saglayici';
+  }
+
+  String _stokFiltresiEtiketi(StokUyariFiltresi filtre) {
+    switch (filtre) {
+      case StokUyariFiltresi.tum:
+        return 'Tum';
+      case StokUyariFiltresi.uyari:
+        return 'Uyari';
+      case StokUyariFiltresi.kritik:
+        return 'Kritik';
+      case StokUyariFiltresi.tukendi:
+        return 'Tukendi';
+    }
   }
 
   String _receteOzetiniOlustur(String urunId) {

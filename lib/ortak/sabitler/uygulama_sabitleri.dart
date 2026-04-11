@@ -1,8 +1,8 @@
 class UygulamaSabitleri {
   const UygulamaSabitleri._();
 
-  static const String uygulamaAdi = 'Adisyo Rarko';
-  static const String restoranAdi = 'Adisyo Rarko';
+  static const String uygulamaAdi = 'VectorPos';
+  static const String restoranAdi = 'VectorPos';
   static const String markaEtiketi = 'POS';
   static const String tamMarkaAdi = '$restoranAdi $markaEtiketi';
   static const String yonetimPaneliBasligi = '$restoranAdi Yonetim Paneli';
@@ -12,6 +12,10 @@ class UygulamaSabitleri {
   static const String operasyonBasligi = 'Operasyon merkezi';
   static const String uygulamaAciklamasi =
       'Cok platformlu restoran yonetim ve siparis uygulamasi';
+  static const bool dagiticiModu = bool.fromEnvironment(
+    'DAGITICI_MODU',
+    defaultValue: false,
+  );
   static const String varsayilanQrTabanUrl = 'https://restoranapp.local';
   static const double restoranKonumEnlem = 41.0082;
   static const double restoranKonumBoylam = 28.9784;

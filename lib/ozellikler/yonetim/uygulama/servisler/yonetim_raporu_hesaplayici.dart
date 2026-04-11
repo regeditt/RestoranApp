@@ -1,4 +1,4 @@
-﻿import 'package:restoran_app/ozellikler/siparis/alan/enumlar/siparis_durumu.dart';
+import 'package:restoran_app/ozellikler/siparis/alan/enumlar/siparis_durumu.dart';
 import 'package:restoran_app/ozellikler/siparis/alan/enumlar/teslimat_tipi.dart';
 import 'package:restoran_app/ozellikler/siparis/alan/varliklar/siparis_varligi.dart';
 import 'package:restoran_app/ozellikler/yonetim/alan/varliklar/patron_raporu_ozeti_varligi.dart';
@@ -20,9 +20,11 @@ class YonetimRaporuHesaplayici {
     int gelAl = 0;
     int paketServis = 0;
     double toplamCiro = 0;
+    double toplamIndirim = 0;
 
     for (final SiparisVarligi siparis in siparisler) {
       toplamCiro += siparis.toplamTutar;
+      toplamIndirim += siparis.indirimTutari;
 
       switch (siparis.durum) {
         case SiparisDurumu.hazirlaniyor:
@@ -48,6 +50,7 @@ class YonetimRaporuHesaplayici {
     return YonetimPaneliOzetiVarligi(
       toplamSiparis: siparisler.length,
       toplamCiro: toplamCiro,
+      toplamIndirim: toplamIndirim,
       hazirlananSiparis: hazirlanan,
       hazirSiparis: hazir,
       yoldaSiparis: yolda,

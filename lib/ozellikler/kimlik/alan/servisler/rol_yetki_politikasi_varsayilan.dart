@@ -19,6 +19,7 @@ class RolYetkiPolitikasiVarsayilan implements RolYetkiPolitikasi {
           IslemYetkisi.ikramUygula,
           IslemYetkisi.urunFiyatDegistir,
           IslemYetkisi.masaTasima,
+          IslemYetkisi.stokYonetimi,
         },
         KullaniciRolu.patron: <IslemYetkisi>{
           IslemYetkisi.siparisDurumuIlerle,
@@ -26,6 +27,7 @@ class RolYetkiPolitikasiVarsayilan implements RolYetkiPolitikasi {
           IslemYetkisi.ikramUygula,
           IslemYetkisi.urunFiyatDegistir,
           IslemYetkisi.masaTasima,
+          IslemYetkisi.stokYonetimi,
         },
       };
 

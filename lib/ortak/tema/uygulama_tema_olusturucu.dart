@@ -11,13 +11,13 @@ class UygulamaTemaOlusturucu {
     final ColorScheme renkSemasi =
         ColorScheme.fromSeed(
           seedColor: temaTokenlari.birincilAksiyon,
-          brightness: Brightness.light,
+          brightness: Brightness.dark,
         ).copyWith(
           primary: temaTokenlari.birincilAksiyon,
           secondary: temaTokenlari.ikincilAksiyon,
           tertiary: temaTokenlari.vurguAksiyon,
-          surface: temaTokenlari.popupYuzey,
-          onSurface: temaTokenlari.metinBirincilKoyu,
+          surface: temaTokenlari.kartYuzey,
+          onSurface: temaTokenlari.metinBirincilAcik,
         );
 
     final TextTheme yaziTemasi = TextTheme(
@@ -65,6 +65,7 @@ class UygulamaTemaOlusturucu {
       useMaterial3: true,
       colorScheme: renkSemasi,
       scaffoldBackgroundColor: temaTokenlari.anaArkaPlan,
+      canvasColor: renkSemasi.surface,
       materialTapTargetSize: MaterialTapTargetSize.padded,
       textTheme: yaziTemasi,
       extensions: <ThemeExtension<dynamic>>[
@@ -104,7 +105,7 @@ class UygulamaTemaOlusturucu {
         ),
       ),
       chipTheme: ChipThemeData(
-        backgroundColor: Colors.white.withValues(alpha: 0.88),
+        backgroundColor: temaTokenlari.kartYuzey.withValues(alpha: 0.8),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(999),
           side: BorderSide(color: temaTokenlari.inceKenar),
@@ -118,10 +119,7 @@ class UygulamaTemaOlusturucu {
           foregroundColor: temaTokenlari.metinBirincilAcik,
           minimumSize: temaTokenlari.dokunmatikHedefBoyutu,
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
-          textStyle: TextStyle(
-            fontWeight: FontWeight.w800,
-            fontSize: 15,
-          ),
+          textStyle: TextStyle(fontWeight: FontWeight.w800, fontSize: 15),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(18),
           ),
@@ -133,10 +131,7 @@ class UygulamaTemaOlusturucu {
           foregroundColor: temaTokenlari.metinBirincilAcik,
           minimumSize: temaTokenlari.dokunmatikHedefBoyutu,
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
-          textStyle: TextStyle(
-            fontWeight: FontWeight.w800,
-            fontSize: 15,
-          ),
+          textStyle: TextStyle(fontWeight: FontWeight.w800, fontSize: 15),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(18),
           ),
@@ -146,10 +141,7 @@ class UygulamaTemaOlusturucu {
         style: OutlinedButton.styleFrom(
           minimumSize: temaTokenlari.dokunmatikHedefBoyutu,
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
-          textStyle: TextStyle(
-            fontWeight: FontWeight.w700,
-            fontSize: 15,
-          ),
+          textStyle: TextStyle(fontWeight: FontWeight.w700, fontSize: 15),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(18),
           ),
@@ -159,10 +151,7 @@ class UygulamaTemaOlusturucu {
         style: TextButton.styleFrom(
           minimumSize: temaTokenlari.dokunmatikHedefBoyutu,
           padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
-          textStyle: TextStyle(
-            fontWeight: FontWeight.w700,
-            fontSize: 15,
-          ),
+          textStyle: TextStyle(fontWeight: FontWeight.w700, fontSize: 15),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
           ),
@@ -174,24 +163,98 @@ class UygulamaTemaOlusturucu {
           padding: const EdgeInsets.all(14),
         ),
       ),
+      popupMenuTheme: PopupMenuThemeData(
+        color: renkSemasi.surface,
+        surfaceTintColor: Colors.transparent,
+        textStyle: TextStyle(
+          color: renkSemasi.onSurface,
+          fontWeight: FontWeight.w700,
+        ),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+          side: BorderSide(
+            color: temaTokenlari.inceKenar.withValues(alpha: 0.8),
+          ),
+        ),
+      ),
+      menuTheme: MenuThemeData(
+        style: MenuStyle(
+          backgroundColor: WidgetStatePropertyAll<Color>(renkSemasi.surface),
+          surfaceTintColor: const WidgetStatePropertyAll<Color>(
+            Colors.transparent,
+          ),
+          side: WidgetStatePropertyAll<BorderSide>(
+            BorderSide(color: temaTokenlari.inceKenar.withValues(alpha: 0.8)),
+          ),
+          shape: WidgetStatePropertyAll<OutlinedBorder>(
+            RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          ),
+        ),
+      ),
+      dropdownMenuTheme: DropdownMenuThemeData(
+        textStyle: TextStyle(
+          color: renkSemasi.onSurface,
+          fontWeight: FontWeight.w700,
+        ),
+        menuStyle: MenuStyle(
+          backgroundColor: WidgetStatePropertyAll<Color>(renkSemasi.surface),
+          surfaceTintColor: const WidgetStatePropertyAll<Color>(
+            Colors.transparent,
+          ),
+          side: WidgetStatePropertyAll<BorderSide>(
+            BorderSide(color: temaTokenlari.inceKenar.withValues(alpha: 0.8)),
+          ),
+          shape: WidgetStatePropertyAll<OutlinedBorder>(
+            RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          ),
+        ),
+      ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: Colors.white.withValues(alpha: 0.94),
+        fillColor: Colors.white.withValues(alpha: 0.06),
         contentPadding: const EdgeInsets.symmetric(
           horizontal: 16,
-          vertical: 18,
+          vertical: 14,
         ),
+        labelStyle: TextStyle(
+          color: temaTokenlari.metinIkincilAcik.withValues(alpha: 0.92),
+          fontWeight: FontWeight.w700,
+        ),
+        floatingLabelStyle: TextStyle(
+          color: renkSemasi.primary,
+          fontWeight: FontWeight.w800,
+        ),
+        hintStyle: TextStyle(
+          color: temaTokenlari.metinIkincilAcik.withValues(alpha: 0.74),
+          fontWeight: FontWeight.w500,
+        ),
+        prefixIconColor: temaTokenlari.metinIkincilAcik.withValues(alpha: 0.88),
+        suffixIconColor: temaTokenlari.metinIkincilAcik.withValues(alpha: 0.88),
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(18),
-          borderSide: BorderSide(color: temaTokenlari.inceKenar),
+          borderRadius: BorderRadius.circular(14),
+          borderSide: BorderSide(
+            color: temaTokenlari.inceKenar.withValues(alpha: 0.80),
+          ),
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(18),
-          borderSide: BorderSide(color: temaTokenlari.inceKenar),
+          borderRadius: BorderRadius.circular(14),
+          borderSide: BorderSide(
+            color: temaTokenlari.inceKenar.withValues(alpha: 0.80),
+          ),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(18),
-          borderSide: BorderSide(color: renkSemasi.primary, width: 1.4),
+          borderRadius: BorderRadius.circular(14),
+          borderSide: BorderSide(color: renkSemasi.primary, width: 1.8),
+        ),
+        errorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: BorderSide(
+            color: renkSemasi.error.withValues(alpha: 0.86),
+          ),
+        ),
+        focusedErrorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: BorderSide(color: renkSemasi.error, width: 1.8),
         ),
       ),
       tabBarTheme: TabBarThemeData(

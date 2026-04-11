@@ -5,6 +5,7 @@ import 'package:restoran_app/ortak/sabitler/uygulama_sabitleri.dart';
 import 'package:restoran_app/ozellikler/menu/alan/varliklar/qr_menu_karti_varligi.dart';
 import 'package:restoran_app/ozellikler/menu/alan/varliklar/urun_varligi.dart';
 import 'package:restoran_app/ozellikler/siparis/alan/varliklar/kurye_takip_entegrasyon_varliklari.dart';
+import 'package:restoran_app/ozellikler/stok/alan/enumlar/stok_uyari_durumu.dart';
 import 'package:restoran_app/ozellikler/stok/alan/varliklar/hammadde_stok_varligi.dart';
 import 'package:restoran_app/ozellikler/stok/alan/varliklar/recete_kalemi_varligi.dart';
 import 'package:restoran_app/ozellikler/yonetim/alan/varliklar/salon_bolumu_varligi.dart';
@@ -207,7 +208,7 @@ class AdminUrunSatiri extends StatelessWidget {
           ),
           const SizedBox(height: 6),
           Text(
-            '$kategoriAdi · ${urun.stoktaMi ? 'Stokta' : 'Kapali'}${urun.oneCikanMi ? ' · One cikan' : ''}',
+            '$kategoriAdi - ${urun.stoktaMi ? 'Stokta' : 'Kapali'}${urun.oneCikanMi ? ' - One cikan' : ''}',
             style: const TextStyle(color: Color(0xFF6D6079)),
           ),
           const SizedBox(height: 6),
@@ -269,16 +270,15 @@ class AdminHammaddeSatiri extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final StokUyariDurumu durum = hammadde.uyariDurumu;
+    final ({Color cerceve, Color metin}) palet = _durumaGoreRenkler(durum);
+
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(
-          color: hammadde.kritikMi
-              ? const Color(0xFFFFC7B8)
-              : const Color(0xFFE8E0F0),
-        ),
+        border: Border.all(color: palet.cerceve),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -292,11 +292,9 @@ class AdminHammaddeSatiri extends StatelessWidget {
                 ),
               ),
               Text(
-                hammadde.kritikMi ? 'Kritik' : 'Normal',
+                durum.etiket,
                 style: TextStyle(
-                  color: hammadde.kritikMi
-                      ? const Color(0xFFFF7A59)
-                      : const Color(0xFF30C48D),
+                  color: palet.metin,
                   fontWeight: FontWeight.w800,
                 ),
               ),
@@ -304,7 +302,9 @@ class AdminHammaddeSatiri extends StatelessWidget {
           ),
           const SizedBox(height: 6),
           Text(
-            '${hammadde.mevcutMiktar.toStringAsFixed(0)} ${hammadde.birim} · Esik ${hammadde.kritikEsik.toStringAsFixed(0)} ${hammadde.birim}',
+            '${hammadde.mevcutMiktar.toStringAsFixed(0)} ${hammadde.birim} - '
+            'Uyari ${hammadde.uyariEsigi.toStringAsFixed(0)} ${hammadde.birim} - '
+            'Kritik ${hammadde.kritikEsik.toStringAsFixed(0)} ${hammadde.birim}',
             style: const TextStyle(color: Color(0xFF6D6079)),
           ),
           const SizedBox(height: 6),
@@ -321,6 +321,31 @@ class AdminHammaddeSatiri extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  ({Color cerceve, Color metin}) _durumaGoreRenkler(StokUyariDurumu durum) {
+    switch (durum) {
+      case StokUyariDurumu.tukendi:
+        return (
+          cerceve: const Color(0xFFFFA694),
+          metin: const Color(0xFFE34D2C),
+        );
+      case StokUyariDurumu.kritik:
+        return (
+          cerceve: const Color(0xFFFFC7B8),
+          metin: const Color(0xFFFF7A59),
+        );
+      case StokUyariDurumu.uyari:
+        return (
+          cerceve: const Color(0xFFFFE4B2),
+          metin: const Color(0xFFCB8A11),
+        );
+      case StokUyariDurumu.normal:
+        return (
+          cerceve: const Color(0xFFE8E0F0),
+          metin: const Color(0xFF30C48D),
+        );
+    }
   }
 }
 

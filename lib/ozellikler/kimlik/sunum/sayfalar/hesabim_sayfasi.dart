@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:restoran_app/ortak/bilesenler/ana_sayfaya_donus.dart';
 import 'package:restoran_app/ortak/responsive/ekran_boyutu.dart';
 import 'package:restoran_app/ortak/sabitler/uygulama_sabitleri.dart';
+import 'package:restoran_app/ortak/tema/ana_sayfa_renk_sablonu.dart';
 import 'package:restoran_app/ozellikler/kimlik/alan/roller/kullanici_rolu.dart';
 import 'package:restoran_app/ozellikler/kimlik/alan/varliklar/kullanici_varligi.dart';
 import 'package:restoran_app/ozellikler/kimlik/sunum/viewmodel/hesabim_viewmodel.dart';
@@ -185,16 +186,16 @@ class _HesabimSayfasiState extends State<HesabimSayfasi> {
         final bool masaustu = EkranBoyutu.masaustu(context);
 
         return Scaffold(
-          backgroundColor: const Color(0xFF110C1B),
+          backgroundColor: AnaSayfaRenkSablonu.arkaPlanKoyu,
           body: DecoratedBox(
             decoration: const BoxDecoration(
               gradient: LinearGradient(
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
                 colors: [
-                  Color(0xFF17101F),
-                  Color(0xFF28143A),
-                  Color(0xFF150C20),
+                  AnaSayfaRenkSablonu.arkaPlanKoyu,
+                  AnaSayfaRenkSablonu.arkaPlanOrta,
+                  AnaSayfaRenkSablonu.arkaPlanUst,
                 ],
               ),
             ),
@@ -237,7 +238,11 @@ class _HesabimSayfasiState extends State<HesabimSayfasi> {
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
-          colors: [Color(0xFFE74179), Color(0xFF7A4DFF), Color(0xFF352056)],
+          colors: [
+            AnaSayfaRenkSablonu.birincilAksiyon,
+            AnaSayfaRenkSablonu.ikincilAksiyon,
+            AnaSayfaRenkSablonu.panelKoyu,
+          ],
         ),
         borderRadius: BorderRadius.circular(30),
       ),
@@ -282,7 +287,7 @@ class _HesabimSayfasiState extends State<HesabimSayfasi> {
                 ? 'Personel ve yonetici girisini tek alandan yonet. Bu ilk adimda giris ve temel profil gorunumu hazir.'
                 : 'Aktif kullanicinin temel profil bilgileri ve rol durumu burada gorunur.',
             style: const TextStyle(
-              color: Color(0xFFF7E9F2),
+              color: AnaSayfaRenkSablonu.metinIkincil,
               fontSize: 16,
               height: 1.5,
             ),
@@ -363,7 +368,7 @@ class _HesabimSayfasiState extends State<HesabimSayfasi> {
               child: FilledButton(
                 onPressed: _islemde ? null : _girisYap,
                 style: FilledButton.styleFrom(
-                  backgroundColor: const Color(0xFFFF5D8F),
+                  backgroundColor: AnaSayfaRenkSablonu.birincilAksiyon,
                   foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(vertical: 18),
                 ),
@@ -398,7 +403,9 @@ class _HesabimSayfasiState extends State<HesabimSayfasi> {
                 width: 56,
                 height: 56,
                 decoration: BoxDecoration(
-                  color: const Color(0xFFFF5D8F).withValues(alpha: 0.14),
+                  color: AnaSayfaRenkSablonu.birincilAksiyon.withValues(
+                    alpha: 0.14,
+                  ),
                   borderRadius: BorderRadius.circular(18),
                 ),
                 child: const Icon(Icons.person_rounded, color: Colors.white),
@@ -464,7 +471,7 @@ class _HesabimSayfasiState extends State<HesabimSayfasi> {
                   ? _profilKaydet
                   : _profilDuzenlemeyiAc,
               style: FilledButton.styleFrom(
-                backgroundColor: const Color(0xFFFF5D8F),
+                backgroundColor: AnaSayfaRenkSablonu.birincilAksiyon,
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(vertical: 18),
               ),
@@ -557,7 +564,7 @@ class _HesabimSayfasiState extends State<HesabimSayfasi> {
                     IconButton(
                       onPressed: () => _adresSil(adres),
                       icon: const Icon(Icons.delete_outline_rounded),
-                      color: const Color(0xFFFF8AAE),
+                      color: AnaSayfaRenkSablonu.metinIkincil,
                     ),
                   ],
                 ),
@@ -627,31 +634,14 @@ class _HesabimSayfasiState extends State<HesabimSayfasi> {
 
   BoxDecoration _panelDekorasyonu() {
     return BoxDecoration(
-      color: const Color(0xFF22142E),
+      color: AnaSayfaRenkSablonu.panelKoyu,
       borderRadius: BorderRadius.circular(28),
       border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
     );
   }
 
   InputDecoration _girdiDekorasyonu(String etiket) {
-    return InputDecoration(
-      labelText: etiket,
-      labelStyle: TextStyle(color: Colors.white.withValues(alpha: 0.72)),
-      filled: true,
-      fillColor: Colors.white.withValues(alpha: 0.05),
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(16),
-        borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.08)),
-      ),
-      enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(16),
-        borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.08)),
-      ),
-      focusedBorder: const OutlineInputBorder(
-        borderRadius: BorderRadius.all(Radius.circular(16)),
-        borderSide: BorderSide(color: Color(0xFFFF5D8F)),
-      ),
-    );
+    return InputDecoration(labelText: etiket);
   }
 
   String _rolEtiketi(KullaniciRolu rol) {

@@ -12,12 +12,18 @@ import 'package:restoran_app/ozellikler/kimlik/sunum/viewmodel/hesabim_viewmodel
 import 'package:restoran_app/ozellikler/menu/sunum/sayfalar/musteri_menu_sayfasi.dart';
 import 'package:restoran_app/ozellikler/menu/sunum/sayfalar/qr_menu_sayfasi.dart';
 import 'package:restoran_app/ozellikler/menu/sunum/viewmodel/musteri_menu_viewmodel.dart';
+import 'package:restoran_app/ozellikler/odeme_kasa/sunum/sayfalar/odeme_kasa_sayfasi.dart';
+import 'package:restoran_app/ozellikler/odeme_kasa/sunum/viewmodel/odeme_kasa_viewmodel.dart';
+import 'package:restoran_app/ozellikler/rezervasyon/sunum/sayfalar/rezervasyon_sayfasi.dart';
+import 'package:restoran_app/ozellikler/rezervasyon/sunum/viewmodel/rezervasyon_viewmodel.dart';
 import 'package:restoran_app/ozellikler/sepet/alan/varliklar/sepet_varligi.dart';
 import 'package:restoran_app/ozellikler/raporlar/sunum/sayfalar/raporlar_sayfasi.dart';
 import 'package:restoran_app/ozellikler/siparis/alan/varliklar/siparis_ozeti_girdisi_varligi.dart';
+import 'package:restoran_app/ozellikler/siparis/sunum/sayfalar/online_siparis_kanali_sayfasi.dart';
 import 'package:restoran_app/ozellikler/siparis/sunum/sayfalar/mutfak_siparis_sayfasi.dart';
 import 'package:restoran_app/ozellikler/siparis/sunum/sayfalar/siparis_ozeti_sayfasi.dart';
 import 'package:restoran_app/ozellikler/siparis/sunum/viewmodel/mutfak_siparis_viewmodel.dart';
+import 'package:restoran_app/ozellikler/siparis/sunum/viewmodel/online_siparis_kanali_viewmodel.dart';
 import 'package:restoran_app/ozellikler/siparis/sunum/viewmodel/siparis_ozeti_viewmodel.dart';
 import 'package:restoran_app/ozellikler/yonetim/sunum/sayfalar/yonetim_paneli_sayfasi.dart';
 import 'package:restoran_app/ozellikler/yonetim/sunum/viewmodel/yonetim_paneli_viewmodel.dart';
@@ -32,6 +38,9 @@ class RotaYapisi {
   static const String musteriMenusu = '/musteri-menusu';
   static const String qrMenu = '/qr-menu';
   static const String pos = '/pos';
+  static const String onlineSiparisKanali = '/online-siparis-kanali';
+  static const String rezervasyon = '/rezervasyon';
+  static const String odemeKasa = '/odeme-kasa';
   static const String mutfak = '/mutfak';
   static const String raporlar = '/raporlar';
   static const String siparisOzeti = '/siparis-ozeti';
@@ -48,6 +57,36 @@ class RotaYapisi {
       baslik: 'POS erisimi icin personel girisi gerekli',
       aciklama:
           'Musteri akisi dogrudan QR menu ile acilir. POS yalnizca garson ve yonetici operasyonu icindir.',
+    ),
+    odemeKasa: _PersonelErisimKurali(
+      izinliRoller: <KullaniciRolu>[
+        KullaniciRolu.garson,
+        KullaniciRolu.yonetici,
+        KullaniciRolu.patron,
+      ],
+      baslik: 'Odeme ve kasa ekrani personel icindir',
+      aciklama:
+          'Kasa operasyonlari sadece personel hesabi ile acilir. Musteri akisinda bu ekran gorunmez.',
+    ),
+    onlineSiparisKanali: _PersonelErisimKurali(
+      izinliRoller: <KullaniciRolu>[
+        KullaniciRolu.garson,
+        KullaniciRolu.yonetici,
+        KullaniciRolu.patron,
+      ],
+      baslik: 'Online siparis kanali personel icindir',
+      aciklama:
+          'Kanal siparisleri operasyon ekranidir. Personel hesabi ile giris yaparak devam etmelisin.',
+    ),
+    rezervasyon: _PersonelErisimKurali(
+      izinliRoller: <KullaniciRolu>[
+        KullaniciRolu.garson,
+        KullaniciRolu.yonetici,
+        KullaniciRolu.patron,
+      ],
+      baslik: 'Rezervasyon ekrani personel icindir',
+      aciklama:
+          'Rezervasyon operasyonu sadece personel hesaplari ile yonetilebilir.',
     ),
     mutfak: _PersonelErisimKurali(
       izinliRoller: <KullaniciRolu>[
@@ -132,6 +171,50 @@ class RotaYapisi {
               servisKaydi: servisKaydi,
               yetkiliSayfaOlustur: () => MusteriMenuSayfasi(
                 viewModel: MusteriMenuViewModel.servisKaydindan(servisKaydi),
+              ),
+            );
+          },
+          settings: ayarlar,
+        );
+      case odemeKasa:
+        return MaterialPageRoute<void>(
+          builder: (context) {
+            final servisKaydi = ServisSaglayici.of(context);
+            return _personelYetkiKorumaIle(
+              rota: odemeKasa,
+              servisKaydi: servisKaydi,
+              yetkiliSayfaOlustur: () => OdemeKasaSayfasi(
+                viewModel: OdemeKasaViewModel.servisKaydindan(servisKaydi),
+              ),
+            );
+          },
+          settings: ayarlar,
+        );
+      case onlineSiparisKanali:
+        return MaterialPageRoute<void>(
+          builder: (context) {
+            final servisKaydi = ServisSaglayici.of(context);
+            return _personelYetkiKorumaIle(
+              rota: onlineSiparisKanali,
+              servisKaydi: servisKaydi,
+              yetkiliSayfaOlustur: () => OnlineSiparisKanaliSayfasi(
+                viewModel: OnlineSiparisKanaliViewModel.servisKaydindan(
+                  servisKaydi,
+                ),
+              ),
+            );
+          },
+          settings: ayarlar,
+        );
+      case rezervasyon:
+        return MaterialPageRoute<void>(
+          builder: (context) {
+            final servisKaydi = ServisSaglayici.of(context);
+            return _personelYetkiKorumaIle(
+              rota: rezervasyon,
+              servisKaydi: servisKaydi,
+              yetkiliSayfaOlustur: () => RezervasyonSayfasi(
+                viewModel: RezervasyonViewModel.servisKaydindan(servisKaydi),
               ),
             );
           },

@@ -1,11 +1,14 @@
 import 'package:flutter/foundation.dart';
 import 'package:restoran_app/bagimlilik_enjeksiyonu/servis_kaydi.dart';
+import 'package:restoran_app/ozellikler/kampanya/alan/varliklar/kampanya_hesap_sonucu_varligi.dart';
+import 'package:restoran_app/ozellikler/kampanya/uygulama/servisler/kampanya_hesaplayici.dart';
 import 'package:restoran_app/ozellikler/kimlik/alan/varliklar/misafir_bilgisi_varligi.dart';
 import 'package:restoran_app/ozellikler/kimlik/alan/varliklar/kullanici_varligi.dart';
 import 'package:restoran_app/ozellikler/kimlik/uygulama/use_case/aktif_kullanici_getir_use_case.dart';
 import 'package:restoran_app/ozellikler/kimlik/uygulama/use_case/misafir_olustur_use_case.dart';
 import 'package:restoran_app/ozellikler/menu/alan/varliklar/qr_menu_baglami_varligi.dart';
 import 'package:restoran_app/ozellikler/sepet/alan/varliklar/sepet_varligi.dart';
+import 'package:restoran_app/ozellikler/sepet/uygulama/use_case/sepet_kupon_kodunu_guncelle_use_case.dart';
 import 'package:restoran_app/ozellikler/sepet/uygulama/use_case/sepeti_temizle_use_case.dart';
 import 'package:restoran_app/ozellikler/siparis/alan/enumlar/paket_teslimat_durumu.dart';
 import 'package:restoran_app/ozellikler/siparis/alan/enumlar/siparis_durumu.dart';
@@ -45,17 +48,24 @@ class SiparisOzetiViewModel extends ChangeNotifier {
     required SiparisOlusturUseCase siparisOlusturUseCase,
     required SiparisiYazdirUseCase siparisiYazdirUseCase,
     required SepetiTemizleUseCase sepetiTemizleUseCase,
+    required SepetKuponKodunuGuncelleUseCase sepetKuponKodunuGuncelleUseCase,
     QrMenuBaglamiVarligi? qrBaglami,
+    KampanyaHesaplayici? kampanyaHesaplayici,
   }) : _sepet = sepet,
        _aktifKullaniciGetirUseCase = aktifKullaniciGetirUseCase,
        _misafirOlusturUseCase = misafirOlusturUseCase,
        _siparisOlusturUseCase = siparisOlusturUseCase,
        _siparisiYazdirUseCase = siparisiYazdirUseCase,
        _sepetiTemizleUseCase = sepetiTemizleUseCase,
+       _sepetKuponKodunuGuncelleUseCase = sepetKuponKodunuGuncelleUseCase,
        _qrBaglami = qrBaglami,
+       _kampanyaHesaplayici =
+           kampanyaHesaplayici ?? const KampanyaHesaplayici(),
        _seciliTeslimatTipi = qrBaglami?.masaNo != null
            ? TeslimatTipi.restorandaYe
-           : TeslimatTipi.gelAl;
+           : TeslimatTipi.gelAl {
+    _kampanyaSonucu = _kampanyaHesaplayici.hesapla(_sepet);
+  }
 
   factory SiparisOzetiViewModel.servisKaydindan(
     ServisKaydi servisKaydi, {
@@ -70,31 +80,89 @@ class SiparisOzetiViewModel extends ChangeNotifier {
       siparisOlusturUseCase: servisKaydi.siparisOlusturUseCase,
       siparisiYazdirUseCase: servisKaydi.siparisiYazdirUseCase,
       sepetiTemizleUseCase: servisKaydi.sepetiTemizleUseCase,
+      sepetKuponKodunuGuncelleUseCase:
+          servisKaydi.sepetKuponKodunuGuncelleUseCase,
     );
   }
 
-  final SepetVarligi _sepet;
+  SepetVarligi _sepet;
   final AktifKullaniciGetirUseCase _aktifKullaniciGetirUseCase;
   final MisafirOlusturUseCase _misafirOlusturUseCase;
   final SiparisOlusturUseCase _siparisOlusturUseCase;
   final SiparisiYazdirUseCase _siparisiYazdirUseCase;
   final SepetiTemizleUseCase _sepetiTemizleUseCase;
+  final SepetKuponKodunuGuncelleUseCase _sepetKuponKodunuGuncelleUseCase;
   final QrMenuBaglamiVarligi? _qrBaglami;
+  final KampanyaHesaplayici _kampanyaHesaplayici;
 
   bool _kaydediliyor = false;
+  bool _kuponIsleniyor = false;
   bool _varsayilanBilgilerYuklendi = false;
   String _adresMetni = '';
   String _teslimatNotu = '';
   TeslimatTipi _seciliTeslimatTipi;
+  late KampanyaHesapSonucuVarligi _kampanyaSonucu;
 
   SepetVarligi get sepet => _sepet;
   QrMenuBaglamiVarligi? get qrBaglami => _qrBaglami;
   bool get kaydediliyor => _kaydediliyor;
+  bool get kuponIsleniyor => _kuponIsleniyor;
   String get adresMetni => _adresMetni;
   String get teslimatNotu => _teslimatNotu;
   TeslimatTipi get seciliTeslimatTipi => _seciliTeslimatTipi;
   bool get paketServisSeciliMi =>
       _seciliTeslimatTipi == TeslimatTipi.paketServis;
+  String get aktifKuponKodu => _sepet.kuponKodu ?? '';
+  bool get kuponUygulandiMi => _kampanyaSonucu.uygulandiMi;
+  bool get kuponHataliMi =>
+      _sepet.kuponKodu != null &&
+      _sepet.kuponKodu!.trim().isNotEmpty &&
+      !_kampanyaSonucu.uygulandiMi;
+  String? get kuponMesaji => kuponHataliMi
+      ? _kampanyaSonucu.hataMesaji
+      : (kuponUygulandiMi ? _kampanyaSonucu.aciklama : null);
+  double get indirimTutari => _kampanyaSonucu.indirimTutari;
+  double get genelToplam =>
+      (_sepet.araToplam - indirimTutari).clamp(0, double.infinity).toDouble();
+
+  Future<SiparisOzetiIslemSonucu> kuponUygula(String kuponKodu) async {
+    if (_kuponIsleniyor) {
+      return const SiparisOzetiIslemSonucu.hata('Kupon islemi devam ediyor');
+    }
+
+    _kuponIsleniyor = true;
+    notifyListeners();
+    try {
+      final String temizKupon = kuponKodu.trim().toUpperCase();
+      if (temizKupon.isEmpty) {
+        _sepet = await _sepetKuponKodunuGuncelleUseCase(null);
+        _kampanyaSonucu = KampanyaHesapSonucuVarligi.bos;
+        return const SiparisOzetiIslemSonucu.basarili(
+          mesaj: 'Kupon temizlendi',
+        );
+      }
+
+      _sepet = await _sepetKuponKodunuGuncelleUseCase(temizKupon);
+      _kampanyaSonucu = _kampanyaHesaplayici.hesapla(_sepet);
+      if (_kampanyaSonucu.uygulandiMi) {
+        return SiparisOzetiIslemSonucu.basarili(
+          mesaj: _kampanyaSonucu.aciklama,
+        );
+      }
+      return SiparisOzetiIslemSonucu.hata(
+        _kampanyaSonucu.hataMesaji ?? 'Kupon uygulanamadi',
+      );
+    } catch (_) {
+      return const SiparisOzetiIslemSonucu.hata('Kupon kodu kaydedilemedi');
+    } finally {
+      _kuponIsleniyor = false;
+      notifyListeners();
+    }
+  }
+
+  Future<SiparisOzetiIslemSonucu> kuponTemizle() async {
+    return kuponUygula('');
+  }
 
   void teslimatTipiSec(TeslimatTipi teslimatTipi) {
     if (_seciliTeslimatTipi == teslimatTipi) {
@@ -142,6 +210,12 @@ class SiparisOzetiViewModel extends ChangeNotifier {
   }
 
   Future<SiparisOzetiIslemSonucu> siparisiOnayla() async {
+    _kampanyaSonucu = _kampanyaHesaplayici.hesapla(_sepet);
+    if (kuponHataliMi) {
+      return SiparisOzetiIslemSonucu.hata(
+        _kampanyaSonucu.hataMesaji ?? 'Kupon gecersiz',
+      );
+    }
     if (paketServisSeciliMi && _adresMetni.trim().isEmpty) {
       return const SiparisOzetiIslemSonucu.hata(
         'Paket sipariste teslimat adresi gerekli',
@@ -184,15 +258,15 @@ class SiparisOzetiViewModel extends ChangeNotifier {
         adresMetni: paketServisSeciliMi
             ? _adresMetni.trim()
             : aktifKullanici?.adresMetni,
-        teslimatNotu: _teslimatNotu.trim().isEmpty
-            ? null
-            : _teslimatNotu.trim(),
+        teslimatNotu: _teslimatNotunuHazirla(),
         paketTeslimatDurumu: paketServisSeciliMi
             ? PaketTeslimatDurumu.adresDogrulandi
             : null,
         masaNo: _qrBaglami?.masaNo,
         bolumAdi: _qrBaglami?.bolumAdi,
         kaynak: _qrBaglami?.kaynak,
+        kuponKodu: _kampanyaSonucu.kuponKodu,
+        indirimTutari: indirimTutari,
       );
 
       final SiparisVarligi kaydedilenSiparis = await _siparisOlusturUseCase(
@@ -213,6 +287,19 @@ class SiparisOzetiViewModel extends ChangeNotifier {
       _kaydediliyor = false;
       notifyListeners();
     }
+  }
+
+  String? _teslimatNotunuHazirla() {
+    final String temizNot = _teslimatNotu.trim();
+    if (!kuponUygulandiMi) {
+      return temizNot.isEmpty ? null : temizNot;
+    }
+    final String kampanyaNotu =
+        'Kampanya: ${_kampanyaSonucu.kuponKodu} (-${indirimTutari.toStringAsFixed(2)} TL)';
+    if (temizNot.isEmpty) {
+      return kampanyaNotu;
+    }
+    return '$temizNot | $kampanyaNotu';
   }
 
   String get teslimatEtiketi {

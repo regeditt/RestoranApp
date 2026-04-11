@@ -33,6 +33,18 @@ dev_dependencies:
   flutter_lints: ^6.0.0
   drift_dev: ^2.32.1
   build_runner: ^2.4.12
+  msix: ^3.16.13
 
 flutter:
   uses-material-design: true
+
+msix_config:
+  display_name: VectorPos
+  publisher_display_name: VectorPos
+  identity_name: com.vectorpos.app
+  msix_version: 1.0.0.0
+  logo_path: windows/runner/resources/app_icon_preview.png
+  output_name: vector_pos_installer
+  output_path: build/windows/installer
+  capabilities: internetClient, location
+  install_certificate: false

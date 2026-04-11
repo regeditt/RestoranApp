@@ -63,6 +63,8 @@ class SiparisDeposuSqlite implements SiparisDeposu {
               masaNo: Value(kaydedilecekSiparis.masaNo),
               bolumAdi: Value(kaydedilecekSiparis.bolumAdi),
               kaynak: Value(kaydedilecekSiparis.kaynak),
+              kuponKodu: Value(kaydedilecekSiparis.kuponKodu),
+              indirimTutari: Value(kaydedilecekSiparis.indirimTutari),
               sahipMisafir: Value(kaydedilecekSiparis.sahip.misafirMi),
               sahipAdSoyad: Value(
                 kaydedilecekSiparis.sahip.misafirBilgisi?.adSoyad ??
@@ -222,6 +224,8 @@ class SiparisDeposuSqlite implements SiparisDeposu {
       masaNo: kayit.masaNo,
       bolumAdi: kayit.bolumAdi,
       kaynak: kayit.kaynak,
+      kuponKodu: kayit.kuponKodu,
+      indirimTutari: kayit.indirimTutari,
     );
   }
 }

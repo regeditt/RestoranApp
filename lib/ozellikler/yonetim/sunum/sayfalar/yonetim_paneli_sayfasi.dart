@@ -3,6 +3,7 @@ import 'package:restoran_app/bagimlilik_enjeksiyonu/servis_kaydi.dart';
 import 'package:restoran_app/ortak/bilesenler/ana_sayfaya_donus.dart';
 import 'package:restoran_app/ortak/responsive/ekran_boyutu.dart';
 import 'package:restoran_app/ortak/sabitler/uygulama_sabitleri.dart';
+import 'package:restoran_app/ortak/tema/ana_sayfa_renk_sablonu.dart';
 import 'package:restoran_app/ortak/yonlendirme/rota_yapisi.dart';
 import 'package:restoran_app/ozellikler/siparis/alan/enumlar/siparis_durumu.dart';
 import 'package:restoran_app/ozellikler/siparis/alan/enumlar/teslimat_tipi.dart';
@@ -66,7 +67,16 @@ class _YonetimPaneliSayfasiState extends State<YonetimPaneliSayfasi> {
 
   Future<void> _yukle() async {
     final YonetimPaneliIslemSonucu sonuc = await widget.viewModel.yukle();
-    if (!mounted || sonuc.basarili) {
+    if (!mounted) {
+      return;
+    }
+    if (sonuc.basarili && sonuc.mesaj.isNotEmpty) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(sonuc.mesaj)));
+      return;
+    }
+    if (sonuc.basarili) {
       return;
     }
     ScaffoldMessenger.of(
@@ -155,7 +165,16 @@ class _YonetimPaneliSayfasiState extends State<YonetimPaneliSayfasi> {
   Future<void> _yonetimVerileriniYenile() async {
     final YonetimPaneliIslemSonucu sonuc = await widget.viewModel
         .yonetimVerileriniYenile();
-    if (!mounted || sonuc.basarili) {
+    if (!mounted) {
+      return;
+    }
+    if (sonuc.basarili && sonuc.mesaj.isNotEmpty) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(sonuc.mesaj)));
+      return;
+    }
+    if (sonuc.basarili) {
       return;
     }
     ScaffoldMessenger.of(
@@ -256,16 +275,16 @@ class _YonetimPaneliSayfasiState extends State<YonetimPaneliSayfasi> {
         final YonetimPaneliOzetiVarligi ozet = viewModel.panelOzeti;
 
         return Scaffold(
-          backgroundColor: const Color(0xFF110D18),
+          backgroundColor: AnaSayfaRenkSablonu.arkaPlanKoyu,
           body: DecoratedBox(
             decoration: const BoxDecoration(
               gradient: LinearGradient(
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
                 colors: [
-                  Color(0xFF17111F),
-                  Color(0xFF241733),
-                  Color(0xFF321A45),
+                  AnaSayfaRenkSablonu.arkaPlanKoyu,
+                  AnaSayfaRenkSablonu.arkaPlanOrta,
+                  AnaSayfaRenkSablonu.arkaPlanUst,
                 ],
               ),
             ),
@@ -508,7 +527,7 @@ class _FiltreCubugu extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
             decoration: BoxDecoration(
               color: seciliMi
-                  ? const Color(0xFFFF5D8F)
+                  ? AnaSayfaRenkSablonu.birincilAksiyon
                   : Colors.white.withValues(alpha: 0.08),
               borderRadius: BorderRadius.circular(999),
               border: Border.all(
@@ -631,6 +650,23 @@ class _KompaktUstAlan extends StatelessWidget {
                     ),
                     icon: const Icon(Icons.bar_chart_rounded, size: 18),
                     label: const Text('Rapor merkezi'),
+                  ),
+                  FilledButton.tonalIcon(
+                    onPressed: () {
+                      Navigator.of(
+                        context,
+                      ).pushReplacementNamed(RotaYapisi.mutfak);
+                    },
+                    style: FilledButton.styleFrom(
+                      foregroundColor: Colors.white,
+                      backgroundColor: Colors.white.withValues(alpha: 0.12),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 14,
+                      ),
+                    ),
+                    icon: const Icon(Icons.soup_kitchen_rounded, size: 18),
+                    label: const Text('Mutfak ekrani'),
                   ),
                   FilledButton.tonalIcon(
                     onPressed: () {
@@ -769,6 +805,11 @@ class _KompaktUstAlan extends StatelessWidget {
                 renk: const Color(0xFF7FE7B3),
               ),
               _OperasyonMetrigi(
+                baslik: 'Kampanya indirimi',
+                deger: paraYaz(ozet.toplamIndirim),
+                renk: const Color(0xFFFFC27A),
+              ),
+              _OperasyonMetrigi(
                 baslik: 'Salon',
                 deger: '${ozet.restorandaYeSayisi}',
                 renk: const Color(0xFF74A2FF),
@@ -892,12 +933,6 @@ class _SiparisAkisi extends StatelessWidget {
                       },
                       icon: const Icon(Icons.close_rounded),
                     ),
-              filled: true,
-              fillColor: Colors.white,
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(18),
-                borderSide: BorderSide.none,
-              ),
             ),
           ),
           const SizedBox(height: 16),

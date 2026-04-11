@@ -4,4 +4,5 @@ enum IslemYetkisi {
   ikramUygula,
   urunFiyatDegistir,
   masaTasima,
+  stokYonetimi,
 }

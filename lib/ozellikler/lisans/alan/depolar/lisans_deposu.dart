@@ -8,6 +8,12 @@ abstract class LisansDeposu {
   /// Lisans anahtarini kalici olarak kaydeder.
   Future<void> lisansAnahtariKaydet(String lisansAnahtari);
 
+  /// Deneme suresi baslangic tarihini getirir.
+  Future<DateTime?> denemeBaslangicTarihiGetir();
+
+  /// Deneme suresi baslangic tarihini kalici olarak kaydeder.
+  Future<void> denemeBaslangicTarihiKaydet(DateTime baslangicTarihi);
+
   /// Kayitli lisans anahtarini temizler.
   Future<void> lisansTemizle();
 }

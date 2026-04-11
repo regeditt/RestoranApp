@@ -44,4 +44,28 @@ void main() {
       expect(sonuc.yazdirmaSonucu, isNotNull);
     },
   );
+
+  test(
+    'SiparisOzetiViewModel kupon indirimini siparise kalici yazar',
+    () async {
+      final ServisKaydi servisKaydi = ServisKaydi.mock();
+      await servisKaydi.sepeteUrunEkleUseCase(urunId: 'urn_001', adet: 3);
+      final SepetVarligi sepet = await servisKaydi.sepetiGetirUseCase();
+      final SiparisOzetiViewModel viewModel =
+          SiparisOzetiViewModel.servisKaydindan(servisKaydi, sepet: sepet);
+
+      final SiparisOzetiIslemSonucu kuponSonucu = await viewModel.kuponUygula(
+        'IKIALBIR',
+      );
+      expect(kuponSonucu.basarili, isTrue);
+
+      final SiparisOzetiIslemSonucu sonuc = await viewModel.siparisiOnayla();
+
+      expect(sonuc.basarili, isTrue);
+      expect(sonuc.siparis, isNotNull);
+      expect(sonuc.siparis!.kuponKodu, 'IKIALBIR');
+      expect(sonuc.siparis!.indirimTutari, greaterThan(0));
+      expect(sonuc.siparis!.toplamTutar, lessThan(sonuc.siparis!.araToplam));
+    },
+  );
 }

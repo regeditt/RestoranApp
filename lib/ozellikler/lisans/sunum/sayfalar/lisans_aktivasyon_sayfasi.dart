@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:restoran_app/ozellikler/lisans/uygulama/use_case/lisans_aktif_et_use_case.dart';
 import 'package:restoran_app/ozellikler/lisans/sunum/viewmodel/lisans_aktivasyon_viewmodel.dart';
 import 'package:restoran_app/ortak/sabitler/uygulama_sabitleri.dart';
@@ -82,6 +83,12 @@ class _LisansAktivasyonSayfasiState extends State<LisansAktivasyonSayfasi> {
                                       ? widget.viewModel.durum.mesaj
                                       : _mesaj,
                                 ),
+                                const SizedBox(height: 10),
+                                _CihazKoduSatiri(
+                                  cihazKodu:
+                                      widget.viewModel.durum.cihazKodu ??
+                                      'BILINMIYOR',
+                                ),
                                 const SizedBox(height: 16),
                                 TextField(
                                   controller: _anahtarDenetleyici,
@@ -90,7 +97,7 @@ class _LisansAktivasyonSayfasiState extends State<LisansAktivasyonSayfasi> {
                                   enabled: !widget.viewModel.islemde,
                                   decoration: const InputDecoration(
                                     labelText: 'Lisans anahtari',
-                                    hintText: 'RST-YYYYMMDD-XXXXXX',
+                                    hintText: 'VP-YYYYMMDD-CCCCCC-XXXXXX',
                                   ),
                                 ),
                                 const SizedBox(height: 14),
@@ -155,6 +162,50 @@ class _DurumSatiri extends StatelessWidget {
         style: temaVerisi.textTheme.bodyMedium?.copyWith(
           color: tema.metinBirincilKoyu,
         ),
+      ),
+    );
+  }
+}
+
+class _CihazKoduSatiri extends StatelessWidget {
+  const _CihazKoduSatiri({required this.cihazKodu});
+
+  final String cihazKodu;
+
+  @override
+  Widget build(BuildContext context) {
+    final RestoranTemaRenkleri tema = context.restoranTema;
+    final ThemeData temaVerisi = Theme.of(context);
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      decoration: BoxDecoration(
+        color: tema.kartYuzey,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(
+              'Cihaz kodu: $cihazKodu',
+              style: temaVerisi.textTheme.bodyMedium?.copyWith(
+                color: tema.metinBirincilKoyu,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+          TextButton.icon(
+            onPressed: () {
+              Clipboard.setData(ClipboardData(text: cihazKodu));
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Cihaz kodu kopyalandi.')),
+              );
+            },
+            icon: const Icon(Icons.copy_rounded, size: 16),
+            label: const Text('Kopyala'),
+          ),
+        ],
       ),
     );
   }

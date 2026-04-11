@@ -94,7 +94,7 @@ void main() {
     expect(find.text('Ana sayfaya don'), findsOneWidget);
     expect(find.text('Chatbot'), findsOneWidget);
     expect(find.text('Giris yap'), findsNothing);
-    expect(find.text('Hesap olustur'), findsNothing);
+    expect(find.text('Hesap olustur'), findsOneWidget);
 
     await tester.tap(find.text('Chatbot'));
     await tester.pumpAndSettle();
@@ -151,7 +151,7 @@ void main() {
     expect(find.text('Girise don'), findsOneWidget);
     expect(find.text('Ad soyad'), findsOneWidget);
     expect(find.text('Kullanici adi / telefon'), findsOneWidget);
-    expect(find.textContaining('hesabi olustur'), findsOneWidget);
+    expect(find.textContaining('hesabi olustur'), findsWidgets);
   });
 
   testWidgets('Acilista ayarlar aksiyonu gorunur', (WidgetTester tester) async {

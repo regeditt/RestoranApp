@@ -1,5 +1,6 @@
 import 'package:restoran_app/ozellikler/stok/alan/varliklar/hammadde_stok_varligi.dart';
 import 'package:restoran_app/ozellikler/stok/alan/varliklar/recete_kalemi_varligi.dart';
+import 'package:restoran_app/ozellikler/stok/alan/varliklar/stok_alarm_gecmisi_kaydi_varligi.dart';
 
 /// Stok ve recete operasyonlari icin depo kontrati.
 abstract class StokDeposu {
@@ -20,4 +21,11 @@ abstract class StokDeposu {
 
   /// Verilen hammadde stokundan [miktar] kadar duser.
   Future<void> stokDus({required String hammaddeId, required double miktar});
+
+  /// Stok alarm gecmisi kayitlarini getirir.
+  Future<List<StokAlarmGecmisiKaydiVarligi>> stokAlarmGecmisiGetir({
+    DateTime? baslangicTarihi,
+    DateTime? bitisTarihi,
+    int limit = 500,
+  });
 }

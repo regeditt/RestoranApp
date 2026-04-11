@@ -705,6 +705,7 @@ class HammaddeFormSonucu {
     required this.ad,
     required this.birim,
     required this.mevcutMiktar,
+    required this.uyariEsigi,
     required this.kritikEsik,
     required this.birimMaliyet,
   });
@@ -712,6 +713,7 @@ class HammaddeFormSonucu {
   final String ad;
   final String birim;
   final double mevcutMiktar;
+  final double uyariEsigi;
   final double kritikEsik;
   final double birimMaliyet;
 }
@@ -729,6 +731,7 @@ class HammaddeFormDialogState extends State<HammaddeFormDialog> {
   late final TextEditingController _adDenetleyici;
   late final TextEditingController _birimDenetleyici;
   late final TextEditingController _miktarDenetleyici;
+  late final TextEditingController _uyariEsigiDenetleyici;
   late final TextEditingController _esikDenetleyici;
   late final TextEditingController _maliyetDenetleyici;
 
@@ -744,6 +747,9 @@ class HammaddeFormDialogState extends State<HammaddeFormDialog> {
     _miktarDenetleyici = TextEditingController(
       text: widget.baslangicHammadde?.mevcutMiktar.toStringAsFixed(0) ?? '',
     );
+    _uyariEsigiDenetleyici = TextEditingController(
+      text: widget.baslangicHammadde?.uyariEsigi.toStringAsFixed(0) ?? '',
+    );
     _esikDenetleyici = TextEditingController(
       text: widget.baslangicHammadde?.kritikEsik.toStringAsFixed(0) ?? '',
     );
@@ -757,6 +763,7 @@ class HammaddeFormDialogState extends State<HammaddeFormDialog> {
     _adDenetleyici.dispose();
     _birimDenetleyici.dispose();
     _miktarDenetleyici.dispose();
+    _uyariEsigiDenetleyici.dispose();
     _esikDenetleyici.dispose();
     _maliyetDenetleyici.dispose();
     super.dispose();
@@ -797,6 +804,14 @@ class HammaddeFormDialogState extends State<HammaddeFormDialog> {
                 ),
                 const SizedBox(height: 12),
                 TextField(
+                  controller: _uyariEsigiDenetleyici,
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                  ),
+                  decoration: const InputDecoration(labelText: 'Uyari esigi'),
+                ),
+                const SizedBox(height: 12),
+                TextField(
                   controller: _esikDenetleyici,
                   keyboardType: const TextInputType.numberWithOptions(
                     decimal: true,
@@ -827,17 +842,26 @@ class HammaddeFormDialogState extends State<HammaddeFormDialog> {
               final double? miktar = double.tryParse(
                 _miktarDenetleyici.text.trim().replaceAll(',', '.'),
               );
+              final String uyariEsigiMetni = _uyariEsigiDenetleyici.text.trim();
+              final double? uyariEsigi = uyariEsigiMetni.isEmpty
+                  ? null
+                  : double.tryParse(uyariEsigiMetni.replaceAll(',', '.'));
               final double? esik = double.tryParse(
                 _esikDenetleyici.text.trim().replaceAll(',', '.'),
               );
               final double? maliyet = double.tryParse(
                 _maliyetDenetleyici.text.trim().replaceAll(',', '.'),
               );
+              final double? hesaplananUyariEsigi = esik == null
+                  ? null
+                  : (uyariEsigi ?? (esik <= 0 ? 0 : esik * 1.35));
               if (ad.isEmpty ||
                   birim.isEmpty ||
                   miktar == null ||
+                  hesaplananUyariEsigi == null ||
                   esik == null ||
-                  maliyet == null) {
+                  maliyet == null ||
+                  hesaplananUyariEsigi < esik) {
                 return;
               }
               Navigator.of(context).pop(
@@ -845,6 +869,7 @@ class HammaddeFormDialogState extends State<HammaddeFormDialog> {
                   ad: ad,
                   birim: birim,
                   mevcutMiktar: miktar,
+                  uyariEsigi: hesaplananUyariEsigi,
                   kritikEsik: esik,
                   birimMaliyet: maliyet,
                 ),

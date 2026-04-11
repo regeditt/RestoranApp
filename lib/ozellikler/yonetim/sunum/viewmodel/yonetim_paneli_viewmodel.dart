@@ -13,7 +13,11 @@ import 'package:restoran_app/ozellikler/siparis/uygulama/servisler/kurye_entegra
 import 'package:restoran_app/ozellikler/siparis/uygulama/servisler/kurye_konum_takip_servisi.dart';
 import 'package:restoran_app/ozellikler/siparis/uygulama/servisler/kurye_takip_senkronlayici.dart';
 import 'package:restoran_app/ozellikler/siparis/uygulama/use_case/siparisleri_getir_use_case.dart';
+import 'package:restoran_app/ozellikler/stok/alan/enumlar/stok_uyari_durumu.dart';
+import 'package:restoran_app/ozellikler/stok/alan/enumlar/stok_uyari_filtresi.dart';
+import 'package:restoran_app/ozellikler/stok/alan/varliklar/hammadde_stok_varligi.dart';
 import 'package:restoran_app/ozellikler/stok/alan/varliklar/stok_ozeti_varligi.dart';
+import 'package:restoran_app/ozellikler/stok/uygulama/use_case/hammadde_uyarilarini_getir_use_case.dart';
 import 'package:restoran_app/ozellikler/stok/uygulama/use_case/stok_ozeti_getir_use_case.dart';
 import 'package:restoran_app/ozellikler/yonetim/alan/varliklar/personel_durumu_varligi.dart';
 import 'package:restoran_app/ozellikler/yonetim/alan/varliklar/saatlik_siparis_ozeti_varligi.dart';
@@ -60,6 +64,7 @@ class YonetimPaneliViewModel extends ChangeNotifier {
     required KategorileriGetirUseCase kategorileriGetirUseCase,
     required UrunleriGetirUseCase urunleriGetirUseCase,
     required StokOzetiGetirUseCase stokOzetiGetirUseCase,
+    HammaddeleriUyariyaGoreGetirUseCase? hammaddeleriUyariyaGoreGetirUseCase,
     required HesapOlusturUseCase hesapOlusturUseCase,
     required YaziciEkleUseCase yaziciEkleUseCase,
     required YaziciGuncelleUseCase yaziciGuncelleUseCase,
@@ -75,6 +80,8 @@ class YonetimPaneliViewModel extends ChangeNotifier {
        _kategorileriGetirUseCase = kategorileriGetirUseCase,
        _urunleriGetirUseCase = urunleriGetirUseCase,
        _stokOzetiGetirUseCase = stokOzetiGetirUseCase,
+       _hammaddeleriUyariyaGoreGetirUseCase =
+           hammaddeleriUyariyaGoreGetirUseCase,
        _hesapOlusturUseCase = hesapOlusturUseCase,
        _yaziciEkleUseCase = yaziciEkleUseCase,
        _yaziciGuncelleUseCase = yaziciGuncelleUseCase,
@@ -95,6 +102,8 @@ class YonetimPaneliViewModel extends ChangeNotifier {
       kategorileriGetirUseCase: servisKaydi.kategorileriGetirUseCase,
       urunleriGetirUseCase: servisKaydi.urunleriGetirUseCase,
       stokOzetiGetirUseCase: servisKaydi.stokOzetiGetirUseCase,
+      hammaddeleriUyariyaGoreGetirUseCase:
+          servisKaydi.hammaddeleriUyariyaGoreGetirUseCase,
       hesapOlusturUseCase: servisKaydi.hesapOlusturUseCase,
       yaziciEkleUseCase: servisKaydi.yaziciEkleUseCase,
       yaziciGuncelleUseCase: servisKaydi.yaziciGuncelleUseCase,
@@ -112,6 +121,8 @@ class YonetimPaneliViewModel extends ChangeNotifier {
   final KategorileriGetirUseCase _kategorileriGetirUseCase;
   final UrunleriGetirUseCase _urunleriGetirUseCase;
   final StokOzetiGetirUseCase _stokOzetiGetirUseCase;
+  final HammaddeleriUyariyaGoreGetirUseCase?
+  _hammaddeleriUyariyaGoreGetirUseCase;
   final HesapOlusturUseCase _hesapOlusturUseCase;
   final YaziciEkleUseCase _yaziciEkleUseCase;
   final YaziciGuncelleUseCase _yaziciGuncelleUseCase;
@@ -133,6 +144,13 @@ class YonetimPaneliViewModel extends ChangeNotifier {
   ZamanFiltresi _seciliZamanFiltresi = ZamanFiltresi.bugun;
   SiparisSirasi _seciliSiralama = SiparisSirasi.enYeni;
   String _aramaMetni = '';
+  bool _stokAlarmDurumlariIlkEslemeYapildi = false;
+  Map<String, StokUyariDurumu> _oncekiStokAlarmDurumlari =
+      <String, StokUyariDurumu>{};
+  final Map<String, DateTime> _sonBildirimZamanlari = <String, DateTime>{};
+  static const Duration _stokAlarmBildirimThrottleSuresi = Duration(
+    minutes: 15,
+  );
 
   bool get yukleniyor => _yukleniyor;
   List<SiparisVarligi> get siparisler => _siparisler;
@@ -258,7 +276,9 @@ class YonetimPaneliViewModel extends ChangeNotifier {
       _stokOzeti = stokOzeti;
       _yukleniyor = false;
       notifyListeners();
-      return const YonetimPaneliIslemSonucu.basarili();
+      final String? stokBildirimMesaji =
+          await _stokAlarmBildirimMesajiOlustur();
+      return YonetimPaneliIslemSonucu.basarili(stokBildirimMesaji ?? '');
     } catch (_) {
       _yukleniyor = false;
       notifyListeners();
@@ -320,7 +340,9 @@ class YonetimPaneliViewModel extends ChangeNotifier {
       _menuUrunleri = menuUrunleri;
       _stokOzeti = stokOzeti;
       notifyListeners();
-      return const YonetimPaneliIslemSonucu.basarili();
+      final String? stokBildirimMesaji =
+          await _stokAlarmBildirimMesajiOlustur();
+      return YonetimPaneliIslemSonucu.basarili(stokBildirimMesaji ?? '');
     } catch (_) {
       return const YonetimPaneliIslemSonucu.hata(
         'Yonetim verileri yenilenemedi',
@@ -450,4 +472,104 @@ class YonetimPaneliViewModel extends ChangeNotifier {
 
     return sirali;
   }
+
+  Future<String?> _stokAlarmBildirimMesajiOlustur() async {
+    final HammaddeleriUyariyaGoreGetirUseCase? hammaddeleriGetir =
+        _hammaddeleriUyariyaGoreGetirUseCase;
+    if (hammaddeleriGetir == null) {
+      return null;
+    }
+    final List<_StokAlarmAdayi> alarmAdaylari = <_StokAlarmAdayi>[];
+    final Map<String, StokUyariDurumu> yeniAlarmDurumlari =
+        <String, StokUyariDurumu>{};
+
+    final List<({StokUyariFiltresi filtre, StokUyariDurumu durum})>
+    alarmKaynaklari = <({StokUyariFiltresi filtre, StokUyariDurumu durum})>[
+      (filtre: StokUyariFiltresi.tukendi, durum: StokUyariDurumu.tukendi),
+      (filtre: StokUyariFiltresi.kritik, durum: StokUyariDurumu.kritik),
+    ];
+
+    for (final kaynak in alarmKaynaklari) {
+      final List<HammaddeStokVarligi> hammaddeler = await hammaddeleriGetir(
+        filtre: kaynak.filtre,
+      );
+      for (final HammaddeStokVarligi hammadde in hammaddeler) {
+        yeniAlarmDurumlari[hammadde.id] = kaynak.durum;
+        alarmAdaylari.add(
+          _StokAlarmAdayi(
+            id: hammadde.id,
+            ad: hammadde.ad,
+            durum: kaynak.durum,
+          ),
+        );
+      }
+    }
+
+    if (!_stokAlarmDurumlariIlkEslemeYapildi) {
+      _stokAlarmDurumlariIlkEslemeYapildi = true;
+      _oncekiStokAlarmDurumlari = yeniAlarmDurumlari;
+      return null;
+    }
+
+    final DateTime simdi = DateTime.now();
+    final Map<String, _StokAlarmAdayi> adayHaritasi = <String, _StokAlarmAdayi>{
+      for (final _StokAlarmAdayi aday in alarmAdaylari) aday.id: aday,
+    };
+    final List<_StokAlarmAdayi> bildirilecekler = <_StokAlarmAdayi>[];
+
+    for (final _StokAlarmAdayi aday in alarmAdaylari) {
+      final StokUyariDurumu oncekiDurum =
+          _oncekiStokAlarmDurumlari[aday.id] ?? StokUyariDurumu.normal;
+      final bool alarmGecisi =
+          oncekiDurum != StokUyariDurumu.kritik &&
+          oncekiDurum != StokUyariDurumu.tukendi;
+      if (!alarmGecisi) {
+        continue;
+      }
+      final DateTime? sonBildirim = _sonBildirimZamanlari[aday.id];
+      final bool throttleda =
+          sonBildirim != null &&
+          simdi.difference(sonBildirim) < _stokAlarmBildirimThrottleSuresi;
+      if (throttleda) {
+        continue;
+      }
+      bildirilecekler.add(aday);
+      _sonBildirimZamanlari[aday.id] = simdi;
+    }
+
+    _oncekiStokAlarmDurumlari = <String, StokUyariDurumu>{
+      for (final MapEntry<String, _StokAlarmAdayi> giris
+          in adayHaritasi.entries)
+        giris.key: giris.value.durum,
+    };
+
+    if (bildirilecekler.isEmpty) {
+      return null;
+    }
+    final int tukendiSayisi = bildirilecekler
+        .where((aday) => aday.durum == StokUyariDurumu.tukendi)
+        .length;
+    final int kritikSayisi = bildirilecekler.length - tukendiSayisi;
+    final String adlar = bildirilecekler
+        .take(3)
+        .map((aday) => aday.ad)
+        .join(', ');
+    final String adetMetni = bildirilecekler.length > 3
+        ? '$adlar ve ${bildirilecekler.length - 3} kalem'
+        : adlar;
+    return 'Stok alarmi: $adetMetni. '
+        'Kritik: $kritikSayisi, Tukendi: $tukendiSayisi.';
+  }
+}
+
+class _StokAlarmAdayi {
+  const _StokAlarmAdayi({
+    required this.id,
+    required this.ad,
+    required this.durum,
+  });
+
+  final String id;
+  final String ad;
+  final StokUyariDurumu durum;
 }

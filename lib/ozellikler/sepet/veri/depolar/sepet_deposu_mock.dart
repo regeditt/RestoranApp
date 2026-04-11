@@ -33,7 +33,11 @@ class SepetDeposuMock implements SepetDeposu {
         .where((kalem) => kalem.adet > 0)
         .toList();
 
-    _sepet = SepetVarligi(id: _sepet.id, kalemler: guncelKalemler);
+    _sepet = SepetVarligi(
+      id: _sepet.id,
+      kalemler: guncelKalemler,
+      kuponKodu: _sepet.kuponKodu,
+    );
     return _sepet;
   }
 
@@ -42,6 +46,7 @@ class SepetDeposuMock implements SepetDeposu {
     _sepet = SepetVarligi(
       id: _sepet.id,
       kalemler: _sepet.kalemler.where((kalem) => kalem.id != kalemId).toList(),
+      kuponKodu: _sepet.kuponKodu,
     );
     return _sepet;
   }
@@ -86,8 +91,20 @@ class SepetDeposuMock implements SepetDeposu {
     _sepet = SepetVarligi(
       id: _sepet.id,
       kalemler: [..._sepet.kalemler, yeniKalem],
+      kuponKodu: _sepet.kuponKodu,
     );
 
+    return _sepet;
+  }
+
+  @override
+  Future<SepetVarligi> kuponKoduGuncelle(String? kuponKodu) async {
+    final String? duzenli = kuponKodu?.trim();
+    _sepet = SepetVarligi(
+      id: _sepet.id,
+      kalemler: _sepet.kalemler,
+      kuponKodu: duzenli == null || duzenli.isEmpty ? null : duzenli,
+    );
     return _sepet;
   }
 

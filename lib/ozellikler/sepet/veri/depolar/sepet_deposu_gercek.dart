@@ -33,6 +33,11 @@ class SepetDeposuGercek implements SepetDeposu {
   }
 
   @override
+  Future<SepetVarligi> kuponKoduGuncelle(String? kuponKodu) {
+    return _icDepo.kuponKoduGuncelle(kuponKodu);
+  }
+
+  @override
   Future<SepetVarligi> urunEkle({
     required String urunId,
     required int adet,

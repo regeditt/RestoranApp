@@ -4,7 +4,6 @@ import 'package:restoran_app/ozellikler/kimlik/veri/depolar/kimlik_deposu_gercek
 import 'package:restoran_app/ozellikler/kimlik/veri/depolar/kimlik_deposu_mock.dart';
 import 'package:restoran_app/ozellikler/kimlik/veri/depolar/kimlik_deposu_sqlite.dart';
 import 'package:restoran_app/ozellikler/lisans/alan/depolar/lisans_deposu.dart';
-import 'package:restoran_app/ozellikler/lisans/uygulama/servisler/lisans_anahtari_dogrulayici.dart';
 import 'package:restoran_app/ozellikler/lisans/veri/depolar/lisans_deposu_gercek.dart';
 import 'package:restoran_app/ozellikler/lisans/veri/depolar/lisans_deposu_mock.dart';
 import 'package:restoran_app/ozellikler/lisans/veri/depolar/lisans_deposu_sqlite.dart';
@@ -12,6 +11,14 @@ import 'package:restoran_app/ozellikler/menu/alan/depolar/menu_deposu.dart';
 import 'package:restoran_app/ozellikler/menu/veri/depolar/menu_deposu_gercek.dart';
 import 'package:restoran_app/ozellikler/menu/veri/depolar/menu_deposu_mock.dart';
 import 'package:restoran_app/ozellikler/menu/veri/depolar/menu_deposu_sqlite.dart';
+import 'package:restoran_app/ozellikler/odeme_kasa/alan/depolar/odeme_kasa_deposu.dart';
+import 'package:restoran_app/ozellikler/odeme_kasa/veri/depolar/odeme_kasa_deposu_gercek.dart';
+import 'package:restoran_app/ozellikler/odeme_kasa/veri/depolar/odeme_kasa_deposu_mock.dart';
+import 'package:restoran_app/ozellikler/odeme_kasa/veri/depolar/odeme_kasa_deposu_sqlite.dart';
+import 'package:restoran_app/ozellikler/rezervasyon/alan/depolar/rezervasyon_deposu.dart';
+import 'package:restoran_app/ozellikler/rezervasyon/veri/depolar/rezervasyon_deposu_gercek.dart';
+import 'package:restoran_app/ozellikler/rezervasyon/veri/depolar/rezervasyon_deposu_mock.dart';
+import 'package:restoran_app/ozellikler/rezervasyon/veri/depolar/rezervasyon_deposu_sqlite.dart';
 import 'package:restoran_app/ozellikler/sepet/alan/depolar/sepet_deposu.dart';
 import 'package:restoran_app/ozellikler/sepet/veri/depolar/sepet_deposu_gercek.dart';
 import 'package:restoran_app/ozellikler/sepet/veri/depolar/sepet_deposu_mock.dart';
@@ -53,6 +60,8 @@ class ServisBagimlilikleri {
     required this.personelDeposu,
     required this.salonPlaniDeposu,
     required this.stokDeposu,
+    required this.odemeKasaDeposu,
+    required this.rezervasyonDeposu,
     required this.kuryeEntegrasyonYonetimServisi,
     required this.veritabani,
   });
@@ -66,12 +75,12 @@ class ServisBagimlilikleri {
   final PersonelDeposu personelDeposu;
   final SalonPlaniDeposu salonPlaniDeposu;
   final StokDeposu stokDeposu;
+  final OdemeKasaDeposu odemeKasaDeposu;
+  final RezervasyonDeposu rezervasyonDeposu;
   final KuryeEntegrasyonYonetimServisi kuryeEntegrasyonYonetimServisi;
   final UygulamaVeritabani? veritabani;
 
   static final UygulamaVeritabani _sqliteVeritabani = UygulamaVeritabani();
-  static final LisansAnahtariDogrulayici _lisansDogrulayici =
-      const LisansAnahtariDogrulayici();
 
   factory ServisBagimlilikleri.mock() {
     final MenuDeposu menuDeposu = MenuDeposuMock();
@@ -108,11 +117,7 @@ class ServisBagimlilikleri {
     });
     personelDeposu.kimlikSiliciAta(kimlikDeposu.hesapSil);
     return ServisBagimlilikleri(
-      lisansDeposu: LisansDeposuMock(
-        baslangicLisansAnahtari: _lisansDogrulayici.lisansAnahtariOlustur(
-          DateTime.now().add(const Duration(days: 365)),
-        ),
-      ),
+      lisansDeposu: LisansDeposuMock(),
       kimlikDeposu: kimlikDeposu,
       menuDeposu: menuDeposu,
       sepetDeposu: SepetDeposuMock(menuDeposu),
@@ -121,6 +126,8 @@ class ServisBagimlilikleri {
       personelDeposu: personelDeposu,
       salonPlaniDeposu: SalonPlaniDeposuMock(),
       stokDeposu: StokDeposuMock(),
+      odemeKasaDeposu: OdemeKasaDeposuMock(),
+      rezervasyonDeposu: RezervasyonDeposuMock(),
       kuryeEntegrasyonYonetimServisi: KuryeEntegrasyonYonetimServisi(),
       veritabani: null,
     );
@@ -138,6 +145,8 @@ class ServisBagimlilikleri {
       personelDeposu: PersonelDeposuGercek(),
       salonPlaniDeposu: SalonPlaniDeposuGercek(),
       stokDeposu: StokDeposuGercek(),
+      odemeKasaDeposu: OdemeKasaDeposuGercek(),
+      rezervasyonDeposu: RezervasyonDeposuGercek(),
       kuryeEntegrasyonYonetimServisi: KuryeEntegrasyonYonetimServisi(),
       veritabani: null,
     );
@@ -155,6 +164,8 @@ class ServisBagimlilikleri {
       personelDeposu: PersonelDeposuSqlite(_sqliteVeritabani),
       salonPlaniDeposu: SalonPlaniDeposuSqlite(_sqliteVeritabani),
       stokDeposu: StokDeposuSqlite(_sqliteVeritabani),
+      odemeKasaDeposu: OdemeKasaDeposuSqlite(_sqliteVeritabani),
+      rezervasyonDeposu: RezervasyonDeposuSqlite(_sqliteVeritabani),
       kuryeEntegrasyonYonetimServisi: KuryeEntegrasyonYonetimServisi(
         depo: KuryeEntegrasyonDeposuSqlite(_sqliteVeritabani),
       ),

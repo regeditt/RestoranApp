@@ -37,6 +37,8 @@ class SiparisDeposuMock implements SiparisDeposu {
       masaNo: siparis.masaNo,
       bolumAdi: siparis.bolumAdi,
       kaynak: siparis.kaynak,
+      kuponKodu: siparis.kuponKodu,
+      indirimTutari: siparis.indirimTutari,
     );
 
     _siparisler.add(kaydedilenSiparis);
