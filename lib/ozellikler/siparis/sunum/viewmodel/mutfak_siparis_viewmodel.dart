@@ -3,6 +3,7 @@ import 'package:restoran_app/bagimlilik_enjeksiyonu/servis_kaydi.dart';
 import 'package:restoran_app/ozellikler/kimlik/alan/roller/islem_yetkisi.dart';
 import 'package:restoran_app/ozellikler/siparis/alan/enumlar/siparis_durumu.dart';
 import 'package:restoran_app/ozellikler/siparis/alan/enumlar/teslimat_tipi.dart';
+import 'package:restoran_app/ozellikler/siparis/alan/servisler/siparis_operasyon_akisi.dart';
 import 'package:restoran_app/ozellikler/siparis/alan/varliklar/siparis_varligi.dart';
 import 'package:restoran_app/ozellikler/siparis/uygulama/servisler/kurye_entegrasyon_yonetim_servisi.dart';
 import 'package:restoran_app/ozellikler/siparis/uygulama/servisler/kurye_konum_takip_servisi.dart';
@@ -182,7 +183,9 @@ class MutfakSiparisViewModel extends ChangeNotifier {
       );
     }
 
-    final SiparisDurumu? sonrakiDurum = _sonrakiDurum(siparis);
+    final SiparisDurumu? sonrakiDurum = SiparisOperasyonAkisi.sonrakiDurum(
+      siparis,
+    );
     if (sonrakiDurum == null) {
       return const MutfakSiparisIslemSonucu.hata(
         'Bu siparisin durumu ilerletilemez',
@@ -209,9 +212,9 @@ class MutfakSiparisViewModel extends ChangeNotifier {
       return MutfakSiparisIslemSonucu.basarili(
         '${siparis.siparisNo} ${_durumEtiketi(sonrakiDurum).toLowerCase()} durumuna alindi. $durumMesaji',
       );
-    } catch (_) {
-      return const MutfakSiparisIslemSonucu.hata(
-        'Siparis durumu guncellenemedi',
+    } catch (hata) {
+      return MutfakSiparisIslemSonucu.hata(
+        _hataMesajiniCoz(hata, varsayilan: 'Siparis durumu guncellenemedi'),
       );
     }
   }
@@ -238,8 +241,10 @@ class MutfakSiparisViewModel extends ChangeNotifier {
       return MutfakSiparisIslemSonucu.basarili(
         '${siparis.siparisNo} iptal edildi ve operasyon listesinden dusuruldu.',
       );
-    } catch (_) {
-      return const MutfakSiparisIslemSonucu.hata('Siparis iptal edilemedi');
+    } catch (hata) {
+      return MutfakSiparisIslemSonucu.hata(
+        _hataMesajiniCoz(hata, varsayilan: 'Siparis iptal edilemedi'),
+      );
     }
   }
 
@@ -300,24 +305,6 @@ class MutfakSiparisViewModel extends ChangeNotifier {
       );
   }
 
-  SiparisDurumu? _sonrakiDurum(SiparisVarligi siparis) {
-    switch (siparis.durum) {
-      case SiparisDurumu.alindi:
-        return SiparisDurumu.hazirlaniyor;
-      case SiparisDurumu.hazirlaniyor:
-        return SiparisDurumu.hazir;
-      case SiparisDurumu.hazir:
-        return siparis.teslimatTipi == TeslimatTipi.paketServis
-            ? SiparisDurumu.yolda
-            : SiparisDurumu.teslimEdildi;
-      case SiparisDurumu.yolda:
-        return SiparisDurumu.teslimEdildi;
-      case SiparisDurumu.teslimEdildi:
-      case SiparisDurumu.iptalEdildi:
-        return null;
-    }
-  }
-
   String _durumYaziciMesaji(
     SiparisVarligi siparis,
     SiparisDurumu sonrakiDurum,
@@ -336,6 +323,16 @@ class MutfakSiparisViewModel extends ChangeNotifier {
       case SiparisDurumu.iptalEdildi:
         return '$hat hatti ile senkron tamamlandi';
     }
+  }
+
+  String _hataMesajiniCoz(Object hata, {required String varsayilan}) {
+    if (hata is StateError) {
+      final String mesaj = hata.message;
+      if (mesaj.trim().isNotEmpty) {
+        return mesaj;
+      }
+    }
+    return varsayilan;
   }
 }
 

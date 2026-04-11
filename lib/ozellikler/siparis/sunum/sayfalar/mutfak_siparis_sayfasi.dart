@@ -169,49 +169,55 @@ class _MutfakSiparisSayfasiState extends State<MutfakSiparisSayfasi> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
+          scrollable: true,
           title: const Text('Kurye Sec'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: <Widget>[
-              Text('${siparis.siparisNo} icin teslimata cikacak kuryeyi sec.'),
-              const SizedBox(height: 12),
-              TextField(
-                controller: denetleyici,
-                autofocus: true,
-                textInputAction: TextInputAction.done,
-                decoration: const InputDecoration(
-                  labelText: 'Kurye adi',
-                  hintText: 'Ornek: Emre Kurye',
+          content: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 460),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                Text(
+                  '${siparis.siparisNo} icin teslimata cikacak kuryeyi sec.',
                 ),
-                onSubmitted: (_) {
-                  final String? sonuc = _kuryeAdiTemizle(denetleyici.text);
-                  if (sonuc != null) {
-                    Navigator.of(context).pop(sonuc);
-                  }
-                },
-              ),
-              if (mevcutKuryeler.isNotEmpty) ...<Widget>[
                 const SizedBox(height: 12),
-                const Text(
-                  'Hizli secim',
-                  style: TextStyle(fontWeight: FontWeight.w700),
+                TextField(
+                  controller: denetleyici,
+                  autofocus: true,
+                  textInputAction: TextInputAction.done,
+                  decoration: const InputDecoration(
+                    labelText: 'Kurye adi',
+                    hintText: 'Ornek: Emre Kurye',
+                  ),
+                  onSubmitted: (_) {
+                    final String? sonuc = _kuryeAdiTemizle(denetleyici.text);
+                    if (sonuc != null) {
+                      Navigator.of(context).pop(sonuc);
+                    }
+                  },
                 ),
-                const SizedBox(height: 6),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: mevcutKuryeler.map((String ad) {
-                    return ActionChip(
-                      label: Text(ad),
-                      onPressed: () {
-                        denetleyici.text = ad;
-                      },
-                    );
-                  }).toList(),
-                ),
+                if (mevcutKuryeler.isNotEmpty) ...<Widget>[
+                  const SizedBox(height: 12),
+                  const Text(
+                    'Hizli secim',
+                    style: TextStyle(fontWeight: FontWeight.w700),
+                  ),
+                  const SizedBox(height: 6),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: mevcutKuryeler.map((String ad) {
+                      return ActionChip(
+                        label: Text(ad),
+                        onPressed: () {
+                          denetleyici.text = ad;
+                        },
+                      );
+                    }).toList(),
+                  ),
+                ],
               ],
-            ],
+            ),
           ),
           actions: <Widget>[
             TextButton(
@@ -325,12 +331,16 @@ class _MutfakSiparisSayfasiState extends State<MutfakSiparisSayfasi> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
+          scrollable: true,
           title: Text('${siparis.siparisNo} mutfak notu'),
-          content: TextField(
-            controller: denetleyici,
-            maxLines: 3,
-            decoration: const InputDecoration(
-              hintText: 'Ornek: Sos ayri gitsin',
+          content: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 460),
+            child: TextField(
+              controller: denetleyici,
+              maxLines: 3,
+              decoration: const InputDecoration(
+                hintText: 'Ornek: Sos ayri gitsin',
+              ),
             ),
           ),
           actions: <Widget>[
@@ -2749,15 +2759,14 @@ String _kisaKalemOzeti(List<SiparisKalemiVarligi> kalemler) {
   if (kalemler.isEmpty) {
     return 'Kalem bilgisi bulunamadi';
   }
-  final List<String> parcalar = kalemler
-      .take(2)
-      .map((SiparisKalemiVarligi kalem) {
-        final String secenek = kalem.secenekAdi == null
-            ? ''
-            : ' / ${kalem.secenekAdi}';
-        return '${kalem.adet}x ${kalem.urunAdi}$secenek';
-      })
-      .toList(growable: false);
+  final List<String> parcalar = kalemler.take(2).map((
+    SiparisKalemiVarligi kalem,
+  ) {
+    final String secenek = kalem.secenekAdi == null
+        ? ''
+        : ' / ${kalem.secenekAdi}';
+    return '${kalem.adet}x ${kalem.urunAdi}$secenek';
+  }).toList();
   final int kalan = kalemler.length - parcalar.length;
   if (kalan > 0) {
     parcalar.add('+$kalan urun daha');

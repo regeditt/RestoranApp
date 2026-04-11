@@ -25,12 +25,25 @@ class _GirisSecimSayfasiState extends State<GirisSecimSayfasi> {
   final TextEditingController _kullaniciAdiDenetleyici =
       TextEditingController();
   final TextEditingController _sifreDenetleyici = TextEditingController();
+  bool _oturumKontrolEdiliyor = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _aktifOturumuKontrolEt();
+  }
 
   @override
   void didUpdateWidget(covariant GirisSecimSayfasi oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.viewModel != widget.viewModel) {
       oldWidget.viewModel.dispose();
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) {
+          return;
+        }
+        _aktifOturumuKontrolEt();
+      });
     }
   }
 
@@ -60,7 +73,31 @@ class _GirisSecimSayfasiState extends State<GirisSecimSayfasi> {
       return;
     }
 
-    Navigator.of(context).pushReplacementNamed(switch (sonuc.hedef!) {
+    _hedefeGit(sonuc.hedef!);
+  }
+
+  Future<void> _aktifOturumuKontrolEt() async {
+    if (!_oturumKontrolEdiliyor) {
+      setState(() {
+        _oturumKontrolEdiliyor = true;
+      });
+    }
+    final _GirisHedefi? aktifOturumHedefi = await widget.viewModel
+        .aktifOturumHedefiGetir();
+    if (!mounted) {
+      return;
+    }
+    if (aktifOturumHedefi != null) {
+      _hedefeGit(aktifOturumHedefi);
+      return;
+    }
+    setState(() {
+      _oturumKontrolEdiliyor = false;
+    });
+  }
+
+  void _hedefeGit(_GirisHedefi hedef) {
+    Navigator.of(context).pushReplacementNamed(switch (hedef) {
       _GirisHedefi.pos => RotaYapisi.pos,
       _GirisHedefi.yonetim => RotaYapisi.yonetimPaneli,
       _GirisHedefi.mutfak => RotaYapisi.mutfak,
@@ -84,6 +121,9 @@ class _GirisSecimSayfasiState extends State<GirisSecimSayfasi> {
 
   @override
   Widget build(BuildContext context) {
+    if (_oturumKontrolEdiliyor) {
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
     return AnimatedBuilder(
       animation: widget.viewModel,
       builder: (BuildContext context, Widget? child) {

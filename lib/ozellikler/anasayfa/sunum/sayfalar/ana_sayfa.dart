@@ -662,6 +662,7 @@ class _DurumSatiri extends StatelessWidget {
             baslik: 'Yonetici',
             alt: 'aktif',
             vurgu: _metinIkincil,
+            onTap: () => Navigator.of(context).pushNamed(RotaYapisi.hesabim),
           ),
         ],
       ),
@@ -675,17 +676,19 @@ class _DurumRozeti extends StatelessWidget {
     required this.baslik,
     required this.alt,
     required this.vurgu,
+    this.onTap,
   });
 
   final IconData ikon;
   final String baslik;
   final String alt;
   final Color vurgu;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
     final ThemeData temaVerisi = Theme.of(context);
-    return Container(
+    final Widget icerik = Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
       decoration: BoxDecoration(
         color: _panelKoyu.withValues(alpha: 0.88),
@@ -716,6 +719,19 @@ class _DurumRozeti extends StatelessWidget {
             ],
           ),
         ],
+      ),
+    );
+
+    if (onTap == null) {
+      return icerik;
+    }
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(12),
+        child: icerik,
       ),
     );
   }
@@ -808,57 +824,75 @@ class _MenuKarti extends StatelessWidget {
         onTap: () => Navigator.of(context).pushNamed(veri.rota),
         child: Padding(
           padding: const EdgeInsets.all(16),
-          child: Stack(
-            alignment: Alignment.center,
-            children: [
-              if (veri.rozet != null)
-                Positioned(
-                  top: 0,
-                  right: 0,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 3,
-                    ),
-                    decoration: BoxDecoration(
-                      color: _anaPembe,
-                      borderRadius: BorderRadius.circular(999),
-                    ),
-                    child: Text(
-                      veri.rozet!,
-                      style: temaVerisi.textTheme.labelLarge?.copyWith(
-                        color: _metinAna,
-                        fontWeight: FontWeight.w800,
+          child: LayoutBuilder(
+            builder: (BuildContext context, BoxConstraints constraints) {
+              final bool darKarti = constraints.maxHeight < 170;
+              final double ikonKutuBoyutu = darKarti ? 58 : 72;
+              final double ikonBoyutu = darKarti ? 30 : 38;
+              final double satirAraligi = darKarti ? 10 : 16;
+
+              return Stack(
+                alignment: Alignment.center,
+                children: [
+                  if (veri.rozet != null)
+                    Positioned(
+                      top: 0,
+                      right: 0,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 3,
+                        ),
+                        decoration: BoxDecoration(
+                          color: _anaPembe,
+                          borderRadius: BorderRadius.circular(999),
+                        ),
+                        child: Text(
+                          veri.rozet!,
+                          style: temaVerisi.textTheme.labelLarge?.copyWith(
+                            color: _metinAna,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
                       ),
                     ),
-                  ),
-                ),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Container(
-                    width: 72,
-                    height: 72,
-                    alignment: Alignment.center,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(20),
-                      color: ikonArkaPlan.withValues(alpha: 0.30),
-                    ),
-                    child: Icon(veri.ikon, color: _metinAna, size: 38),
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    veri.baslik,
-                    textAlign: TextAlign.center,
-                    style: temaVerisi.textTheme.titleLarge?.copyWith(
-                      color: _metinAna,
-                      fontWeight: FontWeight.w700,
-                    ),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Container(
+                        width: ikonKutuBoyutu,
+                        height: ikonKutuBoyutu,
+                        alignment: Alignment.center,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(20),
+                          color: ikonArkaPlan.withValues(alpha: 0.30),
+                        ),
+                        child: Icon(
+                          veri.ikon,
+                          color: _metinAna,
+                          size: ikonBoyutu,
+                        ),
+                      ),
+                      SizedBox(height: satirAraligi),
+                      Flexible(
+                        child: Text(
+                          veri.baslik,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          textAlign: TextAlign.center,
+                          style: temaVerisi.textTheme.titleMedium?.copyWith(
+                            color: _metinAna,
+                            fontWeight: FontWeight.w700,
+                            height: 1.1,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ],
-              ),
-            ],
+              );
+            },
           ),
         ),
       ),
@@ -877,10 +911,9 @@ class _AltSatir extends StatelessWidget {
       mainAxisAlignment: MainAxisAlignment.end,
       children: [
         FilledButton.icon(
-          onPressed: () =>
-              Navigator.of(context).pushNamed(RotaYapisi.personelGiris),
+          onPressed: () => Navigator.of(context).pushNamed(RotaYapisi.hesabim),
           icon: const Icon(Icons.settings_rounded),
-          label: const Text('Ayarlar'),
+          label: const Text('Hesabim'),
           style: FilledButton.styleFrom(
             backgroundColor: ayarRenk,
             foregroundColor: _metinAna,

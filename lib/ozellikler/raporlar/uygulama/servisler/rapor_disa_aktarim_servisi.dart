@@ -46,6 +46,8 @@ class RaporDisaAktarimServisi {
         'Kampanya indirimi',
         'Net ciro',
         'Kuponlu siparis',
+        'KVKK onayli',
+        'Iletisim izinli',
       ],
       ...satirlar.map(
         (_DonemOzetiSatiri satir) => <String>[
@@ -55,6 +57,8 @@ class RaporDisaAktarimServisi {
           _ondalikYaz(satir.toplam.indirimToplami),
           _ondalikYaz(satir.toplam.netCiro),
           satir.toplam.kuponluSiparis.toString(),
+          satir.toplam.aydinlatmaOnayliSiparis.toString(),
+          satir.toplam.ticariIletisimOnayliSiparis.toString(),
         ],
       ),
       <String>[
@@ -64,6 +68,8 @@ class RaporDisaAktarimServisi {
         _ondalikYaz(genelToplam.indirimToplami),
         _ondalikYaz(genelToplam.netCiro),
         genelToplam.kuponluSiparis.toString(),
+        genelToplam.aydinlatmaOnayliSiparis.toString(),
+        genelToplam.ticariIletisimOnayliSiparis.toString(),
       ],
     ];
 
@@ -146,6 +152,8 @@ class RaporDisaAktarimServisi {
                 'Kampanya indirimi',
                 'Net ciro',
                 'Kuponlu siparis',
+                'KVKK onayli',
+                'Iletisim izinli',
               ],
               data: satirlar
                   .map(
@@ -156,6 +164,8 @@ class RaporDisaAktarimServisi {
                       _ondalikYaz(satir.toplam.indirimToplami),
                       _ondalikYaz(satir.toplam.netCiro),
                       satir.toplam.kuponluSiparis.toString(),
+                      satir.toplam.aydinlatmaOnayliSiparis.toString(),
+                      satir.toplam.ticariIletisimOnayliSiparis.toString(),
                     ],
                   )
                   .toList(growable: false),
@@ -166,6 +176,8 @@ class RaporDisaAktarimServisi {
                 3: const pw.FlexColumnWidth(1.1),
                 4: const pw.FlexColumnWidth(1.0),
                 5: const pw.FlexColumnWidth(0.9),
+                6: const pw.FlexColumnWidth(0.9),
+                7: const pw.FlexColumnWidth(0.9),
               },
             ),
             pw.SizedBox(height: 12),
@@ -181,7 +193,9 @@ class RaporDisaAktarimServisi {
                 'Brut: ${_ondalikYaz(genelToplam.brutCiro)} TL | '
                 'Indirim: ${_ondalikYaz(genelToplam.indirimToplami)} TL | '
                 'Net: ${_ondalikYaz(genelToplam.netCiro)} TL | '
-                'Kuponlu siparis: ${genelToplam.kuponluSiparis}',
+                'Kuponlu siparis: ${genelToplam.kuponluSiparis} | '
+                'KVKK onayli: ${genelToplam.aydinlatmaOnayliSiparis} | '
+                'Iletisim izinli: ${genelToplam.ticariIletisimOnayliSiparis}',
                 style: pw.TextStyle(
                   fontSize: 10,
                   fontWeight: pw.FontWeight.bold,
@@ -234,6 +248,10 @@ class RaporDisaAktarimServisi {
       genelToplam.indirimToplami += satir.toplam.indirimToplami;
       genelToplam.netCiro += satir.toplam.netCiro;
       genelToplam.kuponluSiparis += satir.toplam.kuponluSiparis;
+      genelToplam.aydinlatmaOnayliSiparis +=
+          satir.toplam.aydinlatmaOnayliSiparis;
+      genelToplam.ticariIletisimOnayliSiparis +=
+          satir.toplam.ticariIletisimOnayliSiparis;
     }
     return genelToplam;
   }
@@ -293,6 +311,8 @@ class _DonemToplami {
   double indirimToplami = 0;
   double netCiro = 0;
   int kuponluSiparis = 0;
+  int aydinlatmaOnayliSiparis = 0;
+  int ticariIletisimOnayliSiparis = 0;
 
   void siparisEkle(SiparisVarligi siparis) {
     adet++;
@@ -301,6 +321,12 @@ class _DonemToplami {
     netCiro += siparis.toplamTutar;
     if (siparis.indirimTutari > 0 || (siparis.kuponKodu ?? '').isNotEmpty) {
       kuponluSiparis++;
+    }
+    if (siparis.aydinlatmaOnayi) {
+      aydinlatmaOnayliSiparis++;
+    }
+    if (siparis.ticariIletisimOnayi) {
+      ticariIletisimOnayliSiparis++;
     }
   }
 }

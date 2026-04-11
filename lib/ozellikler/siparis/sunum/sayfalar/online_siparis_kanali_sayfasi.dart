@@ -115,6 +115,14 @@ class _OnlineSiparisKanaliSayfasiState
                       padding: const EdgeInsets.all(16),
                       children: <Widget>[
                         _OzetKutulari(viewModel: widget.viewModel),
+                        if (widget
+                            .viewModel
+                            .yogunlukModuOnerisiVar) ...<Widget>[
+                          const SizedBox(height: 12),
+                          _YogunlukUyariKarti(
+                            mesaj: widget.viewModel.yogunlukMesaji,
+                          ),
+                        ],
                         const SizedBox(height: 12),
                         _KanalFiltreleri(viewModel: widget.viewModel),
                         const SizedBox(height: 12),
@@ -238,6 +246,41 @@ class _KisaOzetKarti extends StatelessWidget {
           ),
           const SizedBox(height: 2),
           Text(aciklama, style: const TextStyle(color: _metinIkincil)),
+        ],
+      ),
+    );
+  }
+}
+
+class _YogunlukUyariKarti extends StatelessWidget {
+  const _YogunlukUyariKarti({required this.mesaj});
+
+  final String mesaj;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: _uyari.withValues(alpha: 0.14),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: _uyari.withValues(alpha: 0.40)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          const Icon(Icons.warning_amber_rounded, color: _uyari),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              mesaj,
+              style: const TextStyle(
+                color: _metinAna,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
         ],
       ),
     );

@@ -207,8 +207,10 @@ class _HesabimSayfasiState extends State<HesabimSayfasi> {
                         constraints: const BoxConstraints(maxWidth: 1160),
                         child: Padding(
                           padding: const EdgeInsets.all(22),
-                          child: masaustu
-                              ? Row(
+                          child: ListView(
+                            children: [
+                              if (masaustu)
+                                Row(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Expanded(flex: 11, child: _solAlan()),
@@ -216,13 +218,13 @@ class _HesabimSayfasiState extends State<HesabimSayfasi> {
                                     Expanded(flex: 9, child: _sagAlan()),
                                   ],
                                 )
-                              : ListView(
-                                  children: [
-                                    _solAlan(),
-                                    const SizedBox(height: 18),
-                                    _sagAlan(),
-                                  ],
-                                ),
+                              else ...<Widget>[
+                                _solAlan(),
+                                const SizedBox(height: 18),
+                                _sagAlan(),
+                              ],
+                            ],
+                          ),
                         ),
                       ),
                     ),

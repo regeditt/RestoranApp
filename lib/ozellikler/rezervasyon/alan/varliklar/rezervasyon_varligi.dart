@@ -15,6 +15,8 @@ class RezervasyonVarligi {
     this.masaId,
     this.masaAdi,
     this.notMetni = '',
+    this.aydinlatmaOnayi = false,
+    this.ticariIletisimOnayi = false,
   });
 
   final String id;
@@ -30,6 +32,8 @@ class RezervasyonVarligi {
   final String? masaId;
   final String? masaAdi;
   final String notMetni;
+  final bool aydinlatmaOnayi;
+  final bool ticariIletisimOnayi;
 
   bool zamanAraligiCakisiyor({
     required DateTime baslangic,
@@ -52,6 +56,8 @@ class RezervasyonVarligi {
     String? masaId,
     String? masaAdi,
     String? notMetni,
+    bool? aydinlatmaOnayi,
+    bool? ticariIletisimOnayi,
   }) {
     return RezervasyonVarligi(
       id: id ?? this.id,
@@ -67,6 +73,8 @@ class RezervasyonVarligi {
       masaId: masaId ?? this.masaId,
       masaAdi: masaAdi ?? this.masaAdi,
       notMetni: notMetni ?? this.notMetni,
+      aydinlatmaOnayi: aydinlatmaOnayi ?? this.aydinlatmaOnayi,
+      ticariIletisimOnayi: ticariIletisimOnayi ?? this.ticariIletisimOnayi,
     );
   }
 }

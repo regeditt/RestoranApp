@@ -2497,6 +2497,35 @@ class $SiparisKayitlariTable extends SiparisKayitlari
     requiredDuringInsert: false,
     defaultValue: const Constant(0.0),
   );
+  static const VerificationMeta _aydinlatmaOnayiMeta = const VerificationMeta(
+    'aydinlatmaOnayi',
+  );
+  @override
+  late final GeneratedColumn<bool> aydinlatmaOnayi = GeneratedColumn<bool>(
+    'aydinlatma_onayi',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("aydinlatma_onayi" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _ticariIletisimOnayiMeta =
+      const VerificationMeta('ticariIletisimOnayi');
+  @override
+  late final GeneratedColumn<bool> ticariIletisimOnayi = GeneratedColumn<bool>(
+    'ticari_iletisim_onayi',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("ticari_iletisim_onayi" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
   static const VerificationMeta _sahipMisafirMeta = const VerificationMeta(
     'sahipMisafir',
   );
@@ -2571,6 +2600,8 @@ class $SiparisKayitlariTable extends SiparisKayitlari
     kaynak,
     kuponKodu,
     indirimTutari,
+    aydinlatmaOnayi,
+    ticariIletisimOnayi,
     sahipMisafir,
     sahipAdSoyad,
     sahipTelefon,
@@ -2695,6 +2726,24 @@ class $SiparisKayitlariTable extends SiparisKayitlari
         ),
       );
     }
+    if (data.containsKey('aydinlatma_onayi')) {
+      context.handle(
+        _aydinlatmaOnayiMeta,
+        aydinlatmaOnayi.isAcceptableOrUnknown(
+          data['aydinlatma_onayi']!,
+          _aydinlatmaOnayiMeta,
+        ),
+      );
+    }
+    if (data.containsKey('ticari_iletisim_onayi')) {
+      context.handle(
+        _ticariIletisimOnayiMeta,
+        ticariIletisimOnayi.isAcceptableOrUnknown(
+          data['ticari_iletisim_onayi']!,
+          _ticariIletisimOnayiMeta,
+        ),
+      );
+    }
     if (data.containsKey('sahip_misafir')) {
       context.handle(
         _sahipMisafirMeta,
@@ -2808,6 +2857,14 @@ class $SiparisKayitlariTable extends SiparisKayitlari
         DriftSqlType.double,
         data['${effectivePrefix}indirim_tutari'],
       )!,
+      aydinlatmaOnayi: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}aydinlatma_onayi'],
+      )!,
+      ticariIletisimOnayi: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}ticari_iletisim_onayi'],
+      )!,
       sahipMisafir: attachedDatabase.typeMapping.read(
         DriftSqlType.bool,
         data['${effectivePrefix}sahip_misafir'],
@@ -2853,6 +2910,8 @@ class SiparisKayitlariData extends DataClass
   final String? kaynak;
   final String? kuponKodu;
   final double indirimTutari;
+  final bool aydinlatmaOnayi;
+  final bool ticariIletisimOnayi;
   final bool sahipMisafir;
   final String sahipAdSoyad;
   final String sahipTelefon;
@@ -2873,6 +2932,8 @@ class SiparisKayitlariData extends DataClass
     this.kaynak,
     this.kuponKodu,
     required this.indirimTutari,
+    required this.aydinlatmaOnayi,
+    required this.ticariIletisimOnayi,
     required this.sahipMisafir,
     required this.sahipAdSoyad,
     required this.sahipTelefon,
@@ -2912,6 +2973,8 @@ class SiparisKayitlariData extends DataClass
       map['kupon_kodu'] = Variable<String>(kuponKodu);
     }
     map['indirim_tutari'] = Variable<double>(indirimTutari);
+    map['aydinlatma_onayi'] = Variable<bool>(aydinlatmaOnayi);
+    map['ticari_iletisim_onayi'] = Variable<bool>(ticariIletisimOnayi);
     map['sahip_misafir'] = Variable<bool>(sahipMisafir);
     map['sahip_ad_soyad'] = Variable<String>(sahipAdSoyad);
     map['sahip_telefon'] = Variable<String>(sahipTelefon);
@@ -2956,6 +3019,8 @@ class SiparisKayitlariData extends DataClass
           ? const Value.absent()
           : Value(kuponKodu),
       indirimTutari: Value(indirimTutari),
+      aydinlatmaOnayi: Value(aydinlatmaOnayi),
+      ticariIletisimOnayi: Value(ticariIletisimOnayi),
       sahipMisafir: Value(sahipMisafir),
       sahipAdSoyad: Value(sahipAdSoyad),
       sahipTelefon: Value(sahipTelefon),
@@ -2990,6 +3055,10 @@ class SiparisKayitlariData extends DataClass
       kaynak: serializer.fromJson<String?>(json['kaynak']),
       kuponKodu: serializer.fromJson<String?>(json['kuponKodu']),
       indirimTutari: serializer.fromJson<double>(json['indirimTutari']),
+      aydinlatmaOnayi: serializer.fromJson<bool>(json['aydinlatmaOnayi']),
+      ticariIletisimOnayi: serializer.fromJson<bool>(
+        json['ticariIletisimOnayi'],
+      ),
       sahipMisafir: serializer.fromJson<bool>(json['sahipMisafir']),
       sahipAdSoyad: serializer.fromJson<String>(json['sahipAdSoyad']),
       sahipTelefon: serializer.fromJson<String>(json['sahipTelefon']),
@@ -3015,6 +3084,8 @@ class SiparisKayitlariData extends DataClass
       'kaynak': serializer.toJson<String?>(kaynak),
       'kuponKodu': serializer.toJson<String?>(kuponKodu),
       'indirimTutari': serializer.toJson<double>(indirimTutari),
+      'aydinlatmaOnayi': serializer.toJson<bool>(aydinlatmaOnayi),
+      'ticariIletisimOnayi': serializer.toJson<bool>(ticariIletisimOnayi),
       'sahipMisafir': serializer.toJson<bool>(sahipMisafir),
       'sahipAdSoyad': serializer.toJson<String>(sahipAdSoyad),
       'sahipTelefon': serializer.toJson<String>(sahipTelefon),
@@ -3038,6 +3109,8 @@ class SiparisKayitlariData extends DataClass
     Value<String?> kaynak = const Value.absent(),
     Value<String?> kuponKodu = const Value.absent(),
     double? indirimTutari,
+    bool? aydinlatmaOnayi,
+    bool? ticariIletisimOnayi,
     bool? sahipMisafir,
     String? sahipAdSoyad,
     String? sahipTelefon,
@@ -3060,6 +3133,8 @@ class SiparisKayitlariData extends DataClass
     kaynak: kaynak.present ? kaynak.value : this.kaynak,
     kuponKodu: kuponKodu.present ? kuponKodu.value : this.kuponKodu,
     indirimTutari: indirimTutari ?? this.indirimTutari,
+    aydinlatmaOnayi: aydinlatmaOnayi ?? this.aydinlatmaOnayi,
+    ticariIletisimOnayi: ticariIletisimOnayi ?? this.ticariIletisimOnayi,
     sahipMisafir: sahipMisafir ?? this.sahipMisafir,
     sahipAdSoyad: sahipAdSoyad ?? this.sahipAdSoyad,
     sahipTelefon: sahipTelefon ?? this.sahipTelefon,
@@ -3094,6 +3169,12 @@ class SiparisKayitlariData extends DataClass
       indirimTutari: data.indirimTutari.present
           ? data.indirimTutari.value
           : this.indirimTutari,
+      aydinlatmaOnayi: data.aydinlatmaOnayi.present
+          ? data.aydinlatmaOnayi.value
+          : this.aydinlatmaOnayi,
+      ticariIletisimOnayi: data.ticariIletisimOnayi.present
+          ? data.ticariIletisimOnayi.value
+          : this.ticariIletisimOnayi,
       sahipMisafir: data.sahipMisafir.present
           ? data.sahipMisafir.value
           : this.sahipMisafir,
@@ -3129,6 +3210,8 @@ class SiparisKayitlariData extends DataClass
           ..write('kaynak: $kaynak, ')
           ..write('kuponKodu: $kuponKodu, ')
           ..write('indirimTutari: $indirimTutari, ')
+          ..write('aydinlatmaOnayi: $aydinlatmaOnayi, ')
+          ..write('ticariIletisimOnayi: $ticariIletisimOnayi, ')
           ..write('sahipMisafir: $sahipMisafir, ')
           ..write('sahipAdSoyad: $sahipAdSoyad, ')
           ..write('sahipTelefon: $sahipTelefon, ')
@@ -3139,7 +3222,7 @@ class SiparisKayitlariData extends DataClass
   }
 
   @override
-  int get hashCode => Object.hash(
+  int get hashCode => Object.hashAll([
     id,
     siparisNo,
     teslimatTipi,
@@ -3154,12 +3237,14 @@ class SiparisKayitlariData extends DataClass
     kaynak,
     kuponKodu,
     indirimTutari,
+    aydinlatmaOnayi,
+    ticariIletisimOnayi,
     sahipMisafir,
     sahipAdSoyad,
     sahipTelefon,
     sahipEposta,
     sahipAdres,
-  );
+  ]);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -3178,6 +3263,8 @@ class SiparisKayitlariData extends DataClass
           other.kaynak == this.kaynak &&
           other.kuponKodu == this.kuponKodu &&
           other.indirimTutari == this.indirimTutari &&
+          other.aydinlatmaOnayi == this.aydinlatmaOnayi &&
+          other.ticariIletisimOnayi == this.ticariIletisimOnayi &&
           other.sahipMisafir == this.sahipMisafir &&
           other.sahipAdSoyad == this.sahipAdSoyad &&
           other.sahipTelefon == this.sahipTelefon &&
@@ -3200,6 +3287,8 @@ class SiparisKayitlariCompanion extends UpdateCompanion<SiparisKayitlariData> {
   final Value<String?> kaynak;
   final Value<String?> kuponKodu;
   final Value<double> indirimTutari;
+  final Value<bool> aydinlatmaOnayi;
+  final Value<bool> ticariIletisimOnayi;
   final Value<bool> sahipMisafir;
   final Value<String> sahipAdSoyad;
   final Value<String> sahipTelefon;
@@ -3221,6 +3310,8 @@ class SiparisKayitlariCompanion extends UpdateCompanion<SiparisKayitlariData> {
     this.kaynak = const Value.absent(),
     this.kuponKodu = const Value.absent(),
     this.indirimTutari = const Value.absent(),
+    this.aydinlatmaOnayi = const Value.absent(),
+    this.ticariIletisimOnayi = const Value.absent(),
     this.sahipMisafir = const Value.absent(),
     this.sahipAdSoyad = const Value.absent(),
     this.sahipTelefon = const Value.absent(),
@@ -3243,6 +3334,8 @@ class SiparisKayitlariCompanion extends UpdateCompanion<SiparisKayitlariData> {
     this.kaynak = const Value.absent(),
     this.kuponKodu = const Value.absent(),
     this.indirimTutari = const Value.absent(),
+    this.aydinlatmaOnayi = const Value.absent(),
+    this.ticariIletisimOnayi = const Value.absent(),
     required bool sahipMisafir,
     required String sahipAdSoyad,
     required String sahipTelefon,
@@ -3272,6 +3365,8 @@ class SiparisKayitlariCompanion extends UpdateCompanion<SiparisKayitlariData> {
     Expression<String>? kaynak,
     Expression<String>? kuponKodu,
     Expression<double>? indirimTutari,
+    Expression<bool>? aydinlatmaOnayi,
+    Expression<bool>? ticariIletisimOnayi,
     Expression<bool>? sahipMisafir,
     Expression<String>? sahipAdSoyad,
     Expression<String>? sahipTelefon,
@@ -3295,6 +3390,9 @@ class SiparisKayitlariCompanion extends UpdateCompanion<SiparisKayitlariData> {
       if (kaynak != null) 'kaynak': kaynak,
       if (kuponKodu != null) 'kupon_kodu': kuponKodu,
       if (indirimTutari != null) 'indirim_tutari': indirimTutari,
+      if (aydinlatmaOnayi != null) 'aydinlatma_onayi': aydinlatmaOnayi,
+      if (ticariIletisimOnayi != null)
+        'ticari_iletisim_onayi': ticariIletisimOnayi,
       if (sahipMisafir != null) 'sahip_misafir': sahipMisafir,
       if (sahipAdSoyad != null) 'sahip_ad_soyad': sahipAdSoyad,
       if (sahipTelefon != null) 'sahip_telefon': sahipTelefon,
@@ -3319,6 +3417,8 @@ class SiparisKayitlariCompanion extends UpdateCompanion<SiparisKayitlariData> {
     Value<String?>? kaynak,
     Value<String?>? kuponKodu,
     Value<double>? indirimTutari,
+    Value<bool>? aydinlatmaOnayi,
+    Value<bool>? ticariIletisimOnayi,
     Value<bool>? sahipMisafir,
     Value<String>? sahipAdSoyad,
     Value<String>? sahipTelefon,
@@ -3341,6 +3441,8 @@ class SiparisKayitlariCompanion extends UpdateCompanion<SiparisKayitlariData> {
       kaynak: kaynak ?? this.kaynak,
       kuponKodu: kuponKodu ?? this.kuponKodu,
       indirimTutari: indirimTutari ?? this.indirimTutari,
+      aydinlatmaOnayi: aydinlatmaOnayi ?? this.aydinlatmaOnayi,
+      ticariIletisimOnayi: ticariIletisimOnayi ?? this.ticariIletisimOnayi,
       sahipMisafir: sahipMisafir ?? this.sahipMisafir,
       sahipAdSoyad: sahipAdSoyad ?? this.sahipAdSoyad,
       sahipTelefon: sahipTelefon ?? this.sahipTelefon,
@@ -3395,6 +3497,12 @@ class SiparisKayitlariCompanion extends UpdateCompanion<SiparisKayitlariData> {
     if (indirimTutari.present) {
       map['indirim_tutari'] = Variable<double>(indirimTutari.value);
     }
+    if (aydinlatmaOnayi.present) {
+      map['aydinlatma_onayi'] = Variable<bool>(aydinlatmaOnayi.value);
+    }
+    if (ticariIletisimOnayi.present) {
+      map['ticari_iletisim_onayi'] = Variable<bool>(ticariIletisimOnayi.value);
+    }
     if (sahipMisafir.present) {
       map['sahip_misafir'] = Variable<bool>(sahipMisafir.value);
     }
@@ -3433,6 +3541,8 @@ class SiparisKayitlariCompanion extends UpdateCompanion<SiparisKayitlariData> {
           ..write('kaynak: $kaynak, ')
           ..write('kuponKodu: $kuponKodu, ')
           ..write('indirimTutari: $indirimTutari, ')
+          ..write('aydinlatmaOnayi: $aydinlatmaOnayi, ')
+          ..write('ticariIletisimOnayi: $ticariIletisimOnayi, ')
           ..write('sahipMisafir: $sahipMisafir, ')
           ..write('sahipAdSoyad: $sahipAdSoyad, ')
           ..write('sahipTelefon: $sahipTelefon, ')
@@ -9143,6 +9253,8 @@ typedef $$SiparisKayitlariTableCreateCompanionBuilder =
       Value<String?> kaynak,
       Value<String?> kuponKodu,
       Value<double> indirimTutari,
+      Value<bool> aydinlatmaOnayi,
+      Value<bool> ticariIletisimOnayi,
       required bool sahipMisafir,
       required String sahipAdSoyad,
       required String sahipTelefon,
@@ -9166,6 +9278,8 @@ typedef $$SiparisKayitlariTableUpdateCompanionBuilder =
       Value<String?> kaynak,
       Value<String?> kuponKodu,
       Value<double> indirimTutari,
+      Value<bool> aydinlatmaOnayi,
+      Value<bool> ticariIletisimOnayi,
       Value<bool> sahipMisafir,
       Value<String> sahipAdSoyad,
       Value<String> sahipTelefon,
@@ -9288,6 +9402,16 @@ class $$SiparisKayitlariTableFilterComposer
 
   ColumnFilters<double> get indirimTutari => $composableBuilder(
     column: $table.indirimTutari,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get aydinlatmaOnayi => $composableBuilder(
+    column: $table.aydinlatmaOnayi,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get ticariIletisimOnayi => $composableBuilder(
+    column: $table.ticariIletisimOnayi,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -9421,6 +9545,16 @@ class $$SiparisKayitlariTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<bool> get aydinlatmaOnayi => $composableBuilder(
+    column: $table.aydinlatmaOnayi,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get ticariIletisimOnayi => $composableBuilder(
+    column: $table.ticariIletisimOnayi,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<bool> get sahipMisafir => $composableBuilder(
     column: $table.sahipMisafir,
     builder: (column) => ColumnOrderings(column),
@@ -9507,6 +9641,16 @@ class $$SiparisKayitlariTableAnnotationComposer
 
   GeneratedColumn<double> get indirimTutari => $composableBuilder(
     column: $table.indirimTutari,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get aydinlatmaOnayi => $composableBuilder(
+    column: $table.aydinlatmaOnayi,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get ticariIletisimOnayi => $composableBuilder(
+    column: $table.ticariIletisimOnayi,
     builder: (column) => column,
   );
 
@@ -9605,6 +9749,8 @@ class $$SiparisKayitlariTableTableManager
                 Value<String?> kaynak = const Value.absent(),
                 Value<String?> kuponKodu = const Value.absent(),
                 Value<double> indirimTutari = const Value.absent(),
+                Value<bool> aydinlatmaOnayi = const Value.absent(),
+                Value<bool> ticariIletisimOnayi = const Value.absent(),
                 Value<bool> sahipMisafir = const Value.absent(),
                 Value<String> sahipAdSoyad = const Value.absent(),
                 Value<String> sahipTelefon = const Value.absent(),
@@ -9626,6 +9772,8 @@ class $$SiparisKayitlariTableTableManager
                 kaynak: kaynak,
                 kuponKodu: kuponKodu,
                 indirimTutari: indirimTutari,
+                aydinlatmaOnayi: aydinlatmaOnayi,
+                ticariIletisimOnayi: ticariIletisimOnayi,
                 sahipMisafir: sahipMisafir,
                 sahipAdSoyad: sahipAdSoyad,
                 sahipTelefon: sahipTelefon,
@@ -9649,6 +9797,8 @@ class $$SiparisKayitlariTableTableManager
                 Value<String?> kaynak = const Value.absent(),
                 Value<String?> kuponKodu = const Value.absent(),
                 Value<double> indirimTutari = const Value.absent(),
+                Value<bool> aydinlatmaOnayi = const Value.absent(),
+                Value<bool> ticariIletisimOnayi = const Value.absent(),
                 required bool sahipMisafir,
                 required String sahipAdSoyad,
                 required String sahipTelefon,
@@ -9670,6 +9820,8 @@ class $$SiparisKayitlariTableTableManager
                 kaynak: kaynak,
                 kuponKodu: kuponKodu,
                 indirimTutari: indirimTutari,
+                aydinlatmaOnayi: aydinlatmaOnayi,
+                ticariIletisimOnayi: ticariIletisimOnayi,
                 sahipMisafir: sahipMisafir,
                 sahipAdSoyad: sahipAdSoyad,
                 sahipTelefon: sahipTelefon,

@@ -1,6 +1,8 @@
 import 'package:flutter/foundation.dart';
 import 'package:restoran_app/bagimlilik_enjeksiyonu/servis_kaydi.dart';
 import 'package:restoran_app/ozellikler/kimlik/alan/roller/kullanici_rolu.dart';
+import 'package:restoran_app/ozellikler/kimlik/alan/varliklar/kullanici_varligi.dart';
+import 'package:restoran_app/ozellikler/kimlik/uygulama/use_case/aktif_kullanici_getir_use_case.dart';
 import 'package:restoran_app/ozellikler/kimlik/uygulama/use_case/giris_yap_use_case.dart';
 import 'package:restoran_app/ozellikler/kimlik/uygulama/use_case/hesap_olustur_use_case.dart';
 
@@ -65,18 +67,22 @@ class GirisSecimIslemSonucu {
 /// Personel giris akisini, secili rol modunu ve ekran yonlendirmesini yonetir.
 class GirisSecimViewModel extends ChangeNotifier {
   GirisSecimViewModel({
+    required AktifKullaniciGetirUseCase aktifKullaniciGetirUseCase,
     required GirisYapUseCase girisYapUseCase,
     required HesapOlusturUseCase hesapOlusturUseCase,
-  }) : _girisYapUseCase = girisYapUseCase,
+  }) : _aktifKullaniciGetirUseCase = aktifKullaniciGetirUseCase,
+       _girisYapUseCase = girisYapUseCase,
        _hesapOlusturUseCase = hesapOlusturUseCase;
 
   factory GirisSecimViewModel.servisKaydindan(ServisKaydi servisKaydi) {
     return GirisSecimViewModel(
+      aktifKullaniciGetirUseCase: servisKaydi.aktifKullaniciGetirUseCase,
       girisYapUseCase: servisKaydi.girisYapUseCase,
       hesapOlusturUseCase: servisKaydi.hesapOlusturUseCase,
     );
   }
 
+  final AktifKullaniciGetirUseCase _aktifKullaniciGetirUseCase;
   final GirisYapUseCase _girisYapUseCase;
   final HesapOlusturUseCase _hesapOlusturUseCase;
 
@@ -108,6 +114,14 @@ class GirisSecimViewModel extends ChangeNotifier {
   String get anaAksiyonMetni => hesapOlusturmaModu
       ? '${rolEtiketi(_hesapOlusturmaRolu)} hesabi olustur'
       : _seciliMod.butonMetni;
+
+  Future<GirisHedefi?> aktifOturumHedefiGetir() async {
+    final KullaniciVarligi? kullanici = await _aktifKullaniciGetirUseCase();
+    if (kullanici == null || !kullanici.aktifMi) {
+      return null;
+    }
+    return _roleGoreVarsayilanHedef(kullanici.rol);
+  }
 
   void modSec(PersonelGirisModu mod) {
     if (_seciliMod == mod) {

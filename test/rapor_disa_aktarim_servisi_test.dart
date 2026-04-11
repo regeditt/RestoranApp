@@ -20,6 +20,8 @@ void main() {
           brut: 100,
           indirim: 10,
           kuponKodu: 'INDIRIM10',
+          aydinlatmaOnayi: true,
+          ticariIletisimOnayi: false,
         ),
         _siparisOlustur(
           id: 's2',
@@ -27,6 +29,8 @@ void main() {
           tarih: DateTime(2026, 4, 10, 15, 20),
           brut: 50,
           indirim: 0,
+          aydinlatmaOnayi: true,
+          ticariIletisimOnayi: true,
         ),
         _siparisOlustur(
           id: 's3',
@@ -35,6 +39,8 @@ void main() {
           brut: 80,
           indirim: 8,
           kuponKodu: 'HOSGELDIN',
+          aydinlatmaOnayi: true,
+          ticariIletisimOnayi: true,
         ),
       ];
 
@@ -46,12 +52,12 @@ void main() {
       expect(
         csv,
         contains(
-          'Donem;Siparis adedi;Brut ciro;Kampanya indirimi;Net ciro;Kuponlu siparis',
+          'Donem;Siparis adedi;Brut ciro;Kampanya indirimi;Net ciro;Kuponlu siparis;KVKK onayli;Iletisim izinli',
         ),
       );
-      expect(csv, contains('2026-04-10;2;150.00;10.00;140.00;1'));
-      expect(csv, contains('2026-04-11;1;80.00;8.00;72.00;1'));
-      expect(csv, contains('Toplam;3;230.00;18.00;212.00;2'));
+      expect(csv, contains('2026-04-10;2;150.00;10.00;140.00;1;2;1'));
+      expect(csv, contains('2026-04-11;1;80.00;8.00;72.00;1;1;1'));
+      expect(csv, contains('Toplam;3;230.00;18.00;212.00;2;3;2'));
     },
   );
 
@@ -67,6 +73,8 @@ void main() {
           brut: 120,
           indirim: 20,
           kuponKodu: 'VIP20',
+          aydinlatmaOnayi: true,
+          ticariIletisimOnayi: false,
         ),
         _siparisOlustur(
           id: 's2',
@@ -74,6 +82,8 @@ void main() {
           tarih: DateTime(2026, 4, 28, 18, 00),
           brut: 80,
           indirim: 0,
+          aydinlatmaOnayi: true,
+          ticariIletisimOnayi: true,
         ),
         _siparisOlustur(
           id: 's3',
@@ -82,6 +92,8 @@ void main() {
           brut: 60,
           indirim: 6,
           kuponKodu: 'MAYIS10',
+          aydinlatmaOnayi: true,
+          ticariIletisimOnayi: true,
         ),
       ];
 
@@ -90,9 +102,9 @@ void main() {
         aylik: true,
       );
 
-      expect(csv, contains('2026-04;2;200.00;20.00;180.00;1'));
-      expect(csv, contains('2026-05;1;60.00;6.00;54.00;1'));
-      expect(csv, contains('Toplam;3;260.00;26.00;234.00;2'));
+      expect(csv, contains('2026-04;2;200.00;20.00;180.00;1;2;1'));
+      expect(csv, contains('2026-05;1;60.00;6.00;54.00;1;1;1'));
+      expect(csv, contains('Toplam;3;260.00;26.00;234.00;2;3;2'));
     },
   );
 }
@@ -104,6 +116,8 @@ SiparisVarligi _siparisOlustur({
   required double brut,
   required double indirim,
   String? kuponKodu,
+  bool aydinlatmaOnayi = false,
+  bool ticariIletisimOnayi = false,
 }) {
   return SiparisVarligi(
     id: id,
@@ -125,5 +139,7 @@ SiparisVarligi _siparisOlustur({
     olusturmaTarihi: tarih,
     kuponKodu: kuponKodu,
     indirimTutari: indirim,
+    aydinlatmaOnayi: aydinlatmaOnayi,
+    ticariIletisimOnayi: ticariIletisimOnayi,
   );
 }

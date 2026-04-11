@@ -3,6 +3,7 @@ import 'package:restoran_app/bagimlilik_enjeksiyonu/servis_kaydi.dart';
 import 'package:restoran_app/ozellikler/kimlik/alan/roller/islem_yetkisi.dart';
 import 'package:restoran_app/ozellikler/siparis/alan/enumlar/siparis_durumu.dart';
 import 'package:restoran_app/ozellikler/siparis/alan/enumlar/teslimat_tipi.dart';
+import 'package:restoran_app/ozellikler/siparis/alan/servisler/siparis_operasyon_akisi.dart';
 import 'package:restoran_app/ozellikler/siparis/alan/varliklar/siparis_varligi.dart';
 import 'package:restoran_app/ozellikler/siparis/uygulama/use_case/siparis_durumu_guncelle_use_case.dart';
 import 'package:restoran_app/ozellikler/siparis/uygulama/use_case/siparisleri_getir_use_case.dart';
@@ -45,6 +46,9 @@ class OnlineSiparisKanaliIslemSonucu {
 }
 
 class OnlineSiparisKanaliViewModel extends ChangeNotifier {
+  static const int _aktifOnlineYogunlukEsigi = 8;
+  static const int _aktifPaketYogunlukEsigi = 5;
+
   OnlineSiparisKanaliViewModel({
     required SiparisleriGetirUseCase siparisleriGetirUseCase,
     required SiparisDurumuGuncelleUseCase siparisDurumuGuncelleUseCase,
@@ -109,6 +113,25 @@ class OnlineSiparisKanaliViewModel extends ChangeNotifier {
         return siparis.durum != SiparisDurumu.teslimEdildi &&
             siparis.durum != SiparisDurumu.iptalEdildi;
       }).length;
+
+  int get aktifPaketSiparisSayisi =>
+      _tumOnlineSiparisler.where((SiparisVarligi siparis) {
+        return siparis.teslimatTipi == TeslimatTipi.paketServis &&
+            siparis.durum != SiparisDurumu.teslimEdildi &&
+            siparis.durum != SiparisDurumu.iptalEdildi;
+      }).length;
+
+  bool get yogunlukModuOnerisiVar =>
+      aktifOnlineSiparisSayisi >= _aktifOnlineYogunlukEsigi ||
+      aktifPaketSiparisSayisi >= _aktifPaketYogunlukEsigi;
+
+  String get yogunlukMesaji {
+    if (!yogunlukModuOnerisiVar) {
+      return '';
+    }
+    return 'Aktif siparis yuksek. Yeni siparis kabul hizini azalt, '
+        'hazirlama suresini arttir veya gecici olarak kanal pausela.';
+  }
 
   double get toplamOnlineCiro => _tumOnlineSiparisler.fold<double>(
     0,
@@ -181,7 +204,9 @@ class OnlineSiparisKanaliViewModel extends ChangeNotifier {
         'Siparis durumunu ilerletme yetkin bulunmuyor.',
       );
     }
-    final SiparisDurumu? sonrakiDurum = _sonrakiDurum(siparis);
+    final SiparisDurumu? sonrakiDurum = SiparisOperasyonAkisi.sonrakiDurum(
+      siparis,
+    );
     if (sonrakiDurum == null) {
       return const OnlineSiparisKanaliIslemSonucu.hata(
         'Bu siparisin bir sonraki adimi yok.',
@@ -196,9 +221,9 @@ class OnlineSiparisKanaliViewModel extends ChangeNotifier {
       return OnlineSiparisKanaliIslemSonucu.basarili(
         '${siparis.siparisNo} ${durumEtiketi(sonrakiDurum).toLowerCase()} durumuna alindi.',
       );
-    } catch (_) {
-      return const OnlineSiparisKanaliIslemSonucu.hata(
-        'Siparis durumu guncellenemedi.',
+    } catch (hata) {
+      return OnlineSiparisKanaliIslemSonucu.hata(
+        _hataMesajiniCoz(hata, varsayilan: 'Siparis durumu guncellenemedi.'),
       );
     }
   }
@@ -299,24 +324,6 @@ class OnlineSiparisKanaliViewModel extends ChangeNotifier {
     }
   }
 
-  SiparisDurumu? _sonrakiDurum(SiparisVarligi siparis) {
-    switch (siparis.durum) {
-      case SiparisDurumu.alindi:
-        return SiparisDurumu.hazirlaniyor;
-      case SiparisDurumu.hazirlaniyor:
-        return SiparisDurumu.hazir;
-      case SiparisDurumu.hazir:
-        return siparis.teslimatTipi == TeslimatTipi.paketServis
-            ? SiparisDurumu.yolda
-            : SiparisDurumu.teslimEdildi;
-      case SiparisDurumu.yolda:
-        return SiparisDurumu.teslimEdildi;
-      case SiparisDurumu.teslimEdildi:
-      case SiparisDurumu.iptalEdildi:
-        return null;
-    }
-  }
-
   String _kelimeBaslariniBuyut(String metin) {
     final List<String> parcalar = metin.trim().split(RegExp(r'\s+'));
     return parcalar
@@ -328,5 +335,15 @@ class OnlineSiparisKanaliViewModel extends ChangeNotifier {
           return parca[0].toUpperCase() + parca.substring(1).toLowerCase();
         })
         .join(' ');
+  }
+
+  String _hataMesajiniCoz(Object hata, {required String varsayilan}) {
+    if (hata is StateError) {
+      final String mesaj = hata.message;
+      if (mesaj.trim().isNotEmpty) {
+        return mesaj;
+      }
+    }
+    return varsayilan;
   }
 }

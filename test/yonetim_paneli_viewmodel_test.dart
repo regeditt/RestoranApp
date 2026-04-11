@@ -1,15 +1,97 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:restoran_app/bagimlilik_enjeksiyonu/servis_kaydi.dart';
 import 'package:restoran_app/ortak/platform/konum_platformu.dart';
+import 'package:restoran_app/ozellikler/kimlik/alan/varliklar/misafir_bilgisi_varligi.dart';
 import 'package:restoran_app/ozellikler/siparis/alan/enumlar/siparis_durumu.dart';
 import 'package:restoran_app/ozellikler/siparis/alan/enumlar/teslimat_tipi.dart';
 import 'package:restoran_app/ozellikler/siparis/alan/varliklar/kurye_takip_entegrasyon_varliklari.dart';
+import 'package:restoran_app/ozellikler/siparis/alan/varliklar/siparis_kalemi_varligi.dart';
+import 'package:restoran_app/ozellikler/siparis/alan/varliklar/siparis_sahibi_varligi.dart';
+import 'package:restoran_app/ozellikler/siparis/alan/varliklar/siparis_varligi.dart';
 import 'package:restoran_app/ozellikler/siparis/uygulama/servisler/kurye_entegrasyon_yonetim_servisi.dart';
 import 'package:restoran_app/ozellikler/siparis/uygulama/servisler/kurye_konum_takip_servisi.dart';
 import 'package:restoran_app/ozellikler/yonetim/alan/varliklar/yazici_durumu_varligi.dart';
 import 'package:restoran_app/ozellikler/yonetim/sunum/viewmodel/yonetim_paneli_viewmodel.dart';
 
 void main() {
+  test(
+    'YonetimPaneliViewModel KVKK ve iletisim filtrelerini uygular',
+    () async {
+      final ServisKaydi servisKaydi = ServisKaydi.mock();
+      await servisKaydi.siparisOlusturUseCase(
+        SiparisVarligi(
+          id: 'kvkk_test_1',
+          siparisNo: 'R-KVKK1',
+          sahip: const SiparisSahibiVarligi.misafir(
+            MisafirBilgisiVarligi(adSoyad: 'KVKK Test', telefon: '5551110000'),
+          ),
+          teslimatTipi: TeslimatTipi.gelAl,
+          durum: SiparisDurumu.alindi,
+          kalemler: const <SiparisKalemiVarligi>[
+            SiparisKalemiVarligi(
+              id: 'kal_kvkk_1',
+              urunId: 'urn_001',
+              urunAdi: 'Klasik Burger',
+              birimFiyat: 100,
+              adet: 1,
+            ),
+          ],
+          olusturmaTarihi: DateTime(2026, 4, 11, 13, 0),
+          aydinlatmaOnayi: true,
+          ticariIletisimOnayi: false,
+        ),
+      );
+      await servisKaydi.siparisOlusturUseCase(
+        SiparisVarligi(
+          id: 'kvkk_test_2',
+          siparisNo: 'R-KVKK2',
+          sahip: const SiparisSahibiVarligi.misafir(
+            MisafirBilgisiVarligi(
+              adSoyad: 'KVKK Test 2',
+              telefon: '5551110001',
+            ),
+          ),
+          teslimatTipi: TeslimatTipi.gelAl,
+          durum: SiparisDurumu.alindi,
+          kalemler: const <SiparisKalemiVarligi>[
+            SiparisKalemiVarligi(
+              id: 'kal_kvkk_2',
+              urunId: 'urn_001',
+              urunAdi: 'Klasik Burger',
+              birimFiyat: 120,
+              adet: 1,
+            ),
+          ],
+          olusturmaTarihi: DateTime(2026, 4, 11, 13, 10),
+          aydinlatmaOnayi: true,
+          ticariIletisimOnayi: true,
+        ),
+      );
+
+      final YonetimPaneliViewModel viewModel =
+          YonetimPaneliViewModel.servisKaydindan(servisKaydi);
+      await viewModel.yukle();
+
+      viewModel.filtreSec(PanelFiltre.kvkkOnayli);
+      expect(viewModel.filtreliSiparisler, isNotEmpty);
+      expect(
+        viewModel.filtreliSiparisler.every(
+          (siparis) => siparis.aydinlatmaOnayi,
+        ),
+        isTrue,
+      );
+
+      viewModel.filtreSec(PanelFiltre.iletisimIzinli);
+      expect(viewModel.filtreliSiparisler, isNotEmpty);
+      expect(
+        viewModel.filtreliSiparisler.every(
+          (siparis) => siparis.ticariIletisimOnayi,
+        ),
+        isTrue,
+      );
+    },
+  );
+
   test(
     'YonetimPaneliViewModel yukle ile temel panel verilerini doldurur',
     () async {

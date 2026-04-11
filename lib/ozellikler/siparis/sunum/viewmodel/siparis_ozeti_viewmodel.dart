@@ -98,6 +98,8 @@ class SiparisOzetiViewModel extends ChangeNotifier {
   bool _kaydediliyor = false;
   bool _kuponIsleniyor = false;
   bool _varsayilanBilgilerYuklendi = false;
+  bool _aydinlatmaOnayi = false;
+  bool _ticariIletisimOnayi = false;
   String _adresMetni = '';
   String _teslimatNotu = '';
   TeslimatTipi _seciliTeslimatTipi;
@@ -107,6 +109,8 @@ class SiparisOzetiViewModel extends ChangeNotifier {
   QrMenuBaglamiVarligi? get qrBaglami => _qrBaglami;
   bool get kaydediliyor => _kaydediliyor;
   bool get kuponIsleniyor => _kuponIsleniyor;
+  bool get aydinlatmaOnayi => _aydinlatmaOnayi;
+  bool get ticariIletisimOnayi => _ticariIletisimOnayi;
   String get adresMetni => _adresMetni;
   String get teslimatNotu => _teslimatNotu;
   TeslimatTipi get seciliTeslimatTipi => _seciliTeslimatTipi;
@@ -188,6 +192,22 @@ class SiparisOzetiViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
+  void aydinlatmaOnayiDegisti(bool deger) {
+    if (_aydinlatmaOnayi == deger) {
+      return;
+    }
+    _aydinlatmaOnayi = deger;
+    notifyListeners();
+  }
+
+  void ticariIletisimOnayiDegisti(bool deger) {
+    if (_ticariIletisimOnayi == deger) {
+      return;
+    }
+    _ticariIletisimOnayi = deger;
+    notifyListeners();
+  }
+
   Future<SiparisOzetiIslemSonucu> varsayilanBilgileriYukle() async {
     if (_varsayilanBilgilerYuklendi) {
       return const SiparisOzetiIslemSonucu.basarili();
@@ -219,6 +239,11 @@ class SiparisOzetiViewModel extends ChangeNotifier {
     if (paketServisSeciliMi && _adresMetni.trim().isEmpty) {
       return const SiparisOzetiIslemSonucu.hata(
         'Paket sipariste teslimat adresi gerekli',
+      );
+    }
+    if (!_aydinlatmaOnayi) {
+      return const SiparisOzetiIslemSonucu.hata(
+        'Siparisi tamamlamak icin KVKK aydinlatma onayi zorunludur.',
       );
     }
 
@@ -267,6 +292,8 @@ class SiparisOzetiViewModel extends ChangeNotifier {
         kaynak: _qrBaglami?.kaynak,
         kuponKodu: _kampanyaSonucu.kuponKodu,
         indirimTutari: indirimTutari,
+        aydinlatmaOnayi: _aydinlatmaOnayi,
+        ticariIletisimOnayi: _ticariIletisimOnayi,
       );
 
       final SiparisVarligi kaydedilenSiparis = await _siparisOlusturUseCase(
@@ -291,15 +318,16 @@ class SiparisOzetiViewModel extends ChangeNotifier {
 
   String? _teslimatNotunuHazirla() {
     final String temizNot = _teslimatNotu.trim();
-    if (!kuponUygulandiMi) {
-      return temizNot.isEmpty ? null : temizNot;
+    final List<String> notlar = <String>[if (temizNot.isNotEmpty) temizNot];
+    if (kuponUygulandiMi) {
+      final String kampanyaNotu =
+          'Kampanya: ${_kampanyaSonucu.kuponKodu} (-${indirimTutari.toStringAsFixed(2)} TL)';
+      notlar.add(kampanyaNotu);
     }
-    final String kampanyaNotu =
-        'Kampanya: ${_kampanyaSonucu.kuponKodu} (-${indirimTutari.toStringAsFixed(2)} TL)';
-    if (temizNot.isEmpty) {
-      return kampanyaNotu;
-    }
-    return '$temizNot | $kampanyaNotu';
+    final String onayNotu =
+        'Onaylar: KVKK ${_aydinlatmaOnayi ? 'onayli' : 'onaysiz'}, Ticari iletisim ${_ticariIletisimOnayi ? 'onayli' : 'onaysiz'}';
+    notlar.add(onayNotu);
+    return notlar.isEmpty ? null : notlar.join(' | ');
   }
 
   String get teslimatEtiketi {

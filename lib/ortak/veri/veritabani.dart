@@ -96,6 +96,10 @@ class SiparisKayitlari extends Table {
   TextColumn get kaynak => text().nullable()();
   TextColumn get kuponKodu => text().nullable()();
   RealColumn get indirimTutari => real().withDefault(const Constant(0.0))();
+  BoolColumn get aydinlatmaOnayi =>
+      boolean().withDefault(const Constant(false))();
+  BoolColumn get ticariIletisimOnayi =>
+      boolean().withDefault(const Constant(false))();
   BoolColumn get sahipMisafir => boolean()();
   TextColumn get sahipAdSoyad => text()();
   TextColumn get sahipTelefon => text()();
@@ -242,7 +246,7 @@ class UygulamaVeritabani extends _$UygulamaVeritabani
   static final RegExp _sayisalKimlikDeseni = RegExp(r'^\d+$');
 
   @override
-  int get schemaVersion => 10;
+  int get schemaVersion => 11;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -288,6 +292,16 @@ class UygulamaVeritabani extends _$UygulamaVeritabani
         await migrator.addColumn(
           siparisKayitlari,
           siparisKayitlari.indirimTutari,
+        );
+      }
+      if (from < 11) {
+        await customStatement(
+          'ALTER TABLE siparis_kayitlari '
+          'ADD COLUMN aydinlatma_onayi INTEGER NOT NULL DEFAULT 0',
+        );
+        await customStatement(
+          'ALTER TABLE siparis_kayitlari '
+          'ADD COLUMN ticari_iletisim_onayi INTEGER NOT NULL DEFAULT 0',
         );
       }
     },
@@ -1041,6 +1055,8 @@ class UygulamaVeritabani extends _$UygulamaVeritabani
                 kaynak: Value(kayit.kaynak),
                 kuponKodu: Value(kayit.kuponKodu),
                 indirimTutari: Value(kayit.indirimTutari),
+                aydinlatmaOnayi: Value(kayit.aydinlatmaOnayi),
+                ticariIletisimOnayi: Value(kayit.ticariIletisimOnayi),
                 sahipMisafir: kayit.sahipMisafir,
                 sahipAdSoyad: kayit.sahipAdSoyad,
                 sahipTelefon: kayit.sahipTelefon,

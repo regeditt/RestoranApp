@@ -105,4 +105,52 @@ void main() {
       expect(sonuc.hedef, GirisHedefi.pos);
     },
   );
+
+  test(
+    'GirisSecimViewModel aktif garson oturumunda tekrar giris istemez',
+    () async {
+      final ServisKaydi servisKaydi = ServisKaydi.mock();
+      await servisKaydi.girisYapUseCase(
+        telefon: '5551000000',
+        sifre: '123456',
+        rol: KullaniciRolu.garson,
+      );
+      final GirisSecimViewModel viewModel = GirisSecimViewModel.servisKaydindan(
+        servisKaydi,
+      );
+
+      final GirisHedefi? hedef = await viewModel.aktifOturumHedefiGetir();
+
+      expect(hedef, GirisHedefi.pos);
+    },
+  );
+
+  test(
+    'GirisSecimViewModel aktif yonetici oturumunda tekrar giris istemez',
+    () async {
+      final ServisKaydi servisKaydi = ServisKaydi.mock();
+      await servisKaydi.girisYapUseCase(
+        telefon: '5552000000',
+        sifre: '123456',
+        rol: KullaniciRolu.yonetici,
+      );
+      final GirisSecimViewModel viewModel = GirisSecimViewModel.servisKaydindan(
+        servisKaydi,
+      );
+
+      final GirisHedefi? hedef = await viewModel.aktifOturumHedefiGetir();
+
+      expect(hedef, GirisHedefi.yonetim);
+    },
+  );
+
+  test('GirisSecimViewModel aktif oturum yoksa giris formunu acar', () async {
+    final GirisSecimViewModel viewModel = GirisSecimViewModel.servisKaydindan(
+      ServisKaydi.mock(),
+    );
+
+    final GirisHedefi? hedef = await viewModel.aktifOturumHedefiGetir();
+
+    expect(hedef, isNull);
+  });
 }

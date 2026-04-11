@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:restoran_app/ortak/tema/restoran_tema_uzantilari.dart';
 
@@ -246,21 +248,37 @@ class SuruklenebilirPopupSablonu extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final Size ekranBoyutu = MediaQuery.sizeOf(context);
+    final double ekranIciMaxGenislik = math.max(
+      0,
+      ekranBoyutu.width - disBosluk.horizontal,
+    );
+    final double ekranIciMaxYukseklik = math.max(
+      0,
+      ekranBoyutu.height - disBosluk.vertical,
+    );
     Widget icerik = child;
 
     if (genislik != null || yukseklik != null) {
       icerik = SizedBox(width: genislik, height: yukseklik, child: icerik);
     }
 
-    if (maxGenislik != null || maxYukseklik != null) {
-      icerik = ConstrainedBox(
-        constraints: BoxConstraints(
-          maxWidth: maxGenislik ?? double.infinity,
-          maxHeight: maxYukseklik ?? double.infinity,
-        ),
-        child: icerik,
-      );
-    }
+    final double hedefMaxGenislik = math.min(
+      maxGenislik ?? ekranIciMaxGenislik,
+      ekranIciMaxGenislik,
+    );
+    final double hedefMaxYukseklik = math.min(
+      maxYukseklik ?? ekranIciMaxYukseklik,
+      ekranIciMaxYukseklik,
+    );
+
+    icerik = ConstrainedBox(
+      constraints: BoxConstraints(
+        maxWidth: hedefMaxGenislik,
+        maxHeight: hedefMaxYukseklik,
+      ),
+      child: icerik,
+    );
 
     if (materialKullan) {
       icerik = PopupYuzeyi(

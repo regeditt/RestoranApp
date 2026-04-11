@@ -3,6 +3,8 @@ class YonetimPaneliOzetiVarligi {
     required this.toplamSiparis,
     required this.toplamCiro,
     this.toplamIndirim = 0,
+    this.aydinlatmaOnayliSiparis = 0,
+    this.ticariIletisimOnayliSiparis = 0,
     required this.hazirlananSiparis,
     required this.hazirSiparis,
     required this.yoldaSiparis,
@@ -14,6 +16,8 @@ class YonetimPaneliOzetiVarligi {
   final int toplamSiparis;
   final double toplamCiro;
   final double toplamIndirim;
+  final int aydinlatmaOnayliSiparis;
+  final int ticariIletisimOnayliSiparis;
   final int hazirlananSiparis;
   final int hazirSiparis;
   final int yoldaSiparis;

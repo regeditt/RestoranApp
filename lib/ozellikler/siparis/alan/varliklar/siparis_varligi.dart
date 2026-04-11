@@ -22,6 +22,8 @@ class SiparisVarligi {
     this.kaynak,
     this.kuponKodu,
     this.indirimTutari = 0,
+    this.aydinlatmaOnayi = false,
+    this.ticariIletisimOnayi = false,
   });
 
   final String id;
@@ -40,6 +42,8 @@ class SiparisVarligi {
   final String? kaynak;
   final String? kuponKodu;
   final double indirimTutari;
+  final bool aydinlatmaOnayi;
+  final bool ticariIletisimOnayi;
 
   double get araToplam =>
       kalemler.fold<double>(0, (toplam, kalem) => toplam + kalem.araToplam);
@@ -64,6 +68,8 @@ class SiparisVarligi {
     String? kaynak,
     String? kuponKodu,
     double? indirimTutari,
+    bool? aydinlatmaOnayi,
+    bool? ticariIletisimOnayi,
   }) {
     return SiparisVarligi(
       id: id ?? this.id,
@@ -82,6 +88,8 @@ class SiparisVarligi {
       kaynak: kaynak ?? this.kaynak,
       kuponKodu: kuponKodu ?? this.kuponKodu,
       indirimTutari: indirimTutari ?? this.indirimTutari,
+      aydinlatmaOnayi: aydinlatmaOnayi ?? this.aydinlatmaOnayi,
+      ticariIletisimOnayi: ticariIletisimOnayi ?? this.ticariIletisimOnayi,
     );
   }
 }

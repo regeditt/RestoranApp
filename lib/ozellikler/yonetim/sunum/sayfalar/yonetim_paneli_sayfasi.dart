@@ -512,6 +512,8 @@ class _FiltreCubugu extends StatelessWidget {
       (_PanelFiltre.gelAl, 'Gel al'),
       (_PanelFiltre.paketServis, 'Paket'),
       (_PanelFiltre.restorandaYe, 'Salon'),
+      (_PanelFiltre.kvkkOnayli, 'KVKK'),
+      (_PanelFiltre.iletisimIzinli, 'Iletisim'),
     ];
 
     return Wrap(
@@ -808,6 +810,16 @@ class _KompaktUstAlan extends StatelessWidget {
                 baslik: 'Kampanya indirimi',
                 deger: paraYaz(ozet.toplamIndirim),
                 renk: const Color(0xFFFFC27A),
+              ),
+              _OperasyonMetrigi(
+                baslik: 'KVKK onayli',
+                deger: '${ozet.aydinlatmaOnayliSiparis}',
+                renk: const Color(0xFF9DE7D3),
+              ),
+              _OperasyonMetrigi(
+                baslik: 'Iletisim izinli',
+                deger: '${ozet.ticariIletisimOnayliSiparis}',
+                renk: const Color(0xFFFFA6B8),
               ),
               _OperasyonMetrigi(
                 baslik: 'Salon',

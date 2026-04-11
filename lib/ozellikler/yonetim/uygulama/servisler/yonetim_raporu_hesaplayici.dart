@@ -21,10 +21,18 @@ class YonetimRaporuHesaplayici {
     int paketServis = 0;
     double toplamCiro = 0;
     double toplamIndirim = 0;
+    int aydinlatmaOnayliSiparis = 0;
+    int ticariIletisimOnayliSiparis = 0;
 
     for (final SiparisVarligi siparis in siparisler) {
       toplamCiro += siparis.toplamTutar;
       toplamIndirim += siparis.indirimTutari;
+      if (siparis.aydinlatmaOnayi) {
+        aydinlatmaOnayliSiparis++;
+      }
+      if (siparis.ticariIletisimOnayi) {
+        ticariIletisimOnayliSiparis++;
+      }
 
       switch (siparis.durum) {
         case SiparisDurumu.hazirlaniyor:
@@ -51,6 +59,8 @@ class YonetimRaporuHesaplayici {
       toplamSiparis: siparisler.length,
       toplamCiro: toplamCiro,
       toplamIndirim: toplamIndirim,
+      aydinlatmaOnayliSiparis: aydinlatmaOnayliSiparis,
+      ticariIletisimOnayliSiparis: ticariIletisimOnayliSiparis,
       hazirlananSiparis: hazirlanan,
       hazirSiparis: hazir,
       yoldaSiparis: yolda,

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:restoran_app/ortak/bilesenler/ana_sayfaya_donus.dart';
+import 'package:restoran_app/ortak/bilesenler/kvkk_aydinlatma_dialogu.dart';
 import 'package:restoran_app/ortak/bilesenler/suruklenebilir_dialog_kapsayici.dart';
 import 'package:restoran_app/ortak/tema/ana_sayfa_renk_sablonu.dart';
 import 'package:restoran_app/ozellikler/menu/alan/varliklar/qr_menu_baglami_varligi.dart';
@@ -28,6 +29,8 @@ class _SiparisOzetiSayfasiState extends State<SiparisOzetiSayfasi> {
   QrMenuBaglamiVarligi? get _qrBaglami => widget.viewModel.qrBaglami;
   bool get _kaydediliyor => widget.viewModel.kaydediliyor;
   bool get _kuponIsleniyor => widget.viewModel.kuponIsleniyor;
+  bool get _aydinlatmaOnayi => widget.viewModel.aydinlatmaOnayi;
+  bool get _ticariIletisimOnayi => widget.viewModel.ticariIletisimOnayi;
   TeslimatTipi get _seciliTeslimatTipi => widget.viewModel.seciliTeslimatTipi;
   bool get _paketServisSeciliMi => widget.viewModel.paketServisSeciliMi;
   String get _teslimatEtiketi => widget.viewModel.teslimatEtiketi;
@@ -162,12 +165,16 @@ class _SiparisOzetiSayfasiState extends State<SiparisOzetiSayfasi> {
         return SuruklenebilirPopupSablonu(
           materialKullan: false,
           child: AlertDialog(
+            scrollable: true,
             title: const Text('Siparis alindi'),
-            content: Text(
-              '${kaydedilenSiparis.siparisNo} numarali siparis kaydedildi. '
-              '${_siparisBilgisi(kaydedilenSiparis)}. '
-              '${yazdirmaSonucu.ozetMetni}. '
-              'Toplam ${_genelToplam.toStringAsFixed(0)} TL.',
+            content: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 520),
+              child: Text(
+                '${kaydedilenSiparis.siparisNo} numarali siparis kaydedildi. '
+                '${_siparisBilgisi(kaydedilenSiparis)}. '
+                '${yazdirmaSonucu.ozetMetni}. '
+                'Toplam ${_genelToplam.toStringAsFixed(0)} TL.',
+              ),
             ),
             actions: [
               TextButton(
@@ -449,6 +456,54 @@ class _SiparisOzetiSayfasiState extends State<SiparisOzetiSayfasi> {
                       ),
                     ),
                   ],
+                  const SizedBox(height: 14),
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: TextButton.icon(
+                      onPressed: _kaydediliyor
+                          ? null
+                          : () {
+                              KvkkAydinlatmaDialogu.goster(
+                                context,
+                                baglam: AydinlatmaBaglami.siparis,
+                              );
+                            },
+                      icon: const Icon(Icons.info_outline_rounded),
+                      label: const Text('Aydinlatma detaylarini gor'),
+                    ),
+                  ),
+                  CheckboxListTile(
+                    contentPadding: EdgeInsets.zero,
+                    value: _aydinlatmaOnayi,
+                    title: const Text(
+                      'KVKK aydinlatma metnini okudum ve onayliyorum (zorunlu)',
+                      style: TextStyle(color: Colors.white),
+                    ),
+                    controlAffinity: ListTileControlAffinity.leading,
+                    onChanged: _kaydediliyor
+                        ? null
+                        : (bool? deger) {
+                            widget.viewModel.aydinlatmaOnayiDegisti(
+                              deger ?? false,
+                            );
+                          },
+                  ),
+                  CheckboxListTile(
+                    contentPadding: EdgeInsets.zero,
+                    value: _ticariIletisimOnayi,
+                    title: const Text(
+                      'Kampanya ve bilgilendirme iletileri almak istiyorum (opsiyonel)',
+                      style: TextStyle(color: Colors.white),
+                    ),
+                    controlAffinity: ListTileControlAffinity.leading,
+                    onChanged: _kaydediliyor
+                        ? null
+                        : (bool? deger) {
+                            widget.viewModel.ticariIletisimOnayiDegisti(
+                              deger ?? false,
+                            );
+                          },
+                  ),
                   const SizedBox(height: 18),
                   SizedBox(
                     width: double.infinity,

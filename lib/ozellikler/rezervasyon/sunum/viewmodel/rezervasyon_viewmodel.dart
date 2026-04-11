@@ -30,6 +30,8 @@ class RezervasyonOlusturmaGirdisi {
     required this.baslangicZamani,
     required this.sureDakika,
     required this.notMetni,
+    required this.aydinlatmaOnayi,
+    required this.ticariIletisimOnayi,
     this.tercihBolumId,
   });
 
@@ -39,6 +41,8 @@ class RezervasyonOlusturmaGirdisi {
   final DateTime baslangicZamani;
   final int sureDakika;
   final String notMetni;
+  final bool aydinlatmaOnayi;
+  final bool ticariIletisimOnayi;
   final String? tercihBolumId;
 }
 
@@ -52,6 +56,8 @@ class RezervasyonIslemSonucu {
 }
 
 class RezervasyonViewModel extends ChangeNotifier {
+  static const Duration _noShowToleransSuresi = Duration(minutes: 15);
+
   RezervasyonViewModel({
     required RezervasyonlariGetirUseCase rezervasyonlariGetirUseCase,
     required RezervasyonEkleUseCase rezervasyonEkleUseCase,
@@ -133,14 +139,25 @@ class RezervasyonViewModel extends ChangeNotifier {
     }
     notifyListeners();
     try {
-      final List<RezervasyonVarligi> rezervasyonlar =
+      List<RezervasyonVarligi> rezervasyonlar =
           await _rezervasyonlariGetirUseCase(gun: _seciliGun);
+      final int otomatikNoShowAdedi = await _otomatikNoShowUygula(
+        rezervasyonlar,
+      );
+      if (otomatikNoShowAdedi > 0) {
+        rezervasyonlar = await _rezervasyonlariGetirUseCase(gun: _seciliGun);
+      }
       final List<SalonBolumuVarligi> bolumler =
           await _salonBolumleriniGetirUseCase();
       _rezervasyonlar = rezervasyonlar;
       _salonBolumleri = bolumler;
       _yukleniyor = false;
       notifyListeners();
+      if (otomatikNoShowAdedi > 0) {
+        return RezervasyonIslemSonucu.basarili(
+          '$otomatikNoShowAdedi rezervasyon no-show olarak isaretlendi.',
+        );
+      }
       return const RezervasyonIslemSonucu.basarili();
     } catch (_) {
       _yukleniyor = false;
@@ -154,6 +171,11 @@ class RezervasyonViewModel extends ChangeNotifier {
   Future<RezervasyonIslemSonucu> rezervasyonOlustur(
     RezervasyonOlusturmaGirdisi girdi,
   ) async {
+    if (!girdi.aydinlatmaOnayi) {
+      return const RezervasyonIslemSonucu.hata(
+        'Rezervasyon icin KVKK aydinlatma onayi zorunludur.',
+      );
+    }
     try {
       final DateTime baslangic = girdi.baslangicZamani;
       final DateTime bitis = baslangic.add(Duration(minutes: girdi.sureDakika));
@@ -183,6 +205,8 @@ class RezervasyonViewModel extends ChangeNotifier {
         masaId: atama?.masaId,
         masaAdi: atama?.masaAdi,
         notMetni: girdi.notMetni.trim(),
+        aydinlatmaOnayi: girdi.aydinlatmaOnayi,
+        ticariIletisimOnayi: girdi.ticariIletisimOnayi,
       );
       await _rezervasyonEkleUseCase(rezervasyon);
       await yukle(gun: baslangic);
@@ -273,5 +297,33 @@ class RezervasyonViewModel extends ChangeNotifier {
 
   static DateTime _gunBaslangici(DateTime tarih) {
     return DateTime(tarih.year, tarih.month, tarih.day);
+  }
+
+  Future<int> _otomatikNoShowUygula(
+    List<RezervasyonVarligi> rezervasyonlar,
+  ) async {
+    final DateTime simdi = DateTime.now();
+    final List<RezervasyonVarligi> noShowAdaylari = rezervasyonlar
+        .where((RezervasyonVarligi rezervasyon) {
+          if (rezervasyon.durum != RezervasyonDurumu.beklemede &&
+              rezervasyon.durum != RezervasyonDurumu.onaylandi) {
+            return false;
+          }
+          final DateTime noShowEsigi = rezervasyon.baslangicZamani.add(
+            _noShowToleransSuresi,
+          );
+          return simdi.isAfter(noShowEsigi);
+        })
+        .toList(growable: false);
+    if (noShowAdaylari.isEmpty) {
+      return 0;
+    }
+    for (final RezervasyonVarligi rezervasyon in noShowAdaylari) {
+      await _rezervasyonDurumuGuncelleUseCase(
+        rezervasyonId: rezervasyon.id,
+        durum: RezervasyonDurumu.noShow,
+      );
+    }
+    return noShowAdaylari.length;
   }
 }

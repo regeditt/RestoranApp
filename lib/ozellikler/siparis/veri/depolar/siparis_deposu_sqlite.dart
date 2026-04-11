@@ -4,6 +4,7 @@ import 'package:restoran_app/ozellikler/siparis/alan/depolar/siparis_deposu.dart
 import 'package:restoran_app/ozellikler/siparis/alan/enumlar/paket_teslimat_durumu.dart';
 import 'package:restoran_app/ozellikler/siparis/alan/enumlar/siparis_durumu.dart';
 import 'package:restoran_app/ozellikler/siparis/alan/enumlar/teslimat_tipi.dart';
+import 'package:restoran_app/ozellikler/siparis/alan/servisler/siparis_operasyon_akisi.dart';
 import 'package:restoran_app/ozellikler/siparis/alan/varliklar/siparis_kalemi_varligi.dart';
 import 'package:restoran_app/ozellikler/siparis/alan/varliklar/siparis_sahibi_varligi.dart';
 import 'package:restoran_app/ozellikler/siparis/alan/varliklar/siparis_varligi.dart';
@@ -65,6 +66,10 @@ class SiparisDeposuSqlite implements SiparisDeposu {
               kaynak: Value(kaydedilecekSiparis.kaynak),
               kuponKodu: Value(kaydedilecekSiparis.kuponKodu),
               indirimTutari: Value(kaydedilecekSiparis.indirimTutari),
+              aydinlatmaOnayi: Value(kaydedilecekSiparis.aydinlatmaOnayi),
+              ticariIletisimOnayi: Value(
+                kaydedilecekSiparis.ticariIletisimOnayi,
+              ),
               sahipMisafir: Value(kaydedilecekSiparis.sahip.misafirMi),
               sahipAdSoyad: Value(
                 kaydedilecekSiparis.sahip.misafirBilgisi?.adSoyad ??
@@ -117,6 +122,14 @@ class SiparisDeposuSqlite implements SiparisDeposu {
     final SiparisVarligi? mevcutSiparis = await siparisGetir(siparisId);
     if (mevcutSiparis == null) {
       throw StateError('Siparis bulunamadi');
+    }
+    final SiparisDurumDogrulamaSonucu dogrulamaSonucu =
+        SiparisOperasyonAkisi.gecisDogrula(
+          siparis: mevcutSiparis,
+          hedefDurum: yeniDurum,
+        );
+    if (!dogrulamaSonucu.basarili) {
+      throw StateError(dogrulamaSonucu.mesaj);
     }
     final PaketServisDurumGuncellemesi durumGuncellemesi =
         paketServisDurumGuncellemesiniHesapla(
@@ -226,6 +239,8 @@ class SiparisDeposuSqlite implements SiparisDeposu {
       kaynak: kayit.kaynak,
       kuponKodu: kayit.kuponKodu,
       indirimTutari: kayit.indirimTutari,
+      aydinlatmaOnayi: kayit.aydinlatmaOnayi,
+      ticariIletisimOnayi: kayit.ticariIletisimOnayi,
     );
   }
 }

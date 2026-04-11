@@ -5,6 +5,7 @@ import 'package:restoran_app/ortak/yonlendirme/rota_yapisi.dart';
 import 'package:restoran_app/ozellikler/raporlar/uygulama/servisler/rapor_disa_aktarim_servisi.dart';
 import 'package:restoran_app/ozellikler/raporlar/sunum/bilesenler/kurye_performans_paneli_karti.dart';
 import 'package:restoran_app/ozellikler/raporlar/sunum/bilesenler/kurye_takip_haritasi_karti.dart';
+import 'package:restoran_app/ozellikler/raporlar/sunum/bilesenler/kvkk_uyum_karti.dart';
 import 'package:restoran_app/ozellikler/siparis/alan/varliklar/siparis_varligi.dart';
 import 'package:restoran_app/ozellikler/stok/alan/varliklar/stok_ozeti_varligi.dart';
 import 'package:restoran_app/ozellikler/yonetim/alan/varliklar/saatlik_siparis_ozeti_varligi.dart';
@@ -174,6 +175,7 @@ class _RaporlarSayfasiState extends State<RaporlarSayfasi> {
         final StokOzetiVarligi? stokOzeti = viewModel.stokOzeti;
         final List<Widget> raporKartlari = <Widget>[
           KanalDagilimiKarti(ozet: ozet),
+          KvkkUyumKarti(siparisler: viewModel.filtreliSiparisler),
           SaatlikTrendKarti(veriler: saatlikVeriler),
           PaketServisOperasyonKarti(siparisler: viewModel.filtreliSiparisler),
           KuryePerformansPaneliKarti(siparisler: viewModel.filtreliSiparisler),
@@ -208,26 +210,62 @@ class _RaporlarSayfasiState extends State<RaporlarSayfasi> {
                   constraints: const BoxConstraints(maxWidth: 1520),
                   child: Padding(
                     padding: const EdgeInsets.all(20),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: <Widget>[
-                        _UstAlan(
-                          tema: tema,
-                          disaAktarimSuruyor: _disaAktarimSuruyor,
-                          gunlukCsvDisaAktar: _gunlukCsvDisaAktar,
-                          aylikCsvDisaAktar: _aylikCsvDisaAktar,
-                          gunlukPdfYazdir: _gunlukPdfYazdir,
-                          aylikPdfYazdir: _aylikPdfYazdir,
-                        ),
-                        const SizedBox(height: 14),
-                        _FiltreSeridi(viewModel: viewModel),
-                        const SizedBox(height: 16),
-                        Expanded(
-                          child: viewModel.yukleniyor
-                              ? const Center(child: CircularProgressIndicator())
-                              : _RaporIzgarasi(kartlar: raporKartlari),
-                        ),
-                      ],
+                    child: LayoutBuilder(
+                      builder: (BuildContext context, BoxConstraints kisitlar) {
+                        final bool darEkran = kisitlar.maxWidth < 760;
+                        if (darEkran) {
+                          return ListView(
+                            children: <Widget>[
+                              _UstAlan(
+                                tema: tema,
+                                disaAktarimSuruyor: _disaAktarimSuruyor,
+                                gunlukCsvDisaAktar: _gunlukCsvDisaAktar,
+                                aylikCsvDisaAktar: _aylikCsvDisaAktar,
+                                gunlukPdfYazdir: _gunlukPdfYazdir,
+                                aylikPdfYazdir: _aylikPdfYazdir,
+                              ),
+                              const SizedBox(height: 14),
+                              _FiltreSeridi(viewModel: viewModel),
+                              const SizedBox(height: 16),
+                              if (viewModel.yukleniyor)
+                                const Padding(
+                                  padding: EdgeInsets.all(28),
+                                  child: Center(
+                                    child: CircularProgressIndicator(),
+                                  ),
+                                )
+                              else
+                                _RaporIzgarasi(
+                                  kartlar: raporKartlari,
+                                  kaydirmaKullan: false,
+                                ),
+                            ],
+                          );
+                        }
+                        return Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: <Widget>[
+                            _UstAlan(
+                              tema: tema,
+                              disaAktarimSuruyor: _disaAktarimSuruyor,
+                              gunlukCsvDisaAktar: _gunlukCsvDisaAktar,
+                              aylikCsvDisaAktar: _aylikCsvDisaAktar,
+                              gunlukPdfYazdir: _gunlukPdfYazdir,
+                              aylikPdfYazdir: _aylikPdfYazdir,
+                            ),
+                            const SizedBox(height: 14),
+                            _FiltreSeridi(viewModel: viewModel),
+                            const SizedBox(height: 16),
+                            Expanded(
+                              child: viewModel.yukleniyor
+                                  ? const Center(
+                                      child: CircularProgressIndicator(),
+                                    )
+                                  : _RaporIzgarasi(kartlar: raporKartlari),
+                            ),
+                          ],
+                        );
+                      },
                     ),
                   ),
                 ),
@@ -375,6 +413,8 @@ class _FiltreSeridi extends StatelessWidget {
       PanelFiltre.gelAl => 'Gel al',
       PanelFiltre.paketServis => 'Paket',
       PanelFiltre.restorandaYe => 'Salon',
+      PanelFiltre.kvkkOnayli => 'KVKK',
+      PanelFiltre.iletisimIzinli => 'Iletisim',
     };
   }
 }
@@ -400,8 +440,10 @@ class _SecimKutusu<T> extends StatelessWidget {
         color: Colors.white.withValues(alpha: 0.10),
         borderRadius: BorderRadius.circular(14),
       ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
+      child: Wrap(
+        spacing: 8,
+        runSpacing: 4,
+        crossAxisAlignment: WrapCrossAlignment.center,
         children: <Widget>[
           Text(
             '$baslik: ',
@@ -413,6 +455,7 @@ class _SecimKutusu<T> extends StatelessWidget {
           DropdownButtonHideUnderline(
             child: DropdownButton<T>(
               value: seciliDeger,
+              isDense: true,
               dropdownColor: const Color(0xFF2B1D3A),
               borderRadius: BorderRadius.circular(14),
               style: const TextStyle(
@@ -442,9 +485,10 @@ class _SecimKutusu<T> extends StatelessWidget {
 }
 
 class _RaporIzgarasi extends StatelessWidget {
-  const _RaporIzgarasi({required this.kartlar});
+  const _RaporIzgarasi({required this.kartlar, this.kaydirmaKullan = true});
 
   final List<Widget> kartlar;
+  final bool kaydirmaKullan;
 
   @override
   Widget build(BuildContext context) {
@@ -460,17 +504,17 @@ class _RaporIzgarasi extends StatelessWidget {
         final double kartGenisligi =
             (genislik - ((kolonSayisi - 1) * bosluk)) / kolonSayisi;
 
-        return SingleChildScrollView(
-          child: Wrap(
-            spacing: bosluk,
-            runSpacing: bosluk,
-            children: kartlar
-                .map(
-                  (Widget kart) => SizedBox(width: kartGenisligi, child: kart),
-                )
-                .toList(),
-          ),
+        final Widget icerik = Wrap(
+          spacing: bosluk,
+          runSpacing: bosluk,
+          children: kartlar
+              .map((Widget kart) => SizedBox(width: kartGenisligi, child: kart))
+              .toList(),
         );
+        if (!kaydirmaKullan) {
+          return icerik;
+        }
+        return SingleChildScrollView(child: icerik);
       },
     );
   }

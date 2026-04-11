@@ -156,6 +156,12 @@ class RezervasyonDeposuSqlite implements RezervasyonDeposu {
           masaId: (kayit['masaId'] as String?)?.trim(),
           masaAdi: (kayit['masaAdi'] as String?)?.trim(),
           notMetni: (kayit['notMetni'] as String? ?? '').trim(),
+          aydinlatmaOnayi: kayit['aydinlatmaOnayi'] is bool
+              ? kayit['aydinlatmaOnayi'] as bool
+              : false,
+          ticariIletisimOnayi: kayit['ticariIletisimOnayi'] is bool
+              ? kayit['ticariIletisimOnayi'] as bool
+              : false,
         ),
       );
     }
@@ -177,6 +183,8 @@ class RezervasyonDeposuSqlite implements RezervasyonDeposu {
       'masaId': rezervasyon.masaId,
       'masaAdi': rezervasyon.masaAdi,
       'notMetni': rezervasyon.notMetni,
+      'aydinlatmaOnayi': rezervasyon.aydinlatmaOnayi,
+      'ticariIletisimOnayi': rezervasyon.ticariIletisimOnayi,
     };
   }
 

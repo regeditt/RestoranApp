@@ -187,11 +187,14 @@ class _OdemeKasaSayfasiState extends State<OdemeKasaSayfasi> {
                           LayoutBuilder(
                             builder: (BuildContext context, BoxConstraints c) {
                               final bool dar = c.maxWidth < 900;
+                              final bool cokDar = c.maxWidth < 380;
                               return GridView.count(
                                 crossAxisCount: dar ? 2 : 4,
                                 crossAxisSpacing: 12,
                                 mainAxisSpacing: 12,
-                                childAspectRatio: dar ? 1.35 : 1.7,
+                                childAspectRatio: dar
+                                    ? (cokDar ? 0.95 : 1.2)
+                                    : 1.7,
                                 shrinkWrap: true,
                                 physics: const NeverScrollableScrollPhysics(),
                                 children: <Widget>[
@@ -370,9 +373,11 @@ class _OdemeYontemiKarti extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
           Icon(_ikon(yontem), color: _metinAna),
-          const Spacer(),
+          const SizedBox(height: 10),
           Text(
             yontem.etiket,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
             style: tema.textTheme.titleMedium?.copyWith(
               color: _metinAna,
               fontWeight: FontWeight.w700,
@@ -381,6 +386,8 @@ class _OdemeYontemiKarti extends StatelessWidget {
           const SizedBox(height: 4),
           Text(
             _paraYaz(tutar),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
             style: tema.textTheme.titleLarge?.copyWith(
               color: _metinIkincil,
               fontWeight: FontWeight.w800,

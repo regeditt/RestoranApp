@@ -1895,7 +1895,7 @@ class _MasaButonu extends StatelessWidget {
           ),
         ),
         child: Row(
-          mainAxisSize: MainAxisSize.min,
+          mainAxisSize: MainAxisSize.max,
           children: [
             Icon(
               Icons.table_restaurant_rounded,
@@ -1903,28 +1903,41 @@ class _MasaButonu extends StatelessWidget {
               color: seciliMi ? const Color(0xFF4A295F) : Colors.white,
             ),
             const SizedBox(width: 6),
-            Text(
-              etiket,
-              style: TextStyle(
-                color: seciliMi ? const Color(0xFF4A295F) : Colors.white,
-                fontWeight: FontWeight.w800,
+            Expanded(
+              child: Text(
+                etiket,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  color: seciliMi ? const Color(0xFF4A295F) : Colors.white,
+                  fontWeight: FontWeight.w800,
+                ),
               ),
             ),
             const SizedBox(width: 8),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
-              decoration: BoxDecoration(
-                color: seciliMi
-                    ? const Color(0xFFF3EAFE)
-                    : Colors.white.withValues(alpha: 0.16),
-                borderRadius: BorderRadius.circular(999),
-              ),
-              child: Text(
-                '$kapasite kisilik',
-                style: TextStyle(
-                  color: seciliMi ? const Color(0xFF7B5A90) : Colors.white,
-                  fontSize: 11,
-                  fontWeight: FontWeight.w700,
+            Flexible(
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                alignment: Alignment.centerRight,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 7,
+                    vertical: 2,
+                  ),
+                  decoration: BoxDecoration(
+                    color: seciliMi
+                        ? const Color(0xFFF3EAFE)
+                        : Colors.white.withValues(alpha: 0.16),
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                  child: Text(
+                    '$kapasite kisilik',
+                    style: TextStyle(
+                      color: seciliMi ? const Color(0xFF7B5A90) : Colors.white,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
                 ),
               ),
             ),

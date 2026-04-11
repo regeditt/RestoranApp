@@ -36,12 +36,17 @@ void main() {
           SiparisOzetiViewModel.servisKaydindan(servisKaydi, sepet: sepet);
       await viewModel.varsayilanBilgileriYukle();
       viewModel.adresDegisti('Ataturk Mah. No:1');
+      viewModel.aydinlatmaOnayiDegisti(true);
 
       final SiparisOzetiIslemSonucu sonuc = await viewModel.siparisiOnayla();
 
       expect(sonuc.basarili, isTrue);
       expect(sonuc.siparis, isNotNull);
       expect(sonuc.yazdirmaSonucu, isNotNull);
+      expect(sonuc.siparis!.aydinlatmaOnayi, isTrue);
+      expect(sonuc.siparis!.ticariIletisimOnayi, isFalse);
+      expect(sonuc.siparis!.teslimatNotu, contains('Onaylar: KVKK onayli'));
+      expect(sonuc.siparis!.teslimatNotu, contains('Ticari iletisim onaysiz'));
     },
   );
 
@@ -58,6 +63,7 @@ void main() {
         'IKIALBIR',
       );
       expect(kuponSonucu.basarili, isTrue);
+      viewModel.aydinlatmaOnayiDegisti(true);
 
       final SiparisOzetiIslemSonucu sonuc = await viewModel.siparisiOnayla();
 
@@ -66,6 +72,24 @@ void main() {
       expect(sonuc.siparis!.kuponKodu, 'IKIALBIR');
       expect(sonuc.siparis!.indirimTutari, greaterThan(0));
       expect(sonuc.siparis!.toplamTutar, lessThan(sonuc.siparis!.araToplam));
+      expect(sonuc.siparis!.aydinlatmaOnayi, isTrue);
+      expect(sonuc.siparis!.teslimatNotu, contains('Kampanya: IKIALBIR'));
+      expect(sonuc.siparis!.teslimatNotu, contains('Onaylar: KVKK onayli'));
+    },
+  );
+
+  test(
+    'SiparisOzetiViewModel aydinlatma onayi olmadan siparisi tamamlamaz',
+    () async {
+      final ServisKaydi servisKaydi = ServisKaydi.mock();
+      final SepetVarligi sepet = await _testSepetiOlustur(servisKaydi);
+      final SiparisOzetiViewModel viewModel =
+          SiparisOzetiViewModel.servisKaydindan(servisKaydi, sepet: sepet);
+
+      final SiparisOzetiIslemSonucu sonuc = await viewModel.siparisiOnayla();
+
+      expect(sonuc.basarili, isFalse);
+      expect(sonuc.mesaj, contains('KVKK aydinlatma onayi'));
     },
   );
 }

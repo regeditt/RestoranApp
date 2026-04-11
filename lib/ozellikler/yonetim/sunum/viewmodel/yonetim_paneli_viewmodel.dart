@@ -36,7 +36,15 @@ import 'package:restoran_app/ozellikler/yonetim/uygulama/use_case/yazici_guncell
 import 'package:restoran_app/ozellikler/yonetim/uygulama/use_case/yazici_sil_use_case.dart';
 import 'package:restoran_app/ozellikler/yonetim/uygulama/use_case/yazicilari_getir_use_case.dart';
 
-enum PanelFiltre { tumu, aktif, gelAl, paketServis, restorandaYe }
+enum PanelFiltre {
+  tumu,
+  aktif,
+  gelAl,
+  paketServis,
+  restorandaYe,
+  kvkkOnayli,
+  iletisimIzinli,
+}
 
 enum ZamanFiltresi { bugun, sonIkiSaat, tumu }
 
@@ -199,6 +207,14 @@ class YonetimPaneliViewModel extends ChangeNotifier {
             .where(
               (siparis) => siparis.teslimatTipi == TeslimatTipi.restorandaYe,
             )
+            .toList();
+      case PanelFiltre.kvkkOnayli:
+        kanalFiltreli = zamanFiltreli
+            .where((siparis) => siparis.aydinlatmaOnayi)
+            .toList();
+      case PanelFiltre.iletisimIzinli:
+        kanalFiltreli = zamanFiltreli
+            .where((siparis) => siparis.ticariIletisimOnayi)
             .toList();
     }
 

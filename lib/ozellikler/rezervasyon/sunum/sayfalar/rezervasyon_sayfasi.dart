@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:restoran_app/ortak/bilesenler/kvkk_aydinlatma_dialogu.dart';
 import 'package:restoran_app/ortak/bilesenler/suruklenebilir_dialog_kapsayici.dart';
 import 'package:restoran_app/ortak/tema/ana_sayfa_renk_sablonu.dart';
 import 'package:restoran_app/ozellikler/rezervasyon/alan/enumlar/rezervasyon_durumu.dart';
@@ -555,6 +556,8 @@ class _RezervasyonEkleDialogState extends State<_RezervasyonEkleDialog> {
   late DateTime _baslangicZamani;
   int _sureDakika = 90;
   String? _tercihBolumId;
+  bool _aydinlatmaOnayi = false;
+  bool _ticariIletisimOnayi = false;
 
   @override
   void initState() {
@@ -580,103 +583,185 @@ class _RezervasyonEkleDialogState extends State<_RezervasyonEkleDialog> {
     return SuruklenebilirPopupSablonu(
       materialKullan: false,
       child: AlertDialog(
+        scrollable: true,
+        insetPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 20),
+        actionsOverflowButtonSpacing: 8,
+        actionsOverflowDirection: VerticalDirection.down,
         title: const Text('Rezervasyon ekle'),
-        content: SizedBox(
-          width: 480,
-          child: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: <Widget>[
-                TextField(
-                  controller: _adDenetleyici,
-                  decoration: const InputDecoration(labelText: 'Musteri adi'),
-                ),
-                const SizedBox(height: 12),
-                TextField(
-                  controller: _telefonDenetleyici,
-                  keyboardType: TextInputType.phone,
-                  decoration: const InputDecoration(labelText: 'Telefon'),
-                ),
-                const SizedBox(height: 12),
-                TextField(
-                  controller: _kisiSayisiDenetleyici,
-                  keyboardType: TextInputType.number,
-                  decoration: const InputDecoration(labelText: 'Kisi sayisi'),
-                ),
-                const SizedBox(height: 12),
-                DropdownButtonFormField<String?>(
-                  initialValue: _tercihBolumId,
-                  decoration: const InputDecoration(
-                    labelText: 'Tercih edilen bolum',
+        content: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 480),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: <Widget>[
+              TextField(
+                controller: _adDenetleyici,
+                decoration: const InputDecoration(labelText: 'Musteri adi'),
+                onChanged: (_) => setState(() {}),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: _telefonDenetleyici,
+                keyboardType: TextInputType.phone,
+                decoration: const InputDecoration(labelText: 'Telefon'),
+                onChanged: (_) => setState(() {}),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: _kisiSayisiDenetleyici,
+                keyboardType: TextInputType.number,
+                decoration: const InputDecoration(labelText: 'Kisi sayisi'),
+                onChanged: (_) => setState(() {}),
+              ),
+              const SizedBox(height: 12),
+              DropdownButtonFormField<String?>(
+                initialValue: _tercihBolumId,
+                isExpanded: true,
+                decoration: const InputDecoration(labelText: 'Bolum tercihi'),
+                items: <DropdownMenuItem<String?>>[
+                  const DropdownMenuItem<String?>(
+                    value: null,
+                    child: Text('Farketmez'),
                   ),
-                  items: <DropdownMenuItem<String?>>[
-                    const DropdownMenuItem<String?>(
-                      value: null,
-                      child: Text('Farketmez (otomatik)'),
-                    ),
-                    ...widget.salonBolumleri.map(
-                      (bolum) => DropdownMenuItem<String?>(
-                        value: bolum.id,
-                        child: Text(bolum.ad),
+                  ...widget.salonBolumleri.map(
+                    (bolum) => DropdownMenuItem<String?>(
+                      value: bolum.id,
+                      child: Text(
+                        bolum.ad,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
-                  ],
-                  onChanged: (String? deger) {
-                    setState(() {
-                      _tercihBolumId = deger;
-                    });
-                  },
-                ),
-                const SizedBox(height: 12),
-                Row(
-                  children: <Widget>[
-                    Expanded(
-                      child: OutlinedButton.icon(
-                        onPressed: _tarihSec,
-                        icon: const Icon(Icons.calendar_today_rounded),
-                        label: Text(_kisaTarihYaz(_baslangicZamani)),
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: OutlinedButton.icon(
-                        onPressed: _saatSec,
-                        icon: const Icon(Icons.schedule_rounded),
-                        label: Text(_saatYaz(_baslangicZamani)),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                DropdownButtonFormField<int>(
-                  initialValue: _sureDakika,
-                  decoration: const InputDecoration(
-                    labelText: 'Rezervasyon suresi',
                   ),
-                  items: const <DropdownMenuItem<int>>[
-                    DropdownMenuItem<int>(value: 60, child: Text('60 dk')),
-                    DropdownMenuItem<int>(value: 90, child: Text('90 dk')),
-                    DropdownMenuItem<int>(value: 120, child: Text('120 dk')),
-                    DropdownMenuItem<int>(value: 150, child: Text('150 dk')),
-                  ],
-                  onChanged: (int? deger) {
-                    if (deger == null) {
-                      return;
-                    }
-                    setState(() {
-                      _sureDakika = deger;
-                    });
+                ],
+                onChanged: (String? deger) {
+                  setState(() {
+                    _tercihBolumId = deger;
+                  });
+                },
+              ),
+              const SizedBox(height: 12),
+              LayoutBuilder(
+                builder: (BuildContext context, BoxConstraints constraints) {
+                  if (constraints.maxWidth < 360) {
+                    return Column(
+                      children: <Widget>[
+                        SizedBox(
+                          width: double.infinity,
+                          child: OutlinedButton.icon(
+                            onPressed: _tarihSec,
+                            icon: const Icon(Icons.calendar_today_rounded),
+                            label: Text(_kisaTarihYaz(_baslangicZamani)),
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                        SizedBox(
+                          width: double.infinity,
+                          child: OutlinedButton.icon(
+                            onPressed: _saatSec,
+                            icon: const Icon(Icons.schedule_rounded),
+                            label: Text(_saatYaz(_baslangicZamani)),
+                          ),
+                        ),
+                      ],
+                    );
+                  }
+                  return Row(
+                    children: <Widget>[
+                      Expanded(
+                        child: OutlinedButton.icon(
+                          onPressed: _tarihSec,
+                          icon: const Icon(Icons.calendar_today_rounded),
+                          label: Text(_kisaTarihYaz(_baslangicZamani)),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: OutlinedButton.icon(
+                          onPressed: _saatSec,
+                          icon: const Icon(Icons.schedule_rounded),
+                          label: Text(_saatYaz(_baslangicZamani)),
+                        ),
+                      ),
+                    ],
+                  );
+                },
+              ),
+              const SizedBox(height: 12),
+              DropdownButtonFormField<int>(
+                initialValue: _sureDakika,
+                isExpanded: true,
+                decoration: const InputDecoration(
+                  labelText: 'Rezervasyon suresi',
+                ),
+                items: const <DropdownMenuItem<int>>[
+                  DropdownMenuItem<int>(value: 60, child: Text('60 dk')),
+                  DropdownMenuItem<int>(value: 90, child: Text('90 dk')),
+                  DropdownMenuItem<int>(value: 120, child: Text('120 dk')),
+                  DropdownMenuItem<int>(value: 150, child: Text('150 dk')),
+                ],
+                onChanged: (int? deger) {
+                  if (deger == null) {
+                    return;
+                  }
+                  setState(() {
+                    _sureDakika = deger;
+                  });
+                },
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: _notDenetleyici,
+                minLines: 2,
+                maxLines: 3,
+                decoration: const InputDecoration(labelText: 'Not'),
+              ),
+              const SizedBox(height: 12),
+              SizedBox(
+                width: double.infinity,
+                child: TextButton(
+                  onPressed: () {
+                    KvkkAydinlatmaDialogu.goster(
+                      context,
+                      baglam: AydinlatmaBaglami.rezervasyon,
+                    );
                   },
+                  child: Row(
+                    mainAxisSize: MainAxisSize.max,
+                    children: <Widget>[
+                      const Icon(Icons.info_outline_rounded),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          'Aydinlatma detaylarini gor',
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-                const SizedBox(height: 12),
-                TextField(
-                  controller: _notDenetleyici,
-                  minLines: 2,
-                  maxLines: 3,
-                  decoration: const InputDecoration(labelText: 'Not'),
-                ),
-              ],
-            ),
+              ),
+              _OnaySatiri(
+                metin:
+                    'KVKK aydinlatma metnini okudum ve onayliyorum (zorunlu)',
+                secili: _aydinlatmaOnayi,
+                onChanged: (bool deger) {
+                  setState(() {
+                    _aydinlatmaOnayi = deger;
+                  });
+                },
+              ),
+              _OnaySatiri(
+                metin:
+                    'Kampanya ve bilgilendirme iletileri almak istiyorum (opsiyonel)',
+                secili: _ticariIletisimOnayi,
+                onChanged: (bool deger) {
+                  setState(() {
+                    _ticariIletisimOnayi = deger;
+                  });
+                },
+              ),
+            ],
           ),
         ),
         actions: <Widget>[
@@ -684,10 +769,24 @@ class _RezervasyonEkleDialogState extends State<_RezervasyonEkleDialog> {
             onPressed: () => Navigator.of(context).pop(),
             child: const Text('Vazgec'),
           ),
-          FilledButton(onPressed: _kaydet, child: const Text('Kaydet')),
+          FilledButton(
+            onPressed: _kaydetAktifMi ? _kaydet : null,
+            child: const Text('Kaydet'),
+          ),
         ],
       ),
     );
+  }
+
+  bool get _kaydetAktifMi {
+    final String ad = _adDenetleyici.text.trim();
+    final String telefon = _telefonDenetleyici.text.trim();
+    final int? kisiSayisi = int.tryParse(_kisiSayisiDenetleyici.text.trim());
+    return ad.isNotEmpty &&
+        telefon.isNotEmpty &&
+        kisiSayisi != null &&
+        kisiSayisi > 0 &&
+        _aydinlatmaOnayi;
   }
 
   Future<void> _tarihSec() async {
@@ -737,7 +836,8 @@ class _RezervasyonEkleDialogState extends State<_RezervasyonEkleDialog> {
     if (ad.isEmpty ||
         telefon.isEmpty ||
         kisiSayisi == null ||
-        kisiSayisi <= 0) {
+        kisiSayisi <= 0 ||
+        !_aydinlatmaOnayi) {
       return;
     }
     Navigator.of(context).pop(
@@ -748,6 +848,8 @@ class _RezervasyonEkleDialogState extends State<_RezervasyonEkleDialog> {
         baslangicZamani: _baslangicZamani,
         sureDakika: _sureDakika,
         notMetni: _notDenetleyici.text.trim(),
+        aydinlatmaOnayi: _aydinlatmaOnayi,
+        ticariIletisimOnayi: _ticariIletisimOnayi,
         tercihBolumId: _tercihBolumId,
       ),
     );
@@ -764,6 +866,49 @@ class _RezervasyonEkleDialogState extends State<_RezervasyonEkleDialog> {
       0,
     ).add(Duration(minutes: dakika));
     return hizalanmis.add(const Duration(minutes: 30));
+  }
+}
+
+class _OnaySatiri extends StatelessWidget {
+  const _OnaySatiri({
+    required this.metin,
+    required this.secili,
+    required this.onChanged,
+  });
+
+  final String metin;
+  final bool secili;
+  final ValueChanged<bool> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: () => onChanged(!secili),
+      borderRadius: BorderRadius.circular(10),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 2),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            Checkbox(
+              value: secili,
+              onChanged: (bool? d) => onChanged(d ?? false),
+            ),
+            const SizedBox(width: 4),
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.only(top: 12),
+                child: Text(
+                  metin,
+                  softWrap: true,
+                  style: Theme.of(context).textTheme.bodyMedium,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }
 
