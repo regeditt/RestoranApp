@@ -2,7 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:restoran_app/ortak/bilesenler/ana_sayfaya_donus.dart';
 import 'package:restoran_app/ortak/tema/restoran_tema_uzantilari.dart';
 import 'package:restoran_app/ortak/yonlendirme/rota_yapisi.dart';
+import 'package:restoran_app/ozellikler/raporlar/uygulama/servisler/rapor_disa_aktarim_servisi.dart';
+import 'package:restoran_app/ozellikler/raporlar/sunum/bilesenler/kurye_performans_paneli_karti.dart';
 import 'package:restoran_app/ozellikler/raporlar/sunum/bilesenler/kurye_takip_haritasi_karti.dart';
+import 'package:restoran_app/ozellikler/siparis/alan/varliklar/siparis_varligi.dart';
 import 'package:restoran_app/ozellikler/stok/alan/varliklar/stok_ozeti_varligi.dart';
 import 'package:restoran_app/ozellikler/yonetim/alan/varliklar/saatlik_siparis_ozeti_varligi.dart';
 import 'package:restoran_app/ozellikler/yonetim/alan/varliklar/yonetim_paneli_ozeti_varligi.dart';
@@ -21,6 +24,10 @@ class RaporlarSayfasi extends StatefulWidget {
 }
 
 class _RaporlarSayfasiState extends State<RaporlarSayfasi> {
+  final RaporDisaAktarimServisi _raporDisaAktarimServisi =
+      const RaporDisaAktarimServisi();
+  bool _disaAktarimSuruyor = false;
+
   @override
   void initState() {
     super.initState();
@@ -57,6 +64,103 @@ class _RaporlarSayfasiState extends State<RaporlarSayfasi> {
     ).showSnackBar(SnackBar(content: Text(sonuc.mesaj)));
   }
 
+  Future<void> _gunlukCsvDisaAktar() async {
+    await _csvDisaAktar(aylik: false);
+  }
+
+  Future<void> _aylikCsvDisaAktar() async {
+    await _csvDisaAktar(aylik: true);
+  }
+
+  Future<void> _gunlukPdfYazdir() async {
+    await _pdfYazdir(aylik: false);
+  }
+
+  Future<void> _aylikPdfYazdir() async {
+    await _pdfYazdir(aylik: true);
+  }
+
+  Future<void> _csvDisaAktar({required bool aylik}) async {
+    final List<SiparisVarligi> siparisler = widget.viewModel.filtreliSiparisler;
+    if (siparisler.isEmpty) {
+      _durumMesajiGoster('Disa aktarim icin siparis bulunamadi.');
+      return;
+    }
+
+    setState(() {
+      _disaAktarimSuruyor = true;
+    });
+
+    try {
+      final String? kayitYolu = aylik
+          ? await _raporDisaAktarimServisi.aylikCsvDisaAktar(siparisler)
+          : await _raporDisaAktarimServisi.gunlukCsvDisaAktar(siparisler);
+      if (!mounted) {
+        return;
+      }
+      if (kayitYolu == null) {
+        _durumMesajiGoster('CSV disa aktarim islemi baslatildi.');
+        return;
+      }
+      _durumMesajiGoster('CSV raporu kaydedildi: $kayitYolu');
+    } catch (hata) {
+      _durumMesajiGoster(
+        aylik
+            ? 'Aylik CSV disa aktarim basarisiz: $hata'
+            : 'Gunluk CSV disa aktarim basarisiz: $hata',
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _disaAktarimSuruyor = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _pdfYazdir({required bool aylik}) async {
+    final List<SiparisVarligi> siparisler = widget.viewModel.filtreliSiparisler;
+    if (siparisler.isEmpty) {
+      _durumMesajiGoster('Yazdirma icin siparis bulunamadi.');
+      return;
+    }
+
+    setState(() {
+      _disaAktarimSuruyor = true;
+    });
+
+    try {
+      if (aylik) {
+        await _raporDisaAktarimServisi.aylikPdfYazdir(siparisler);
+      } else {
+        await _raporDisaAktarimServisi.gunlukPdfYazdir(siparisler);
+      }
+      if (!mounted) {
+        return;
+      }
+      _durumMesajiGoster('PDF yazdirma penceresi acildi.');
+    } catch (hata) {
+      _durumMesajiGoster(
+        aylik
+            ? 'Aylik PDF yazdirma basarisiz: $hata'
+            : 'Gunluk PDF yazdirma basarisiz: $hata',
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _disaAktarimSuruyor = false;
+        });
+      }
+    }
+  }
+
+  void _durumMesajiGoster(String mesaj) {
+    if (!mounted) {
+      return;
+    }
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(mesaj)));
+  }
+
   @override
   Widget build(BuildContext context) {
     return AnimatedBuilder(
@@ -72,6 +176,7 @@ class _RaporlarSayfasiState extends State<RaporlarSayfasi> {
           KanalDagilimiKarti(ozet: ozet),
           SaatlikTrendKarti(veriler: saatlikVeriler),
           PaketServisOperasyonKarti(siparisler: viewModel.filtreliSiparisler),
+          KuryePerformansPaneliKarti(siparisler: viewModel.filtreliSiparisler),
           KuryeTakipHaritasiKarti(siparisler: viewModel.siparisler),
           if (stokOzeti != null) StokVeMaliyetKarti(ozet: stokOzeti),
           PatronRaporuKarti(
@@ -106,7 +211,14 @@ class _RaporlarSayfasiState extends State<RaporlarSayfasi> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: <Widget>[
-                        _UstAlan(tema: tema),
+                        _UstAlan(
+                          tema: tema,
+                          disaAktarimSuruyor: _disaAktarimSuruyor,
+                          gunlukCsvDisaAktar: _gunlukCsvDisaAktar,
+                          aylikCsvDisaAktar: _aylikCsvDisaAktar,
+                          gunlukPdfYazdir: _gunlukPdfYazdir,
+                          aylikPdfYazdir: _aylikPdfYazdir,
+                        ),
                         const SizedBox(height: 14),
                         _FiltreSeridi(viewModel: viewModel),
                         const SizedBox(height: 16),
@@ -129,9 +241,21 @@ class _RaporlarSayfasiState extends State<RaporlarSayfasi> {
 }
 
 class _UstAlan extends StatelessWidget {
-  const _UstAlan({required this.tema});
+  const _UstAlan({
+    required this.tema,
+    required this.disaAktarimSuruyor,
+    required this.gunlukCsvDisaAktar,
+    required this.aylikCsvDisaAktar,
+    required this.gunlukPdfYazdir,
+    required this.aylikPdfYazdir,
+  });
 
   final RestoranTemaRenkleri tema;
+  final bool disaAktarimSuruyor;
+  final Future<void> Function() gunlukCsvDisaAktar;
+  final Future<void> Function() aylikCsvDisaAktar;
+  final Future<void> Function() gunlukPdfYazdir;
+  final Future<void> Function() aylikPdfYazdir;
 
   @override
   Widget build(BuildContext context) {
@@ -162,6 +286,26 @@ class _UstAlan extends StatelessWidget {
             ).pushReplacementNamed(RotaYapisi.yonetimPaneli),
             icon: const Icon(Icons.dashboard_customize_rounded),
             label: const Text('Yonetim paneline don'),
+          ),
+          FilledButton.tonalIcon(
+            onPressed: disaAktarimSuruyor ? null : gunlukCsvDisaAktar,
+            icon: const Icon(Icons.table_view_rounded),
+            label: const Text('Gunluk CSV'),
+          ),
+          FilledButton.tonalIcon(
+            onPressed: disaAktarimSuruyor ? null : aylikCsvDisaAktar,
+            icon: const Icon(Icons.date_range_rounded),
+            label: const Text('Aylik CSV'),
+          ),
+          FilledButton.tonalIcon(
+            onPressed: disaAktarimSuruyor ? null : gunlukPdfYazdir,
+            icon: const Icon(Icons.picture_as_pdf_rounded),
+            label: const Text('Gunluk PDF'),
+          ),
+          FilledButton.tonalIcon(
+            onPressed: disaAktarimSuruyor ? null : aylikPdfYazdir,
+            icon: const Icon(Icons.print_rounded),
+            label: const Text('Aylik PDF'),
           ),
           Text(
             'Rapor Merkezi',
