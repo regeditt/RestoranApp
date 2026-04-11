@@ -18,6 +18,7 @@ void main() {
     'YonetimPaneliViewModel KVKK ve iletisim filtrelerini uygular',
     () async {
       final ServisKaydi servisKaydi = ServisKaydi.mock();
+      final DateTime simdi = DateTime.now();
       await servisKaydi.siparisOlusturUseCase(
         SiparisVarligi(
           id: 'kvkk_test_1',
@@ -36,7 +37,7 @@ void main() {
               adet: 1,
             ),
           ],
-          olusturmaTarihi: DateTime(2026, 4, 11, 13, 0),
+          olusturmaTarihi: simdi.subtract(const Duration(minutes: 20)),
           aydinlatmaOnayi: true,
           ticariIletisimOnayi: false,
         ),
@@ -62,7 +63,7 @@ void main() {
               adet: 1,
             ),
           ],
-          olusturmaTarihi: DateTime(2026, 4, 11, 13, 10),
+          olusturmaTarihi: simdi.subtract(const Duration(minutes: 10)),
           aydinlatmaOnayi: true,
           ticariIletisimOnayi: true,
         ),

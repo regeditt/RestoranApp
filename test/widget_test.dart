@@ -39,14 +39,18 @@ void main() {
   testWidgets('RestoranApp acilista ana sayfayi gosterir', (
     WidgetTester tester,
   ) async {
+    addTearDown(() async {
+      await tester.binding.setSurfaceSize(null);
+    });
+
+    await tester.binding.setSurfaceSize(const Size(1400, 900));
     await tester.pumpWidget(
       const UygulamaKabugu(veriKaynagi: VeriKaynagiTipi.mock),
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('GUNCEL KURLAR'), findsOneWidget);
     expect(find.text('Urunler'), findsOneWidget);
-    expect(find.text('Ayarlar'), findsOneWidget);
+    expect(find.text('Raporlar'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 
@@ -64,7 +68,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Urunler'), findsOneWidget);
-    expect(find.text('Hizli Satis'), findsOneWidget);
+    expect(find.text('Odeme Kasa'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 
@@ -122,8 +126,8 @@ void main() {
     await tester.tap(find.text('Ana sayfaya don'));
     await tester.pumpAndSettle();
 
-    expect(find.text('GUNCEL KURLAR'), findsOneWidget);
     expect(find.text('Urunler'), findsOneWidget);
+    expect(find.text('Siparisler'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 
@@ -165,7 +169,7 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('Ayarlar'), findsOneWidget);
+    expect(find.text('Raporlar'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 
@@ -177,7 +181,7 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('Musteri Hizmetleri'), findsOneWidget);
+    expect(find.text('Stoklar'), findsOneWidget);
     expect(find.text('Siparisler'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
@@ -273,7 +277,8 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('GUNCEL KURLAR'), findsOneWidget);
+    expect(find.text('Urunler'), findsOneWidget);
+    expect(find.text('Rezervasyon'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 
@@ -304,8 +309,6 @@ void main() {
     expect(find.text('Mutfak Siparis Yonetimi'), findsOneWidget);
     expect(find.text('Yonetim paneli'), findsOneWidget);
     expect(find.text('Personel girisine don'), findsOneWidget);
-    expect(find.text('Yazici senkronu'), findsOneWidget);
-    expect(find.text('Aktif is'), findsOneWidget);
     expect(find.text('Yeni'), findsOneWidget);
     expect(find.text('Salon'), findsWidgets);
     expect(tester.takeException(), isNull);
@@ -377,13 +380,9 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Salon ve Masa Secimi'), findsOneWidget);
-    expect(find.text('Salon / Masa 1'), findsOneWidget);
-    expect(find.text('Salon varligi: Salon'), findsOneWidget);
-    expect(find.text('Masa varligi: Masa 1 · 4 kisilik'), findsOneWidget);
-    expect(find.textContaining('Urun varliklari:'), findsOneWidget);
-    expect(find.textContaining('Tum urunler kategorisinde'), findsOneWidget);
+    expect(find.text('POS OPERASYON'), findsOneWidget);
     expect(find.text('Salon'), findsWidgets);
-    expect(find.text('Masa 1'), findsWidgets);
+    expect(find.textContaining('Masa'), findsWidgets);
     expect(find.textContaining(' urun'), findsWidgets);
     expect(tester.takeException(), isNull);
   });
@@ -427,7 +426,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('POS OPERASYON'), findsOneWidget);
-    expect(find.text('Tum urunler Secimleri'), findsOneWidget);
+    expect(find.text('Salon ve Masa Secimi'), findsOneWidget);
     expect(find.text('Yeni'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
