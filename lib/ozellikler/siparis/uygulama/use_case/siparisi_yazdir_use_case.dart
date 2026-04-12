@@ -1,4 +1,4 @@
-import 'package:restoran_app/ortak/platform/yazici_cikti_platformu.dart';
+﻿import 'package:restoran_app/ortak/platform/yazici_cikti_platformu.dart';
 import 'package:restoran_app/ozellikler/siparis/alan/varliklar/siparis_varligi.dart';
 import 'package:restoran_app/ozellikler/siparis/alan/varliklar/yazdirma_sonucu_varligi.dart';
 import 'package:restoran_app/ozellikler/siparis/uygulama/servisler/yazici_hedefleri_belirleyici.dart';
@@ -6,6 +6,7 @@ import 'package:restoran_app/ozellikler/siparis/uygulama/servisler/siparis_fisi_
 import 'package:restoran_app/ozellikler/yonetim/alan/depolar/yazici_deposu.dart';
 import 'package:restoran_app/ozellikler/yonetim/alan/varliklar/yazici_durumu_varligi.dart';
 
+/// SiparisiYazdirUseCase use-case operasyonunu yurutur.
 class SiparisiYazdirUseCase {
   const SiparisiYazdirUseCase(
     this._yaziciDeposu,
@@ -17,6 +18,7 @@ class SiparisiYazdirUseCase {
   final YaziciCiktiPlatformu _yaziciCiktiPlatformu;
   final YaziciHedefleriBelirleyici _hedefleriBelirleyici;
 
+  /// Use-case operasyonunu calistirir ve sonucu dondurur.
   Future<YazdirmaSonucuVarligi> call(SiparisVarligi siparis) async {
     final List<YaziciDurumuVarligi> yazicilar = await _yaziciDeposu
         .yazicilariGetir();

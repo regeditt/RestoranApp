@@ -1,0 +1,2 @@
+# SOLID kural baseline
+# Format: kaynak|hedef|kuralKodu

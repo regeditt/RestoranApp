@@ -2474,6 +2474,58 @@ class $SiparisKayitlariTable extends SiparisKayitlari
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _kuponKoduMeta = const VerificationMeta(
+    'kuponKodu',
+  );
+  @override
+  late final GeneratedColumn<String> kuponKodu = GeneratedColumn<String>(
+    'kupon_kodu',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _indirimTutariMeta = const VerificationMeta(
+    'indirimTutari',
+  );
+  @override
+  late final GeneratedColumn<double> indirimTutari = GeneratedColumn<double>(
+    'indirim_tutari',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0.0),
+  );
+  static const VerificationMeta _aydinlatmaOnayiMeta = const VerificationMeta(
+    'aydinlatmaOnayi',
+  );
+  @override
+  late final GeneratedColumn<bool> aydinlatmaOnayi = GeneratedColumn<bool>(
+    'aydinlatma_onayi',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("aydinlatma_onayi" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _ticariIletisimOnayiMeta =
+      const VerificationMeta('ticariIletisimOnayi');
+  @override
+  late final GeneratedColumn<bool> ticariIletisimOnayi = GeneratedColumn<bool>(
+    'ticari_iletisim_onayi',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("ticari_iletisim_onayi" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
   static const VerificationMeta _sahipMisafirMeta = const VerificationMeta(
     'sahipMisafir',
   );
@@ -2546,6 +2598,10 @@ class $SiparisKayitlariTable extends SiparisKayitlari
     masaNo,
     bolumAdi,
     kaynak,
+    kuponKodu,
+    indirimTutari,
+    aydinlatmaOnayi,
+    ticariIletisimOnayi,
     sahipMisafir,
     sahipAdSoyad,
     sahipTelefon,
@@ -2655,6 +2711,39 @@ class $SiparisKayitlariTable extends SiparisKayitlari
         kaynak.isAcceptableOrUnknown(data['kaynak']!, _kaynakMeta),
       );
     }
+    if (data.containsKey('kupon_kodu')) {
+      context.handle(
+        _kuponKoduMeta,
+        kuponKodu.isAcceptableOrUnknown(data['kupon_kodu']!, _kuponKoduMeta),
+      );
+    }
+    if (data.containsKey('indirim_tutari')) {
+      context.handle(
+        _indirimTutariMeta,
+        indirimTutari.isAcceptableOrUnknown(
+          data['indirim_tutari']!,
+          _indirimTutariMeta,
+        ),
+      );
+    }
+    if (data.containsKey('aydinlatma_onayi')) {
+      context.handle(
+        _aydinlatmaOnayiMeta,
+        aydinlatmaOnayi.isAcceptableOrUnknown(
+          data['aydinlatma_onayi']!,
+          _aydinlatmaOnayiMeta,
+        ),
+      );
+    }
+    if (data.containsKey('ticari_iletisim_onayi')) {
+      context.handle(
+        _ticariIletisimOnayiMeta,
+        ticariIletisimOnayi.isAcceptableOrUnknown(
+          data['ticari_iletisim_onayi']!,
+          _ticariIletisimOnayiMeta,
+        ),
+      );
+    }
     if (data.containsKey('sahip_misafir')) {
       context.handle(
         _sahipMisafirMeta,
@@ -2760,6 +2849,22 @@ class $SiparisKayitlariTable extends SiparisKayitlari
         DriftSqlType.string,
         data['${effectivePrefix}kaynak'],
       ),
+      kuponKodu: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}kupon_kodu'],
+      ),
+      indirimTutari: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}indirim_tutari'],
+      )!,
+      aydinlatmaOnayi: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}aydinlatma_onayi'],
+      )!,
+      ticariIletisimOnayi: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}ticari_iletisim_onayi'],
+      )!,
       sahipMisafir: attachedDatabase.typeMapping.read(
         DriftSqlType.bool,
         data['${effectivePrefix}sahip_misafir'],
@@ -2803,6 +2908,10 @@ class SiparisKayitlariData extends DataClass
   final String? masaNo;
   final String? bolumAdi;
   final String? kaynak;
+  final String? kuponKodu;
+  final double indirimTutari;
+  final bool aydinlatmaOnayi;
+  final bool ticariIletisimOnayi;
   final bool sahipMisafir;
   final String sahipAdSoyad;
   final String sahipTelefon;
@@ -2821,6 +2930,10 @@ class SiparisKayitlariData extends DataClass
     this.masaNo,
     this.bolumAdi,
     this.kaynak,
+    this.kuponKodu,
+    required this.indirimTutari,
+    required this.aydinlatmaOnayi,
+    required this.ticariIletisimOnayi,
     required this.sahipMisafir,
     required this.sahipAdSoyad,
     required this.sahipTelefon,
@@ -2856,6 +2969,12 @@ class SiparisKayitlariData extends DataClass
     if (!nullToAbsent || kaynak != null) {
       map['kaynak'] = Variable<String>(kaynak);
     }
+    if (!nullToAbsent || kuponKodu != null) {
+      map['kupon_kodu'] = Variable<String>(kuponKodu);
+    }
+    map['indirim_tutari'] = Variable<double>(indirimTutari);
+    map['aydinlatma_onayi'] = Variable<bool>(aydinlatmaOnayi);
+    map['ticari_iletisim_onayi'] = Variable<bool>(ticariIletisimOnayi);
     map['sahip_misafir'] = Variable<bool>(sahipMisafir);
     map['sahip_ad_soyad'] = Variable<String>(sahipAdSoyad);
     map['sahip_telefon'] = Variable<String>(sahipTelefon);
@@ -2896,6 +3015,12 @@ class SiparisKayitlariData extends DataClass
       kaynak: kaynak == null && nullToAbsent
           ? const Value.absent()
           : Value(kaynak),
+      kuponKodu: kuponKodu == null && nullToAbsent
+          ? const Value.absent()
+          : Value(kuponKodu),
+      indirimTutari: Value(indirimTutari),
+      aydinlatmaOnayi: Value(aydinlatmaOnayi),
+      ticariIletisimOnayi: Value(ticariIletisimOnayi),
       sahipMisafir: Value(sahipMisafir),
       sahipAdSoyad: Value(sahipAdSoyad),
       sahipTelefon: Value(sahipTelefon),
@@ -2928,6 +3053,12 @@ class SiparisKayitlariData extends DataClass
       masaNo: serializer.fromJson<String?>(json['masaNo']),
       bolumAdi: serializer.fromJson<String?>(json['bolumAdi']),
       kaynak: serializer.fromJson<String?>(json['kaynak']),
+      kuponKodu: serializer.fromJson<String?>(json['kuponKodu']),
+      indirimTutari: serializer.fromJson<double>(json['indirimTutari']),
+      aydinlatmaOnayi: serializer.fromJson<bool>(json['aydinlatmaOnayi']),
+      ticariIletisimOnayi: serializer.fromJson<bool>(
+        json['ticariIletisimOnayi'],
+      ),
       sahipMisafir: serializer.fromJson<bool>(json['sahipMisafir']),
       sahipAdSoyad: serializer.fromJson<String>(json['sahipAdSoyad']),
       sahipTelefon: serializer.fromJson<String>(json['sahipTelefon']),
@@ -2951,6 +3082,10 @@ class SiparisKayitlariData extends DataClass
       'masaNo': serializer.toJson<String?>(masaNo),
       'bolumAdi': serializer.toJson<String?>(bolumAdi),
       'kaynak': serializer.toJson<String?>(kaynak),
+      'kuponKodu': serializer.toJson<String?>(kuponKodu),
+      'indirimTutari': serializer.toJson<double>(indirimTutari),
+      'aydinlatmaOnayi': serializer.toJson<bool>(aydinlatmaOnayi),
+      'ticariIletisimOnayi': serializer.toJson<bool>(ticariIletisimOnayi),
       'sahipMisafir': serializer.toJson<bool>(sahipMisafir),
       'sahipAdSoyad': serializer.toJson<String>(sahipAdSoyad),
       'sahipTelefon': serializer.toJson<String>(sahipTelefon),
@@ -2972,6 +3107,10 @@ class SiparisKayitlariData extends DataClass
     Value<String?> masaNo = const Value.absent(),
     Value<String?> bolumAdi = const Value.absent(),
     Value<String?> kaynak = const Value.absent(),
+    Value<String?> kuponKodu = const Value.absent(),
+    double? indirimTutari,
+    bool? aydinlatmaOnayi,
+    bool? ticariIletisimOnayi,
     bool? sahipMisafir,
     String? sahipAdSoyad,
     String? sahipTelefon,
@@ -2992,6 +3131,10 @@ class SiparisKayitlariData extends DataClass
     masaNo: masaNo.present ? masaNo.value : this.masaNo,
     bolumAdi: bolumAdi.present ? bolumAdi.value : this.bolumAdi,
     kaynak: kaynak.present ? kaynak.value : this.kaynak,
+    kuponKodu: kuponKodu.present ? kuponKodu.value : this.kuponKodu,
+    indirimTutari: indirimTutari ?? this.indirimTutari,
+    aydinlatmaOnayi: aydinlatmaOnayi ?? this.aydinlatmaOnayi,
+    ticariIletisimOnayi: ticariIletisimOnayi ?? this.ticariIletisimOnayi,
     sahipMisafir: sahipMisafir ?? this.sahipMisafir,
     sahipAdSoyad: sahipAdSoyad ?? this.sahipAdSoyad,
     sahipTelefon: sahipTelefon ?? this.sahipTelefon,
@@ -3022,6 +3165,16 @@ class SiparisKayitlariData extends DataClass
       masaNo: data.masaNo.present ? data.masaNo.value : this.masaNo,
       bolumAdi: data.bolumAdi.present ? data.bolumAdi.value : this.bolumAdi,
       kaynak: data.kaynak.present ? data.kaynak.value : this.kaynak,
+      kuponKodu: data.kuponKodu.present ? data.kuponKodu.value : this.kuponKodu,
+      indirimTutari: data.indirimTutari.present
+          ? data.indirimTutari.value
+          : this.indirimTutari,
+      aydinlatmaOnayi: data.aydinlatmaOnayi.present
+          ? data.aydinlatmaOnayi.value
+          : this.aydinlatmaOnayi,
+      ticariIletisimOnayi: data.ticariIletisimOnayi.present
+          ? data.ticariIletisimOnayi.value
+          : this.ticariIletisimOnayi,
       sahipMisafir: data.sahipMisafir.present
           ? data.sahipMisafir.value
           : this.sahipMisafir,
@@ -3055,6 +3208,10 @@ class SiparisKayitlariData extends DataClass
           ..write('masaNo: $masaNo, ')
           ..write('bolumAdi: $bolumAdi, ')
           ..write('kaynak: $kaynak, ')
+          ..write('kuponKodu: $kuponKodu, ')
+          ..write('indirimTutari: $indirimTutari, ')
+          ..write('aydinlatmaOnayi: $aydinlatmaOnayi, ')
+          ..write('ticariIletisimOnayi: $ticariIletisimOnayi, ')
           ..write('sahipMisafir: $sahipMisafir, ')
           ..write('sahipAdSoyad: $sahipAdSoyad, ')
           ..write('sahipTelefon: $sahipTelefon, ')
@@ -3065,7 +3222,7 @@ class SiparisKayitlariData extends DataClass
   }
 
   @override
-  int get hashCode => Object.hash(
+  int get hashCode => Object.hashAll([
     id,
     siparisNo,
     teslimatTipi,
@@ -3078,12 +3235,16 @@ class SiparisKayitlariData extends DataClass
     masaNo,
     bolumAdi,
     kaynak,
+    kuponKodu,
+    indirimTutari,
+    aydinlatmaOnayi,
+    ticariIletisimOnayi,
     sahipMisafir,
     sahipAdSoyad,
     sahipTelefon,
     sahipEposta,
     sahipAdres,
-  );
+  ]);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -3100,6 +3261,10 @@ class SiparisKayitlariData extends DataClass
           other.masaNo == this.masaNo &&
           other.bolumAdi == this.bolumAdi &&
           other.kaynak == this.kaynak &&
+          other.kuponKodu == this.kuponKodu &&
+          other.indirimTutari == this.indirimTutari &&
+          other.aydinlatmaOnayi == this.aydinlatmaOnayi &&
+          other.ticariIletisimOnayi == this.ticariIletisimOnayi &&
           other.sahipMisafir == this.sahipMisafir &&
           other.sahipAdSoyad == this.sahipAdSoyad &&
           other.sahipTelefon == this.sahipTelefon &&
@@ -3120,6 +3285,10 @@ class SiparisKayitlariCompanion extends UpdateCompanion<SiparisKayitlariData> {
   final Value<String?> masaNo;
   final Value<String?> bolumAdi;
   final Value<String?> kaynak;
+  final Value<String?> kuponKodu;
+  final Value<double> indirimTutari;
+  final Value<bool> aydinlatmaOnayi;
+  final Value<bool> ticariIletisimOnayi;
   final Value<bool> sahipMisafir;
   final Value<String> sahipAdSoyad;
   final Value<String> sahipTelefon;
@@ -3139,6 +3308,10 @@ class SiparisKayitlariCompanion extends UpdateCompanion<SiparisKayitlariData> {
     this.masaNo = const Value.absent(),
     this.bolumAdi = const Value.absent(),
     this.kaynak = const Value.absent(),
+    this.kuponKodu = const Value.absent(),
+    this.indirimTutari = const Value.absent(),
+    this.aydinlatmaOnayi = const Value.absent(),
+    this.ticariIletisimOnayi = const Value.absent(),
     this.sahipMisafir = const Value.absent(),
     this.sahipAdSoyad = const Value.absent(),
     this.sahipTelefon = const Value.absent(),
@@ -3159,6 +3332,10 @@ class SiparisKayitlariCompanion extends UpdateCompanion<SiparisKayitlariData> {
     this.masaNo = const Value.absent(),
     this.bolumAdi = const Value.absent(),
     this.kaynak = const Value.absent(),
+    this.kuponKodu = const Value.absent(),
+    this.indirimTutari = const Value.absent(),
+    this.aydinlatmaOnayi = const Value.absent(),
+    this.ticariIletisimOnayi = const Value.absent(),
     required bool sahipMisafir,
     required String sahipAdSoyad,
     required String sahipTelefon,
@@ -3186,6 +3363,10 @@ class SiparisKayitlariCompanion extends UpdateCompanion<SiparisKayitlariData> {
     Expression<String>? masaNo,
     Expression<String>? bolumAdi,
     Expression<String>? kaynak,
+    Expression<String>? kuponKodu,
+    Expression<double>? indirimTutari,
+    Expression<bool>? aydinlatmaOnayi,
+    Expression<bool>? ticariIletisimOnayi,
     Expression<bool>? sahipMisafir,
     Expression<String>? sahipAdSoyad,
     Expression<String>? sahipTelefon,
@@ -3207,6 +3388,11 @@ class SiparisKayitlariCompanion extends UpdateCompanion<SiparisKayitlariData> {
       if (masaNo != null) 'masa_no': masaNo,
       if (bolumAdi != null) 'bolum_adi': bolumAdi,
       if (kaynak != null) 'kaynak': kaynak,
+      if (kuponKodu != null) 'kupon_kodu': kuponKodu,
+      if (indirimTutari != null) 'indirim_tutari': indirimTutari,
+      if (aydinlatmaOnayi != null) 'aydinlatma_onayi': aydinlatmaOnayi,
+      if (ticariIletisimOnayi != null)
+        'ticari_iletisim_onayi': ticariIletisimOnayi,
       if (sahipMisafir != null) 'sahip_misafir': sahipMisafir,
       if (sahipAdSoyad != null) 'sahip_ad_soyad': sahipAdSoyad,
       if (sahipTelefon != null) 'sahip_telefon': sahipTelefon,
@@ -3229,6 +3415,10 @@ class SiparisKayitlariCompanion extends UpdateCompanion<SiparisKayitlariData> {
     Value<String?>? masaNo,
     Value<String?>? bolumAdi,
     Value<String?>? kaynak,
+    Value<String?>? kuponKodu,
+    Value<double>? indirimTutari,
+    Value<bool>? aydinlatmaOnayi,
+    Value<bool>? ticariIletisimOnayi,
     Value<bool>? sahipMisafir,
     Value<String>? sahipAdSoyad,
     Value<String>? sahipTelefon,
@@ -3249,6 +3439,10 @@ class SiparisKayitlariCompanion extends UpdateCompanion<SiparisKayitlariData> {
       masaNo: masaNo ?? this.masaNo,
       bolumAdi: bolumAdi ?? this.bolumAdi,
       kaynak: kaynak ?? this.kaynak,
+      kuponKodu: kuponKodu ?? this.kuponKodu,
+      indirimTutari: indirimTutari ?? this.indirimTutari,
+      aydinlatmaOnayi: aydinlatmaOnayi ?? this.aydinlatmaOnayi,
+      ticariIletisimOnayi: ticariIletisimOnayi ?? this.ticariIletisimOnayi,
       sahipMisafir: sahipMisafir ?? this.sahipMisafir,
       sahipAdSoyad: sahipAdSoyad ?? this.sahipAdSoyad,
       sahipTelefon: sahipTelefon ?? this.sahipTelefon,
@@ -3297,6 +3491,18 @@ class SiparisKayitlariCompanion extends UpdateCompanion<SiparisKayitlariData> {
     if (kaynak.present) {
       map['kaynak'] = Variable<String>(kaynak.value);
     }
+    if (kuponKodu.present) {
+      map['kupon_kodu'] = Variable<String>(kuponKodu.value);
+    }
+    if (indirimTutari.present) {
+      map['indirim_tutari'] = Variable<double>(indirimTutari.value);
+    }
+    if (aydinlatmaOnayi.present) {
+      map['aydinlatma_onayi'] = Variable<bool>(aydinlatmaOnayi.value);
+    }
+    if (ticariIletisimOnayi.present) {
+      map['ticari_iletisim_onayi'] = Variable<bool>(ticariIletisimOnayi.value);
+    }
     if (sahipMisafir.present) {
       map['sahip_misafir'] = Variable<bool>(sahipMisafir.value);
     }
@@ -3333,6 +3539,10 @@ class SiparisKayitlariCompanion extends UpdateCompanion<SiparisKayitlariData> {
           ..write('masaNo: $masaNo, ')
           ..write('bolumAdi: $bolumAdi, ')
           ..write('kaynak: $kaynak, ')
+          ..write('kuponKodu: $kuponKodu, ')
+          ..write('indirimTutari: $indirimTutari, ')
+          ..write('aydinlatmaOnayi: $aydinlatmaOnayi, ')
+          ..write('ticariIletisimOnayi: $ticariIletisimOnayi, ')
           ..write('sahipMisafir: $sahipMisafir, ')
           ..write('sahipAdSoyad: $sahipAdSoyad, ')
           ..write('sahipTelefon: $sahipTelefon, ')
@@ -5520,6 +5730,18 @@ class $HammaddeKayitlariTable extends HammaddeKayitlari
     type: DriftSqlType.double,
     requiredDuringInsert: true,
   );
+  static const VerificationMeta _uyariEsigiMeta = const VerificationMeta(
+    'uyariEsigi',
+  );
+  @override
+  late final GeneratedColumn<double> uyariEsigi = GeneratedColumn<double>(
+    'uyari_esigi',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0.0),
+  );
   static const VerificationMeta _kritikEsikMeta = const VerificationMeta(
     'kritikEsik',
   );
@@ -5548,6 +5770,7 @@ class $HammaddeKayitlariTable extends HammaddeKayitlari
     ad,
     birim,
     mevcutMiktar,
+    uyariEsigi,
     kritikEsik,
     birimMaliyet,
   ];
@@ -5591,6 +5814,12 @@ class $HammaddeKayitlariTable extends HammaddeKayitlari
       );
     } else if (isInserting) {
       context.missing(_mevcutMiktarMeta);
+    }
+    if (data.containsKey('uyari_esigi')) {
+      context.handle(
+        _uyariEsigiMeta,
+        uyariEsigi.isAcceptableOrUnknown(data['uyari_esigi']!, _uyariEsigiMeta),
+      );
     }
     if (data.containsKey('kritik_esik')) {
       context.handle(
@@ -5636,6 +5865,10 @@ class $HammaddeKayitlariTable extends HammaddeKayitlari
         DriftSqlType.double,
         data['${effectivePrefix}mevcut_miktar'],
       )!,
+      uyariEsigi: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}uyari_esigi'],
+      )!,
       kritikEsik: attachedDatabase.typeMapping.read(
         DriftSqlType.double,
         data['${effectivePrefix}kritik_esik'],
@@ -5659,6 +5892,7 @@ class HammaddeKayitlariData extends DataClass
   final String ad;
   final String birim;
   final double mevcutMiktar;
+  final double uyariEsigi;
   final double kritikEsik;
   final double birimMaliyet;
   const HammaddeKayitlariData({
@@ -5666,6 +5900,7 @@ class HammaddeKayitlariData extends DataClass
     required this.ad,
     required this.birim,
     required this.mevcutMiktar,
+    required this.uyariEsigi,
     required this.kritikEsik,
     required this.birimMaliyet,
   });
@@ -5676,6 +5911,7 @@ class HammaddeKayitlariData extends DataClass
     map['ad'] = Variable<String>(ad);
     map['birim'] = Variable<String>(birim);
     map['mevcut_miktar'] = Variable<double>(mevcutMiktar);
+    map['uyari_esigi'] = Variable<double>(uyariEsigi);
     map['kritik_esik'] = Variable<double>(kritikEsik);
     map['birim_maliyet'] = Variable<double>(birimMaliyet);
     return map;
@@ -5687,6 +5923,7 @@ class HammaddeKayitlariData extends DataClass
       ad: Value(ad),
       birim: Value(birim),
       mevcutMiktar: Value(mevcutMiktar),
+      uyariEsigi: Value(uyariEsigi),
       kritikEsik: Value(kritikEsik),
       birimMaliyet: Value(birimMaliyet),
     );
@@ -5702,6 +5939,7 @@ class HammaddeKayitlariData extends DataClass
       ad: serializer.fromJson<String>(json['ad']),
       birim: serializer.fromJson<String>(json['birim']),
       mevcutMiktar: serializer.fromJson<double>(json['mevcutMiktar']),
+      uyariEsigi: serializer.fromJson<double>(json['uyariEsigi']),
       kritikEsik: serializer.fromJson<double>(json['kritikEsik']),
       birimMaliyet: serializer.fromJson<double>(json['birimMaliyet']),
     );
@@ -5714,6 +5952,7 @@ class HammaddeKayitlariData extends DataClass
       'ad': serializer.toJson<String>(ad),
       'birim': serializer.toJson<String>(birim),
       'mevcutMiktar': serializer.toJson<double>(mevcutMiktar),
+      'uyariEsigi': serializer.toJson<double>(uyariEsigi),
       'kritikEsik': serializer.toJson<double>(kritikEsik),
       'birimMaliyet': serializer.toJson<double>(birimMaliyet),
     };
@@ -5724,6 +5963,7 @@ class HammaddeKayitlariData extends DataClass
     String? ad,
     String? birim,
     double? mevcutMiktar,
+    double? uyariEsigi,
     double? kritikEsik,
     double? birimMaliyet,
   }) => HammaddeKayitlariData(
@@ -5731,6 +5971,7 @@ class HammaddeKayitlariData extends DataClass
     ad: ad ?? this.ad,
     birim: birim ?? this.birim,
     mevcutMiktar: mevcutMiktar ?? this.mevcutMiktar,
+    uyariEsigi: uyariEsigi ?? this.uyariEsigi,
     kritikEsik: kritikEsik ?? this.kritikEsik,
     birimMaliyet: birimMaliyet ?? this.birimMaliyet,
   );
@@ -5742,6 +5983,9 @@ class HammaddeKayitlariData extends DataClass
       mevcutMiktar: data.mevcutMiktar.present
           ? data.mevcutMiktar.value
           : this.mevcutMiktar,
+      uyariEsigi: data.uyariEsigi.present
+          ? data.uyariEsigi.value
+          : this.uyariEsigi,
       kritikEsik: data.kritikEsik.present
           ? data.kritikEsik.value
           : this.kritikEsik,
@@ -5758,6 +6002,7 @@ class HammaddeKayitlariData extends DataClass
           ..write('ad: $ad, ')
           ..write('birim: $birim, ')
           ..write('mevcutMiktar: $mevcutMiktar, ')
+          ..write('uyariEsigi: $uyariEsigi, ')
           ..write('kritikEsik: $kritikEsik, ')
           ..write('birimMaliyet: $birimMaliyet')
           ..write(')'))
@@ -5765,8 +6010,15 @@ class HammaddeKayitlariData extends DataClass
   }
 
   @override
-  int get hashCode =>
-      Object.hash(id, ad, birim, mevcutMiktar, kritikEsik, birimMaliyet);
+  int get hashCode => Object.hash(
+    id,
+    ad,
+    birim,
+    mevcutMiktar,
+    uyariEsigi,
+    kritikEsik,
+    birimMaliyet,
+  );
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -5775,6 +6027,7 @@ class HammaddeKayitlariData extends DataClass
           other.ad == this.ad &&
           other.birim == this.birim &&
           other.mevcutMiktar == this.mevcutMiktar &&
+          other.uyariEsigi == this.uyariEsigi &&
           other.kritikEsik == this.kritikEsik &&
           other.birimMaliyet == this.birimMaliyet);
 }
@@ -5785,6 +6038,7 @@ class HammaddeKayitlariCompanion
   final Value<String> ad;
   final Value<String> birim;
   final Value<double> mevcutMiktar;
+  final Value<double> uyariEsigi;
   final Value<double> kritikEsik;
   final Value<double> birimMaliyet;
   final Value<int> rowid;
@@ -5793,6 +6047,7 @@ class HammaddeKayitlariCompanion
     this.ad = const Value.absent(),
     this.birim = const Value.absent(),
     this.mevcutMiktar = const Value.absent(),
+    this.uyariEsigi = const Value.absent(),
     this.kritikEsik = const Value.absent(),
     this.birimMaliyet = const Value.absent(),
     this.rowid = const Value.absent(),
@@ -5802,6 +6057,7 @@ class HammaddeKayitlariCompanion
     required String ad,
     required String birim,
     required double mevcutMiktar,
+    this.uyariEsigi = const Value.absent(),
     required double kritikEsik,
     required double birimMaliyet,
     this.rowid = const Value.absent(),
@@ -5816,6 +6072,7 @@ class HammaddeKayitlariCompanion
     Expression<String>? ad,
     Expression<String>? birim,
     Expression<double>? mevcutMiktar,
+    Expression<double>? uyariEsigi,
     Expression<double>? kritikEsik,
     Expression<double>? birimMaliyet,
     Expression<int>? rowid,
@@ -5825,6 +6082,7 @@ class HammaddeKayitlariCompanion
       if (ad != null) 'ad': ad,
       if (birim != null) 'birim': birim,
       if (mevcutMiktar != null) 'mevcut_miktar': mevcutMiktar,
+      if (uyariEsigi != null) 'uyari_esigi': uyariEsigi,
       if (kritikEsik != null) 'kritik_esik': kritikEsik,
       if (birimMaliyet != null) 'birim_maliyet': birimMaliyet,
       if (rowid != null) 'rowid': rowid,
@@ -5836,6 +6094,7 @@ class HammaddeKayitlariCompanion
     Value<String>? ad,
     Value<String>? birim,
     Value<double>? mevcutMiktar,
+    Value<double>? uyariEsigi,
     Value<double>? kritikEsik,
     Value<double>? birimMaliyet,
     Value<int>? rowid,
@@ -5845,6 +6104,7 @@ class HammaddeKayitlariCompanion
       ad: ad ?? this.ad,
       birim: birim ?? this.birim,
       mevcutMiktar: mevcutMiktar ?? this.mevcutMiktar,
+      uyariEsigi: uyariEsigi ?? this.uyariEsigi,
       kritikEsik: kritikEsik ?? this.kritikEsik,
       birimMaliyet: birimMaliyet ?? this.birimMaliyet,
       rowid: rowid ?? this.rowid,
@@ -5866,6 +6126,9 @@ class HammaddeKayitlariCompanion
     if (mevcutMiktar.present) {
       map['mevcut_miktar'] = Variable<double>(mevcutMiktar.value);
     }
+    if (uyariEsigi.present) {
+      map['uyari_esigi'] = Variable<double>(uyariEsigi.value);
+    }
     if (kritikEsik.present) {
       map['kritik_esik'] = Variable<double>(kritikEsik.value);
     }
@@ -5885,8 +6148,602 @@ class HammaddeKayitlariCompanion
           ..write('ad: $ad, ')
           ..write('birim: $birim, ')
           ..write('mevcutMiktar: $mevcutMiktar, ')
+          ..write('uyariEsigi: $uyariEsigi, ')
           ..write('kritikEsik: $kritikEsik, ')
           ..write('birimMaliyet: $birimMaliyet, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $StokAlarmGecmisKayitlariTable extends StokAlarmGecmisKayitlari
+    with
+        TableInfo<
+          $StokAlarmGecmisKayitlariTable,
+          StokAlarmGecmisKayitlariData
+        > {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $StokAlarmGecmisKayitlariTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _zamanMeta = const VerificationMeta('zaman');
+  @override
+  late final GeneratedColumn<DateTime> zaman = GeneratedColumn<DateTime>(
+    'zaman',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _hammaddeIdMeta = const VerificationMeta(
+    'hammaddeId',
+  );
+  @override
+  late final GeneratedColumn<String> hammaddeId = GeneratedColumn<String>(
+    'hammadde_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _hammaddeAdiMeta = const VerificationMeta(
+    'hammaddeAdi',
+  );
+  @override
+  late final GeneratedColumn<String> hammaddeAdi = GeneratedColumn<String>(
+    'hammadde_adi',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _oncekiMiktarMeta = const VerificationMeta(
+    'oncekiMiktar',
+  );
+  @override
+  late final GeneratedColumn<double> oncekiMiktar = GeneratedColumn<double>(
+    'onceki_miktar',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _yeniMiktarMeta = const VerificationMeta(
+    'yeniMiktar',
+  );
+  @override
+  late final GeneratedColumn<double> yeniMiktar = GeneratedColumn<double>(
+    'yeni_miktar',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _oncekiDurumMeta = const VerificationMeta(
+    'oncekiDurum',
+  );
+  @override
+  late final GeneratedColumn<int> oncekiDurum = GeneratedColumn<int>(
+    'onceki_durum',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _yeniDurumMeta = const VerificationMeta(
+    'yeniDurum',
+  );
+  @override
+  late final GeneratedColumn<int> yeniDurum = GeneratedColumn<int>(
+    'yeni_durum',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _tetikleyenIslemMeta = const VerificationMeta(
+    'tetikleyenIslem',
+  );
+  @override
+  late final GeneratedColumn<String> tetikleyenIslem = GeneratedColumn<String>(
+    'tetikleyen_islem',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    zaman,
+    hammaddeId,
+    hammaddeAdi,
+    oncekiMiktar,
+    yeniMiktar,
+    oncekiDurum,
+    yeniDurum,
+    tetikleyenIslem,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'stok_alarm_gecmis_kayitlari';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<StokAlarmGecmisKayitlariData> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('zaman')) {
+      context.handle(
+        _zamanMeta,
+        zaman.isAcceptableOrUnknown(data['zaman']!, _zamanMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_zamanMeta);
+    }
+    if (data.containsKey('hammadde_id')) {
+      context.handle(
+        _hammaddeIdMeta,
+        hammaddeId.isAcceptableOrUnknown(data['hammadde_id']!, _hammaddeIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_hammaddeIdMeta);
+    }
+    if (data.containsKey('hammadde_adi')) {
+      context.handle(
+        _hammaddeAdiMeta,
+        hammaddeAdi.isAcceptableOrUnknown(
+          data['hammadde_adi']!,
+          _hammaddeAdiMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_hammaddeAdiMeta);
+    }
+    if (data.containsKey('onceki_miktar')) {
+      context.handle(
+        _oncekiMiktarMeta,
+        oncekiMiktar.isAcceptableOrUnknown(
+          data['onceki_miktar']!,
+          _oncekiMiktarMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_oncekiMiktarMeta);
+    }
+    if (data.containsKey('yeni_miktar')) {
+      context.handle(
+        _yeniMiktarMeta,
+        yeniMiktar.isAcceptableOrUnknown(data['yeni_miktar']!, _yeniMiktarMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_yeniMiktarMeta);
+    }
+    if (data.containsKey('onceki_durum')) {
+      context.handle(
+        _oncekiDurumMeta,
+        oncekiDurum.isAcceptableOrUnknown(
+          data['onceki_durum']!,
+          _oncekiDurumMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_oncekiDurumMeta);
+    }
+    if (data.containsKey('yeni_durum')) {
+      context.handle(
+        _yeniDurumMeta,
+        yeniDurum.isAcceptableOrUnknown(data['yeni_durum']!, _yeniDurumMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_yeniDurumMeta);
+    }
+    if (data.containsKey('tetikleyen_islem')) {
+      context.handle(
+        _tetikleyenIslemMeta,
+        tetikleyenIslem.isAcceptableOrUnknown(
+          data['tetikleyen_islem']!,
+          _tetikleyenIslemMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_tetikleyenIslemMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  StokAlarmGecmisKayitlariData map(
+    Map<String, dynamic> data, {
+    String? tablePrefix,
+  }) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return StokAlarmGecmisKayitlariData(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      zaman: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}zaman'],
+      )!,
+      hammaddeId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}hammadde_id'],
+      )!,
+      hammaddeAdi: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}hammadde_adi'],
+      )!,
+      oncekiMiktar: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}onceki_miktar'],
+      )!,
+      yeniMiktar: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}yeni_miktar'],
+      )!,
+      oncekiDurum: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}onceki_durum'],
+      )!,
+      yeniDurum: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}yeni_durum'],
+      )!,
+      tetikleyenIslem: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}tetikleyen_islem'],
+      )!,
+    );
+  }
+
+  @override
+  $StokAlarmGecmisKayitlariTable createAlias(String alias) {
+    return $StokAlarmGecmisKayitlariTable(attachedDatabase, alias);
+  }
+}
+
+class StokAlarmGecmisKayitlariData extends DataClass
+    implements Insertable<StokAlarmGecmisKayitlariData> {
+  final String id;
+  final DateTime zaman;
+  final String hammaddeId;
+  final String hammaddeAdi;
+  final double oncekiMiktar;
+  final double yeniMiktar;
+  final int oncekiDurum;
+  final int yeniDurum;
+  final String tetikleyenIslem;
+  const StokAlarmGecmisKayitlariData({
+    required this.id,
+    required this.zaman,
+    required this.hammaddeId,
+    required this.hammaddeAdi,
+    required this.oncekiMiktar,
+    required this.yeniMiktar,
+    required this.oncekiDurum,
+    required this.yeniDurum,
+    required this.tetikleyenIslem,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['zaman'] = Variable<DateTime>(zaman);
+    map['hammadde_id'] = Variable<String>(hammaddeId);
+    map['hammadde_adi'] = Variable<String>(hammaddeAdi);
+    map['onceki_miktar'] = Variable<double>(oncekiMiktar);
+    map['yeni_miktar'] = Variable<double>(yeniMiktar);
+    map['onceki_durum'] = Variable<int>(oncekiDurum);
+    map['yeni_durum'] = Variable<int>(yeniDurum);
+    map['tetikleyen_islem'] = Variable<String>(tetikleyenIslem);
+    return map;
+  }
+
+  StokAlarmGecmisKayitlariCompanion toCompanion(bool nullToAbsent) {
+    return StokAlarmGecmisKayitlariCompanion(
+      id: Value(id),
+      zaman: Value(zaman),
+      hammaddeId: Value(hammaddeId),
+      hammaddeAdi: Value(hammaddeAdi),
+      oncekiMiktar: Value(oncekiMiktar),
+      yeniMiktar: Value(yeniMiktar),
+      oncekiDurum: Value(oncekiDurum),
+      yeniDurum: Value(yeniDurum),
+      tetikleyenIslem: Value(tetikleyenIslem),
+    );
+  }
+
+  factory StokAlarmGecmisKayitlariData.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return StokAlarmGecmisKayitlariData(
+      id: serializer.fromJson<String>(json['id']),
+      zaman: serializer.fromJson<DateTime>(json['zaman']),
+      hammaddeId: serializer.fromJson<String>(json['hammaddeId']),
+      hammaddeAdi: serializer.fromJson<String>(json['hammaddeAdi']),
+      oncekiMiktar: serializer.fromJson<double>(json['oncekiMiktar']),
+      yeniMiktar: serializer.fromJson<double>(json['yeniMiktar']),
+      oncekiDurum: serializer.fromJson<int>(json['oncekiDurum']),
+      yeniDurum: serializer.fromJson<int>(json['yeniDurum']),
+      tetikleyenIslem: serializer.fromJson<String>(json['tetikleyenIslem']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'zaman': serializer.toJson<DateTime>(zaman),
+      'hammaddeId': serializer.toJson<String>(hammaddeId),
+      'hammaddeAdi': serializer.toJson<String>(hammaddeAdi),
+      'oncekiMiktar': serializer.toJson<double>(oncekiMiktar),
+      'yeniMiktar': serializer.toJson<double>(yeniMiktar),
+      'oncekiDurum': serializer.toJson<int>(oncekiDurum),
+      'yeniDurum': serializer.toJson<int>(yeniDurum),
+      'tetikleyenIslem': serializer.toJson<String>(tetikleyenIslem),
+    };
+  }
+
+  StokAlarmGecmisKayitlariData copyWith({
+    String? id,
+    DateTime? zaman,
+    String? hammaddeId,
+    String? hammaddeAdi,
+    double? oncekiMiktar,
+    double? yeniMiktar,
+    int? oncekiDurum,
+    int? yeniDurum,
+    String? tetikleyenIslem,
+  }) => StokAlarmGecmisKayitlariData(
+    id: id ?? this.id,
+    zaman: zaman ?? this.zaman,
+    hammaddeId: hammaddeId ?? this.hammaddeId,
+    hammaddeAdi: hammaddeAdi ?? this.hammaddeAdi,
+    oncekiMiktar: oncekiMiktar ?? this.oncekiMiktar,
+    yeniMiktar: yeniMiktar ?? this.yeniMiktar,
+    oncekiDurum: oncekiDurum ?? this.oncekiDurum,
+    yeniDurum: yeniDurum ?? this.yeniDurum,
+    tetikleyenIslem: tetikleyenIslem ?? this.tetikleyenIslem,
+  );
+  StokAlarmGecmisKayitlariData copyWithCompanion(
+    StokAlarmGecmisKayitlariCompanion data,
+  ) {
+    return StokAlarmGecmisKayitlariData(
+      id: data.id.present ? data.id.value : this.id,
+      zaman: data.zaman.present ? data.zaman.value : this.zaman,
+      hammaddeId: data.hammaddeId.present
+          ? data.hammaddeId.value
+          : this.hammaddeId,
+      hammaddeAdi: data.hammaddeAdi.present
+          ? data.hammaddeAdi.value
+          : this.hammaddeAdi,
+      oncekiMiktar: data.oncekiMiktar.present
+          ? data.oncekiMiktar.value
+          : this.oncekiMiktar,
+      yeniMiktar: data.yeniMiktar.present
+          ? data.yeniMiktar.value
+          : this.yeniMiktar,
+      oncekiDurum: data.oncekiDurum.present
+          ? data.oncekiDurum.value
+          : this.oncekiDurum,
+      yeniDurum: data.yeniDurum.present ? data.yeniDurum.value : this.yeniDurum,
+      tetikleyenIslem: data.tetikleyenIslem.present
+          ? data.tetikleyenIslem.value
+          : this.tetikleyenIslem,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('StokAlarmGecmisKayitlariData(')
+          ..write('id: $id, ')
+          ..write('zaman: $zaman, ')
+          ..write('hammaddeId: $hammaddeId, ')
+          ..write('hammaddeAdi: $hammaddeAdi, ')
+          ..write('oncekiMiktar: $oncekiMiktar, ')
+          ..write('yeniMiktar: $yeniMiktar, ')
+          ..write('oncekiDurum: $oncekiDurum, ')
+          ..write('yeniDurum: $yeniDurum, ')
+          ..write('tetikleyenIslem: $tetikleyenIslem')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    zaman,
+    hammaddeId,
+    hammaddeAdi,
+    oncekiMiktar,
+    yeniMiktar,
+    oncekiDurum,
+    yeniDurum,
+    tetikleyenIslem,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is StokAlarmGecmisKayitlariData &&
+          other.id == this.id &&
+          other.zaman == this.zaman &&
+          other.hammaddeId == this.hammaddeId &&
+          other.hammaddeAdi == this.hammaddeAdi &&
+          other.oncekiMiktar == this.oncekiMiktar &&
+          other.yeniMiktar == this.yeniMiktar &&
+          other.oncekiDurum == this.oncekiDurum &&
+          other.yeniDurum == this.yeniDurum &&
+          other.tetikleyenIslem == this.tetikleyenIslem);
+}
+
+class StokAlarmGecmisKayitlariCompanion
+    extends UpdateCompanion<StokAlarmGecmisKayitlariData> {
+  final Value<String> id;
+  final Value<DateTime> zaman;
+  final Value<String> hammaddeId;
+  final Value<String> hammaddeAdi;
+  final Value<double> oncekiMiktar;
+  final Value<double> yeniMiktar;
+  final Value<int> oncekiDurum;
+  final Value<int> yeniDurum;
+  final Value<String> tetikleyenIslem;
+  final Value<int> rowid;
+  const StokAlarmGecmisKayitlariCompanion({
+    this.id = const Value.absent(),
+    this.zaman = const Value.absent(),
+    this.hammaddeId = const Value.absent(),
+    this.hammaddeAdi = const Value.absent(),
+    this.oncekiMiktar = const Value.absent(),
+    this.yeniMiktar = const Value.absent(),
+    this.oncekiDurum = const Value.absent(),
+    this.yeniDurum = const Value.absent(),
+    this.tetikleyenIslem = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  StokAlarmGecmisKayitlariCompanion.insert({
+    required String id,
+    required DateTime zaman,
+    required String hammaddeId,
+    required String hammaddeAdi,
+    required double oncekiMiktar,
+    required double yeniMiktar,
+    required int oncekiDurum,
+    required int yeniDurum,
+    required String tetikleyenIslem,
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       zaman = Value(zaman),
+       hammaddeId = Value(hammaddeId),
+       hammaddeAdi = Value(hammaddeAdi),
+       oncekiMiktar = Value(oncekiMiktar),
+       yeniMiktar = Value(yeniMiktar),
+       oncekiDurum = Value(oncekiDurum),
+       yeniDurum = Value(yeniDurum),
+       tetikleyenIslem = Value(tetikleyenIslem);
+  static Insertable<StokAlarmGecmisKayitlariData> custom({
+    Expression<String>? id,
+    Expression<DateTime>? zaman,
+    Expression<String>? hammaddeId,
+    Expression<String>? hammaddeAdi,
+    Expression<double>? oncekiMiktar,
+    Expression<double>? yeniMiktar,
+    Expression<int>? oncekiDurum,
+    Expression<int>? yeniDurum,
+    Expression<String>? tetikleyenIslem,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (zaman != null) 'zaman': zaman,
+      if (hammaddeId != null) 'hammadde_id': hammaddeId,
+      if (hammaddeAdi != null) 'hammadde_adi': hammaddeAdi,
+      if (oncekiMiktar != null) 'onceki_miktar': oncekiMiktar,
+      if (yeniMiktar != null) 'yeni_miktar': yeniMiktar,
+      if (oncekiDurum != null) 'onceki_durum': oncekiDurum,
+      if (yeniDurum != null) 'yeni_durum': yeniDurum,
+      if (tetikleyenIslem != null) 'tetikleyen_islem': tetikleyenIslem,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  StokAlarmGecmisKayitlariCompanion copyWith({
+    Value<String>? id,
+    Value<DateTime>? zaman,
+    Value<String>? hammaddeId,
+    Value<String>? hammaddeAdi,
+    Value<double>? oncekiMiktar,
+    Value<double>? yeniMiktar,
+    Value<int>? oncekiDurum,
+    Value<int>? yeniDurum,
+    Value<String>? tetikleyenIslem,
+    Value<int>? rowid,
+  }) {
+    return StokAlarmGecmisKayitlariCompanion(
+      id: id ?? this.id,
+      zaman: zaman ?? this.zaman,
+      hammaddeId: hammaddeId ?? this.hammaddeId,
+      hammaddeAdi: hammaddeAdi ?? this.hammaddeAdi,
+      oncekiMiktar: oncekiMiktar ?? this.oncekiMiktar,
+      yeniMiktar: yeniMiktar ?? this.yeniMiktar,
+      oncekiDurum: oncekiDurum ?? this.oncekiDurum,
+      yeniDurum: yeniDurum ?? this.yeniDurum,
+      tetikleyenIslem: tetikleyenIslem ?? this.tetikleyenIslem,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (zaman.present) {
+      map['zaman'] = Variable<DateTime>(zaman.value);
+    }
+    if (hammaddeId.present) {
+      map['hammadde_id'] = Variable<String>(hammaddeId.value);
+    }
+    if (hammaddeAdi.present) {
+      map['hammadde_adi'] = Variable<String>(hammaddeAdi.value);
+    }
+    if (oncekiMiktar.present) {
+      map['onceki_miktar'] = Variable<double>(oncekiMiktar.value);
+    }
+    if (yeniMiktar.present) {
+      map['yeni_miktar'] = Variable<double>(yeniMiktar.value);
+    }
+    if (oncekiDurum.present) {
+      map['onceki_durum'] = Variable<int>(oncekiDurum.value);
+    }
+    if (yeniDurum.present) {
+      map['yeni_durum'] = Variable<int>(yeniDurum.value);
+    }
+    if (tetikleyenIslem.present) {
+      map['tetikleyen_islem'] = Variable<String>(tetikleyenIslem.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('StokAlarmGecmisKayitlariCompanion(')
+          ..write('id: $id, ')
+          ..write('zaman: $zaman, ')
+          ..write('hammaddeId: $hammaddeId, ')
+          ..write('hammaddeAdi: $hammaddeAdi, ')
+          ..write('oncekiMiktar: $oncekiMiktar, ')
+          ..write('yeniMiktar: $yeniMiktar, ')
+          ..write('oncekiDurum: $oncekiDurum, ')
+          ..write('yeniDurum: $yeniDurum, ')
+          ..write('tetikleyenIslem: $tetikleyenIslem, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -6205,6 +7062,8 @@ abstract class _$UygulamaVeritabani extends GeneratedDatabase {
   late final $MasaKayitlariTable masaKayitlari = $MasaKayitlariTable(this);
   late final $HammaddeKayitlariTable hammaddeKayitlari =
       $HammaddeKayitlariTable(this);
+  late final $StokAlarmGecmisKayitlariTable stokAlarmGecmisKayitlari =
+      $StokAlarmGecmisKayitlariTable(this);
   late final $ReceteKalemKayitlariTable receteKalemKayitlari =
       $ReceteKalemKayitlariTable(this);
   @override
@@ -6226,6 +7085,7 @@ abstract class _$UygulamaVeritabani extends GeneratedDatabase {
     salonBolumKayitlari,
     masaKayitlari,
     hammaddeKayitlari,
+    stokAlarmGecmisKayitlari,
     receteKalemKayitlari,
   ];
   @override
@@ -8391,6 +9251,10 @@ typedef $$SiparisKayitlariTableCreateCompanionBuilder =
       Value<String?> masaNo,
       Value<String?> bolumAdi,
       Value<String?> kaynak,
+      Value<String?> kuponKodu,
+      Value<double> indirimTutari,
+      Value<bool> aydinlatmaOnayi,
+      Value<bool> ticariIletisimOnayi,
       required bool sahipMisafir,
       required String sahipAdSoyad,
       required String sahipTelefon,
@@ -8412,6 +9276,10 @@ typedef $$SiparisKayitlariTableUpdateCompanionBuilder =
       Value<String?> masaNo,
       Value<String?> bolumAdi,
       Value<String?> kaynak,
+      Value<String?> kuponKodu,
+      Value<double> indirimTutari,
+      Value<bool> aydinlatmaOnayi,
+      Value<bool> ticariIletisimOnayi,
       Value<bool> sahipMisafir,
       Value<String> sahipAdSoyad,
       Value<String> sahipTelefon,
@@ -8524,6 +9392,26 @@ class $$SiparisKayitlariTableFilterComposer
 
   ColumnFilters<String> get kaynak => $composableBuilder(
     column: $table.kaynak,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get kuponKodu => $composableBuilder(
+    column: $table.kuponKodu,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get indirimTutari => $composableBuilder(
+    column: $table.indirimTutari,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get aydinlatmaOnayi => $composableBuilder(
+    column: $table.aydinlatmaOnayi,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get ticariIletisimOnayi => $composableBuilder(
+    column: $table.ticariIletisimOnayi,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -8647,6 +9535,26 @@ class $$SiparisKayitlariTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get kuponKodu => $composableBuilder(
+    column: $table.kuponKodu,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get indirimTutari => $composableBuilder(
+    column: $table.indirimTutari,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get aydinlatmaOnayi => $composableBuilder(
+    column: $table.aydinlatmaOnayi,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get ticariIletisimOnayi => $composableBuilder(
+    column: $table.ticariIletisimOnayi,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<bool> get sahipMisafir => $composableBuilder(
     column: $table.sahipMisafir,
     builder: (column) => ColumnOrderings(column),
@@ -8727,6 +9635,24 @@ class $$SiparisKayitlariTableAnnotationComposer
 
   GeneratedColumn<String> get kaynak =>
       $composableBuilder(column: $table.kaynak, builder: (column) => column);
+
+  GeneratedColumn<String> get kuponKodu =>
+      $composableBuilder(column: $table.kuponKodu, builder: (column) => column);
+
+  GeneratedColumn<double> get indirimTutari => $composableBuilder(
+    column: $table.indirimTutari,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get aydinlatmaOnayi => $composableBuilder(
+    column: $table.aydinlatmaOnayi,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get ticariIletisimOnayi => $composableBuilder(
+    column: $table.ticariIletisimOnayi,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<bool> get sahipMisafir => $composableBuilder(
     column: $table.sahipMisafir,
@@ -8821,6 +9747,10 @@ class $$SiparisKayitlariTableTableManager
                 Value<String?> masaNo = const Value.absent(),
                 Value<String?> bolumAdi = const Value.absent(),
                 Value<String?> kaynak = const Value.absent(),
+                Value<String?> kuponKodu = const Value.absent(),
+                Value<double> indirimTutari = const Value.absent(),
+                Value<bool> aydinlatmaOnayi = const Value.absent(),
+                Value<bool> ticariIletisimOnayi = const Value.absent(),
                 Value<bool> sahipMisafir = const Value.absent(),
                 Value<String> sahipAdSoyad = const Value.absent(),
                 Value<String> sahipTelefon = const Value.absent(),
@@ -8840,6 +9770,10 @@ class $$SiparisKayitlariTableTableManager
                 masaNo: masaNo,
                 bolumAdi: bolumAdi,
                 kaynak: kaynak,
+                kuponKodu: kuponKodu,
+                indirimTutari: indirimTutari,
+                aydinlatmaOnayi: aydinlatmaOnayi,
+                ticariIletisimOnayi: ticariIletisimOnayi,
                 sahipMisafir: sahipMisafir,
                 sahipAdSoyad: sahipAdSoyad,
                 sahipTelefon: sahipTelefon,
@@ -8861,6 +9795,10 @@ class $$SiparisKayitlariTableTableManager
                 Value<String?> masaNo = const Value.absent(),
                 Value<String?> bolumAdi = const Value.absent(),
                 Value<String?> kaynak = const Value.absent(),
+                Value<String?> kuponKodu = const Value.absent(),
+                Value<double> indirimTutari = const Value.absent(),
+                Value<bool> aydinlatmaOnayi = const Value.absent(),
+                Value<bool> ticariIletisimOnayi = const Value.absent(),
                 required bool sahipMisafir,
                 required String sahipAdSoyad,
                 required String sahipTelefon,
@@ -8880,6 +9818,10 @@ class $$SiparisKayitlariTableTableManager
                 masaNo: masaNo,
                 bolumAdi: bolumAdi,
                 kaynak: kaynak,
+                kuponKodu: kuponKodu,
+                indirimTutari: indirimTutari,
+                aydinlatmaOnayi: aydinlatmaOnayi,
+                ticariIletisimOnayi: ticariIletisimOnayi,
                 sahipMisafir: sahipMisafir,
                 sahipAdSoyad: sahipAdSoyad,
                 sahipTelefon: sahipTelefon,
@@ -10569,6 +11511,7 @@ typedef $$HammaddeKayitlariTableCreateCompanionBuilder =
       required String ad,
       required String birim,
       required double mevcutMiktar,
+      Value<double> uyariEsigi,
       required double kritikEsik,
       required double birimMaliyet,
       Value<int> rowid,
@@ -10579,6 +11522,7 @@ typedef $$HammaddeKayitlariTableUpdateCompanionBuilder =
       Value<String> ad,
       Value<String> birim,
       Value<double> mevcutMiktar,
+      Value<double> uyariEsigi,
       Value<double> kritikEsik,
       Value<double> birimMaliyet,
       Value<int> rowid,
@@ -10655,6 +11599,11 @@ class $$HammaddeKayitlariTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
+  ColumnFilters<double> get uyariEsigi => $composableBuilder(
+    column: $table.uyariEsigi,
+    builder: (column) => ColumnFilters(column),
+  );
+
   ColumnFilters<double> get kritikEsik => $composableBuilder(
     column: $table.kritikEsik,
     builder: (column) => ColumnFilters(column),
@@ -10720,6 +11669,11 @@ class $$HammaddeKayitlariTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<double> get uyariEsigi => $composableBuilder(
+    column: $table.uyariEsigi,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<double> get kritikEsik => $composableBuilder(
     column: $table.kritikEsik,
     builder: (column) => ColumnOrderings(column),
@@ -10751,6 +11705,11 @@ class $$HammaddeKayitlariTableAnnotationComposer
 
   GeneratedColumn<double> get mevcutMiktar => $composableBuilder(
     column: $table.mevcutMiktar,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<double> get uyariEsigi => $composableBuilder(
+    column: $table.uyariEsigi,
     builder: (column) => column,
   );
 
@@ -10828,6 +11787,7 @@ class $$HammaddeKayitlariTableTableManager
                 Value<String> ad = const Value.absent(),
                 Value<String> birim = const Value.absent(),
                 Value<double> mevcutMiktar = const Value.absent(),
+                Value<double> uyariEsigi = const Value.absent(),
                 Value<double> kritikEsik = const Value.absent(),
                 Value<double> birimMaliyet = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
@@ -10836,6 +11796,7 @@ class $$HammaddeKayitlariTableTableManager
                 ad: ad,
                 birim: birim,
                 mevcutMiktar: mevcutMiktar,
+                uyariEsigi: uyariEsigi,
                 kritikEsik: kritikEsik,
                 birimMaliyet: birimMaliyet,
                 rowid: rowid,
@@ -10846,6 +11807,7 @@ class $$HammaddeKayitlariTableTableManager
                 required String ad,
                 required String birim,
                 required double mevcutMiktar,
+                Value<double> uyariEsigi = const Value.absent(),
                 required double kritikEsik,
                 required double birimMaliyet,
                 Value<int> rowid = const Value.absent(),
@@ -10854,6 +11816,7 @@ class $$HammaddeKayitlariTableTableManager
                 ad: ad,
                 birim: birim,
                 mevcutMiktar: mevcutMiktar,
+                uyariEsigi: uyariEsigi,
                 kritikEsik: kritikEsik,
                 birimMaliyet: birimMaliyet,
                 rowid: rowid,
@@ -10915,6 +11878,313 @@ typedef $$HammaddeKayitlariTableProcessedTableManager =
       (HammaddeKayitlariData, $$HammaddeKayitlariTableReferences),
       HammaddeKayitlariData,
       PrefetchHooks Function({bool receteKalemKayitlariRefs})
+    >;
+typedef $$StokAlarmGecmisKayitlariTableCreateCompanionBuilder =
+    StokAlarmGecmisKayitlariCompanion Function({
+      required String id,
+      required DateTime zaman,
+      required String hammaddeId,
+      required String hammaddeAdi,
+      required double oncekiMiktar,
+      required double yeniMiktar,
+      required int oncekiDurum,
+      required int yeniDurum,
+      required String tetikleyenIslem,
+      Value<int> rowid,
+    });
+typedef $$StokAlarmGecmisKayitlariTableUpdateCompanionBuilder =
+    StokAlarmGecmisKayitlariCompanion Function({
+      Value<String> id,
+      Value<DateTime> zaman,
+      Value<String> hammaddeId,
+      Value<String> hammaddeAdi,
+      Value<double> oncekiMiktar,
+      Value<double> yeniMiktar,
+      Value<int> oncekiDurum,
+      Value<int> yeniDurum,
+      Value<String> tetikleyenIslem,
+      Value<int> rowid,
+    });
+
+class $$StokAlarmGecmisKayitlariTableFilterComposer
+    extends Composer<_$UygulamaVeritabani, $StokAlarmGecmisKayitlariTable> {
+  $$StokAlarmGecmisKayitlariTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get zaman => $composableBuilder(
+    column: $table.zaman,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get hammaddeId => $composableBuilder(
+    column: $table.hammaddeId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get hammaddeAdi => $composableBuilder(
+    column: $table.hammaddeAdi,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get oncekiMiktar => $composableBuilder(
+    column: $table.oncekiMiktar,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get yeniMiktar => $composableBuilder(
+    column: $table.yeniMiktar,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get oncekiDurum => $composableBuilder(
+    column: $table.oncekiDurum,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get yeniDurum => $composableBuilder(
+    column: $table.yeniDurum,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get tetikleyenIslem => $composableBuilder(
+    column: $table.tetikleyenIslem,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$StokAlarmGecmisKayitlariTableOrderingComposer
+    extends Composer<_$UygulamaVeritabani, $StokAlarmGecmisKayitlariTable> {
+  $$StokAlarmGecmisKayitlariTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get zaman => $composableBuilder(
+    column: $table.zaman,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get hammaddeId => $composableBuilder(
+    column: $table.hammaddeId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get hammaddeAdi => $composableBuilder(
+    column: $table.hammaddeAdi,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get oncekiMiktar => $composableBuilder(
+    column: $table.oncekiMiktar,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get yeniMiktar => $composableBuilder(
+    column: $table.yeniMiktar,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get oncekiDurum => $composableBuilder(
+    column: $table.oncekiDurum,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get yeniDurum => $composableBuilder(
+    column: $table.yeniDurum,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get tetikleyenIslem => $composableBuilder(
+    column: $table.tetikleyenIslem,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$StokAlarmGecmisKayitlariTableAnnotationComposer
+    extends Composer<_$UygulamaVeritabani, $StokAlarmGecmisKayitlariTable> {
+  $$StokAlarmGecmisKayitlariTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get zaman =>
+      $composableBuilder(column: $table.zaman, builder: (column) => column);
+
+  GeneratedColumn<String> get hammaddeId => $composableBuilder(
+    column: $table.hammaddeId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get hammaddeAdi => $composableBuilder(
+    column: $table.hammaddeAdi,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<double> get oncekiMiktar => $composableBuilder(
+    column: $table.oncekiMiktar,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<double> get yeniMiktar => $composableBuilder(
+    column: $table.yeniMiktar,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get oncekiDurum => $composableBuilder(
+    column: $table.oncekiDurum,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get yeniDurum =>
+      $composableBuilder(column: $table.yeniDurum, builder: (column) => column);
+
+  GeneratedColumn<String> get tetikleyenIslem => $composableBuilder(
+    column: $table.tetikleyenIslem,
+    builder: (column) => column,
+  );
+}
+
+class $$StokAlarmGecmisKayitlariTableTableManager
+    extends
+        RootTableManager<
+          _$UygulamaVeritabani,
+          $StokAlarmGecmisKayitlariTable,
+          StokAlarmGecmisKayitlariData,
+          $$StokAlarmGecmisKayitlariTableFilterComposer,
+          $$StokAlarmGecmisKayitlariTableOrderingComposer,
+          $$StokAlarmGecmisKayitlariTableAnnotationComposer,
+          $$StokAlarmGecmisKayitlariTableCreateCompanionBuilder,
+          $$StokAlarmGecmisKayitlariTableUpdateCompanionBuilder,
+          (
+            StokAlarmGecmisKayitlariData,
+            BaseReferences<
+              _$UygulamaVeritabani,
+              $StokAlarmGecmisKayitlariTable,
+              StokAlarmGecmisKayitlariData
+            >,
+          ),
+          StokAlarmGecmisKayitlariData,
+          PrefetchHooks Function()
+        > {
+  $$StokAlarmGecmisKayitlariTableTableManager(
+    _$UygulamaVeritabani db,
+    $StokAlarmGecmisKayitlariTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$StokAlarmGecmisKayitlariTableFilterComposer(
+                $db: db,
+                $table: table,
+              ),
+          createOrderingComposer: () =>
+              $$StokAlarmGecmisKayitlariTableOrderingComposer(
+                $db: db,
+                $table: table,
+              ),
+          createComputedFieldComposer: () =>
+              $$StokAlarmGecmisKayitlariTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<DateTime> zaman = const Value.absent(),
+                Value<String> hammaddeId = const Value.absent(),
+                Value<String> hammaddeAdi = const Value.absent(),
+                Value<double> oncekiMiktar = const Value.absent(),
+                Value<double> yeniMiktar = const Value.absent(),
+                Value<int> oncekiDurum = const Value.absent(),
+                Value<int> yeniDurum = const Value.absent(),
+                Value<String> tetikleyenIslem = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => StokAlarmGecmisKayitlariCompanion(
+                id: id,
+                zaman: zaman,
+                hammaddeId: hammaddeId,
+                hammaddeAdi: hammaddeAdi,
+                oncekiMiktar: oncekiMiktar,
+                yeniMiktar: yeniMiktar,
+                oncekiDurum: oncekiDurum,
+                yeniDurum: yeniDurum,
+                tetikleyenIslem: tetikleyenIslem,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required DateTime zaman,
+                required String hammaddeId,
+                required String hammaddeAdi,
+                required double oncekiMiktar,
+                required double yeniMiktar,
+                required int oncekiDurum,
+                required int yeniDurum,
+                required String tetikleyenIslem,
+                Value<int> rowid = const Value.absent(),
+              }) => StokAlarmGecmisKayitlariCompanion.insert(
+                id: id,
+                zaman: zaman,
+                hammaddeId: hammaddeId,
+                hammaddeAdi: hammaddeAdi,
+                oncekiMiktar: oncekiMiktar,
+                yeniMiktar: yeniMiktar,
+                oncekiDurum: oncekiDurum,
+                yeniDurum: yeniDurum,
+                tetikleyenIslem: tetikleyenIslem,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$StokAlarmGecmisKayitlariTableProcessedTableManager =
+    ProcessedTableManager<
+      _$UygulamaVeritabani,
+      $StokAlarmGecmisKayitlariTable,
+      StokAlarmGecmisKayitlariData,
+      $$StokAlarmGecmisKayitlariTableFilterComposer,
+      $$StokAlarmGecmisKayitlariTableOrderingComposer,
+      $$StokAlarmGecmisKayitlariTableAnnotationComposer,
+      $$StokAlarmGecmisKayitlariTableCreateCompanionBuilder,
+      $$StokAlarmGecmisKayitlariTableUpdateCompanionBuilder,
+      (
+        StokAlarmGecmisKayitlariData,
+        BaseReferences<
+          _$UygulamaVeritabani,
+          $StokAlarmGecmisKayitlariTable,
+          StokAlarmGecmisKayitlariData
+        >,
+      ),
+      StokAlarmGecmisKayitlariData,
+      PrefetchHooks Function()
     >;
 typedef $$ReceteKalemKayitlariTableCreateCompanionBuilder =
     ReceteKalemKayitlariCompanion Function({
@@ -11345,6 +12615,11 @@ class $UygulamaVeritabaniManager {
       $$MasaKayitlariTableTableManager(_db, _db.masaKayitlari);
   $$HammaddeKayitlariTableTableManager get hammaddeKayitlari =>
       $$HammaddeKayitlariTableTableManager(_db, _db.hammaddeKayitlari);
+  $$StokAlarmGecmisKayitlariTableTableManager get stokAlarmGecmisKayitlari =>
+      $$StokAlarmGecmisKayitlariTableTableManager(
+        _db,
+        _db.stokAlarmGecmisKayitlari,
+      );
   $$ReceteKalemKayitlariTableTableManager get receteKalemKayitlari =>
       $$ReceteKalemKayitlariTableTableManager(_db, _db.receteKalemKayitlari);
 }

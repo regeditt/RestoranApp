@@ -87,6 +87,25 @@ class SepetDeposuSqlite implements SepetDeposu {
     await (_veritabani.delete(
       _veritabani.sepetKalemleri,
     )..where((tbl) => tbl.sepetId.equals(sepet.id))).go();
+    await (_veritabani.update(_veritabani.sepetKayitlari)
+          ..where((tbl) => tbl.id.equals(sepet.id)))
+        .write(const SepetKayitlariCompanion(kuponKodu: Value(null)));
+  }
+
+  @override
+  Future<SepetVarligi> kuponKoduGuncelle(String? kuponKodu) async {
+    final sepet = await _sepetKaydiniGetir();
+    final String? temiz = kuponKodu?.trim();
+    await (_veritabani.update(_veritabani.sepetKayitlari)
+          ..where((tbl) => tbl.id.equals(sepet.id)))
+        .write(
+          SepetKayitlariCompanion(
+            kuponKodu: temiz == null || temiz.isEmpty
+                ? const Value(null)
+                : Value(temiz),
+          ),
+        );
+    return sepetiGetir();
   }
 
   Future<SepetKayitlariData> _sepetKaydiniGetir() async {

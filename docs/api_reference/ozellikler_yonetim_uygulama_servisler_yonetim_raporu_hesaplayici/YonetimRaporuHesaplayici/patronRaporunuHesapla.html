@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1, user-scalable=no">
+  <meta name="description" content="API docs for the patronRaporunuHesapla method from the YonetimRaporuHesaplayici class, for the Dart programming language.">
+  <title>patronRaporunuHesapla method - YonetimRaporuHesaplayici class - yonetim_raporu_hesaplayici library - Dart API</title>
+
+
+  
+  <link rel="preconnect" href="https://fonts.gstatic.com">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:ital,wght@0,300;0,400;0,500;0,700;1,400&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet">
+  
+  <link rel="stylesheet" href="../../static-assets/github.css?v1">
+  <link rel="stylesheet" href="../../static-assets/styles.css?v1">
+  <link rel="icon" href="../../static-assets/favicon.png?v1">
+  
+</head>
+
+<body data-base-href="../../" data-using-base-href="false" class="light-theme">
+<div id="overlay-under-drawer"></div>
+<header id="title">
+  <span id="sidenav-left-toggle" class="material-symbols-outlined" role="button" tabindex="0">menu</span>
+  <ol class="breadcrumbs gt-separated dark hidden-xs">
+    <li><a href="../../index.html">restoran_app</a></li>
+    <li><a href="../../ozellikler_yonetim_uygulama_servisler_yonetim_raporu_hesaplayici/">ozellikler\yonetim\uygulama\servisler\yonetim_raporu_hesaplayici.dart</a></li>
+    <li><a href="../../ozellikler_yonetim_uygulama_servisler_yonetim_raporu_hesaplayici/YonetimRaporuHesaplayici-class.html">YonetimRaporuHesaplayici</a></li>
+    <li class="self-crumb">patronRaporunuHesapla static method</li>
+  </ol>
+  <div class="self-name">patronRaporunuHesapla</div>
+  <form class="search navbar-right" role="search">
+    <input type="text" id="search-box" autocomplete="off" disabled class="form-control typeahead" placeholder="Loading search...">
+  </form>
+  <button class="toggle" id="theme-button" title="Toggle between light and dark mode" aria-label="Light and dark mode toggle">
+    <span id="dark-theme-button" class="material-symbols-outlined" aria-hidden="true">
+      dark_mode
+    </span>
+    <span id="light-theme-button" class="material-symbols-outlined" aria-hidden="true">
+      light_mode
+    </span>
+  </button>
+</header>
+<main>
+<div
+    id="dartdoc-main-content"
+    class="main-content"
+    data-above-sidebar="ozellikler_yonetim_uygulama_servisler_yonetim_raporu_hesaplayici&#47;YonetimRaporuHesaplayici-class-sidebar.html"
+    data-below-sidebar="">
+    <div>
+<h1><span class="kind-method">patronRaporunuHesapla</span> static method 
+</h1></div>
+
+    <section class="multi-line-signature">
+      
+<span class="returntype"><a href="../../ozellikler_yonetim_alan_varliklar_patron_raporu_ozeti_varligi/PatronRaporuOzetiVarligi-class.html">PatronRaporuOzetiVarligi</a></span>
+<span class="name ">patronRaporunuHesapla</span>(<wbr>{<ol class="parameter-list"> <li><span class="parameter" id="patronRaporunuHesapla-param-siparisler"><span>required</span> <span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/List-class.html">List</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="../../ozellikler_siparis_alan_varliklar_siparis_varligi/SiparisVarligi-class.html">SiparisVarligi</a></span>&gt;</span></span> <span class="parameter-name">siparisler</span>, </span></li>
+<li><span class="parameter" id="patronRaporunuHesapla-param-saatlikVeriler"><span>required</span> <span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/List-class.html">List</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="../../ozellikler_yonetim_alan_varliklar_saatlik_siparis_ozeti_varligi/SaatlikSiparisOzetiVarligi-class.html">SaatlikSiparisOzetiVarligi</a></span>&gt;</span></span> <span class="parameter-name">saatlikVeriler</span>, </span></li>
+</ol>})
+
+      
+
+    </section>
+    
+
+
+    
+<section class="summary source-code" id="source">
+  <h2><span>Implementation</span></h2>
+  <pre class="language-dart"><code class="language-dart">static PatronRaporuOzetiVarligi patronRaporunuHesapla({
+  required List&lt;SiparisVarligi&gt; siparisler,
+  required List&lt;SaatlikSiparisOzetiVarligi&gt; saatlikVeriler,
+}) {
+  if (siparisler.isEmpty) {
+    return const PatronRaporuOzetiVarligi(
+      ortalamaAdisyon: 0,
+      tahminiGunSonuCiro: 0,
+      enGucluKanalEtiketi: &#39;Veri yok&#39;,
+      enGucluKanalAdedi: 0,
+      zirveSaatEtiketi: &#39;--:--&#39;,
+      zirveSaatAdedi: 0,
+      enYuksekSiparisNo: &#39;-&#39;,
+      enYuksekSiparisTutari: 0,
+    );
+  }
+
+  final SiparisVarligi enYuksekSiparis = siparisler.reduce(
+    (onceki, mevcut) =&gt;
+        onceki.toplamTutar &gt;= mevcut.toplamTutar ? onceki : mevcut,
+  );
+
+  final SaatlikSiparisOzetiVarligi zirveSaat = saatlikVeriler.isEmpty
+      ? const SaatlikSiparisOzetiVarligi(etiket: &#39;--:--&#39;, adet: 0)
+      : saatlikVeriler.reduce(
+          (onceki, mevcut) =&gt; onceki.adet &gt;= mevcut.adet ? onceki : mevcut,
+        );
+
+  final List&lt;({String etiket, int adet})&gt; kanallar =
+      &lt;({String etiket, int adet})&gt;[
+        (etiket: &#39;Restoranda ye&#39;, adet: 0),
+        (etiket: &#39;Gel al&#39;, adet: 0),
+        (etiket: &#39;Paket servis&#39;, adet: 0),
+      ];
+
+  for (final SiparisVarligi siparis in siparisler) {
+    switch (siparis.teslimatTipi) {
+      case TeslimatTipi.restorandaYe:
+        kanallar[0] = (
+          etiket: kanallar[0].etiket,
+          adet: kanallar[0].adet + 1,
+        );
+      case TeslimatTipi.gelAl:
+        kanallar[1] = (
+          etiket: kanallar[1].etiket,
+          adet: kanallar[1].adet + 1,
+        );
+      case TeslimatTipi.paketServis:
+        kanallar[2] = (
+          etiket: kanallar[2].etiket,
+          adet: kanallar[2].adet + 1,
+        );
+    }
+  }
+
+  final ({String etiket, int adet}) enGucluKanal = kanallar.reduce(
+    (onceki, mevcut) =&gt; onceki.adet &gt;= mevcut.adet ? onceki : mevcut,
+  );
+
+  final double toplamCiro = siparisler.fold&lt;double&gt;(
+    0,
+    (double onceki, SiparisVarligi siparis) =&gt; onceki + siparis.toplamTutar,
+  );
+  final double ortalamaAdisyon = toplamCiro &#47; siparisler.length;
+  final int aktifSaatSayisi = saatlikVeriler
+      .where((veri) =&gt; veri.adet &gt; 0)
+      .length;
+  final double saatlikOrtalama =
+      toplamCiro &#47; (aktifSaatSayisi == 0 ? 1 : aktifSaatSayisi);
+  final double tahminiGunSonuCiro = saatlikOrtalama * 12;
+
+  return PatronRaporuOzetiVarligi(
+    ortalamaAdisyon: ortalamaAdisyon,
+    tahminiGunSonuCiro: tahminiGunSonuCiro,
+    enGucluKanalEtiketi: enGucluKanal.etiket,
+    enGucluKanalAdedi: enGucluKanal.adet,
+    zirveSaatEtiketi: zirveSaat.etiket,
+    zirveSaatAdedi: zirveSaat.adet,
+    enYuksekSiparisNo: enYuksekSiparis.siparisNo,
+    enYuksekSiparisTutari: enYuksekSiparis.toplamTutar,
+  );
+}</code></pre>
+</section>
+
+
+  </div> <!-- /.main-content -->
+  <div id="dartdoc-sidebar-left" class="sidebar sidebar-offcanvas-left">
+    <!-- The search input and breadcrumbs below are only responsively visible at low resolutions. -->
+<header id="header-search-sidebar" class="hidden-l">
+  <form class="search-sidebar" role="search">
+    <input type="text" id="search-sidebar" autocomplete="off" disabled class="form-control typeahead" placeholder="Loading search...">
+  </form>
+</header>
+<ol class="breadcrumbs gt-separated dark hidden-l" id="sidebar-nav">
+    <li><a href="../../index.html">restoran_app</a></li>
+    <li><a href="../../ozellikler_yonetim_uygulama_servisler_yonetim_raporu_hesaplayici/">yonetim_raporu_hesaplayici</a></li>
+    <li><a href="../../ozellikler_yonetim_uygulama_servisler_yonetim_raporu_hesaplayici/YonetimRaporuHesaplayici-class.html">YonetimRaporuHesaplayici</a></li>
+    <li class="self-crumb">patronRaporunuHesapla static method</li>
+</ol>
+
+    <h5>YonetimRaporuHesaplayici class</h5>
+    <div id="dartdoc-sidebar-left-content"></div>
+  </div><!--/.sidebar-offcanvas-->
+  <div id="dartdoc-sidebar-right" class="sidebar sidebar-offcanvas-right">
+</div><!--/.sidebar-offcanvas-->
+</main>
+<footer>
+  <span class="no-break">
+    restoran_app
+      1.0.0+1
+  </span>
+  
+</footer>
+
+
+<script src="../../static-assets/highlight.pack.js?v1"></script>
+<script src="../../static-assets/docs.dart.js"></script>
+
+</body>
+</html>
+

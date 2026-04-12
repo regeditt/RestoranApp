@@ -4,6 +4,8 @@ import 'package:restoran_app/ortak/bilesenler/suruklenebilir_dialog_kapsayici.da
 import 'package:restoran_app/ortak/sabitler/uygulama_sabitleri.dart';
 import 'package:restoran_app/ozellikler/menu/alan/varliklar/qr_menu_karti_varligi.dart';
 import 'package:restoran_app/ozellikler/menu/alan/varliklar/urun_varligi.dart';
+import 'package:restoran_app/ozellikler/siparis/alan/varliklar/kurye_takip_entegrasyon_varliklari.dart';
+import 'package:restoran_app/ozellikler/stok/alan/enumlar/stok_uyari_durumu.dart';
 import 'package:restoran_app/ozellikler/stok/alan/varliklar/hammadde_stok_varligi.dart';
 import 'package:restoran_app/ozellikler/stok/alan/varliklar/recete_kalemi_varligi.dart';
 import 'package:restoran_app/ozellikler/yonetim/alan/varliklar/salon_bolumu_varligi.dart';
@@ -206,7 +208,7 @@ class AdminUrunSatiri extends StatelessWidget {
           ),
           const SizedBox(height: 6),
           Text(
-            '$kategoriAdi · ${urun.stoktaMi ? 'Stokta' : 'Kapali'}${urun.oneCikanMi ? ' · One cikan' : ''}',
+            '$kategoriAdi - ${urun.stoktaMi ? 'Stokta' : 'Kapali'}${urun.oneCikanMi ? ' - One cikan' : ''}',
             style: const TextStyle(color: Color(0xFF6D6079)),
           ),
           const SizedBox(height: 6),
@@ -268,16 +270,15 @@ class AdminHammaddeSatiri extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final StokUyariDurumu durum = hammadde.uyariDurumu;
+    final ({Color cerceve, Color metin}) palet = _durumaGoreRenkler(durum);
+
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(
-          color: hammadde.kritikMi
-              ? const Color(0xFFFFC7B8)
-              : const Color(0xFFE8E0F0),
-        ),
+        border: Border.all(color: palet.cerceve),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -291,11 +292,9 @@ class AdminHammaddeSatiri extends StatelessWidget {
                 ),
               ),
               Text(
-                hammadde.kritikMi ? 'Kritik' : 'Normal',
+                durum.etiket,
                 style: TextStyle(
-                  color: hammadde.kritikMi
-                      ? const Color(0xFFFF7A59)
-                      : const Color(0xFF30C48D),
+                  color: palet.metin,
                   fontWeight: FontWeight.w800,
                 ),
               ),
@@ -303,7 +302,9 @@ class AdminHammaddeSatiri extends StatelessWidget {
           ),
           const SizedBox(height: 6),
           Text(
-            '${hammadde.mevcutMiktar.toStringAsFixed(0)} ${hammadde.birim} · Esik ${hammadde.kritikEsik.toStringAsFixed(0)} ${hammadde.birim}',
+            '${hammadde.mevcutMiktar.toStringAsFixed(0)} ${hammadde.birim} - '
+            'Uyari ${hammadde.uyariEsigi.toStringAsFixed(0)} ${hammadde.birim} - '
+            'Kritik ${hammadde.kritikEsik.toStringAsFixed(0)} ${hammadde.birim}',
             style: const TextStyle(color: Color(0xFF6D6079)),
           ),
           const SizedBox(height: 6),
@@ -316,6 +317,220 @@ class AdminHammaddeSatiri extends StatelessWidget {
             onPressed: duzenle,
             icon: const Icon(Icons.edit_outlined),
             label: const Text('Duzenle'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  ({Color cerceve, Color metin}) _durumaGoreRenkler(StokUyariDurumu durum) {
+    switch (durum) {
+      case StokUyariDurumu.tukendi:
+        return (
+          cerceve: const Color(0xFFFFA694),
+          metin: const Color(0xFFE34D2C),
+        );
+      case StokUyariDurumu.kritik:
+        return (
+          cerceve: const Color(0xFFFFC7B8),
+          metin: const Color(0xFFFF7A59),
+        );
+      case StokUyariDurumu.uyari:
+        return (
+          cerceve: const Color(0xFFFFE4B2),
+          metin: const Color(0xFFCB8A11),
+        );
+      case StokUyariDurumu.normal:
+        return (
+          cerceve: const Color(0xFFE8E0F0),
+          metin: const Color(0xFF30C48D),
+        );
+    }
+  }
+}
+
+class AdminKuryeSaglayiciSatiri extends StatelessWidget {
+  const AdminKuryeSaglayiciSatiri({
+    super.key,
+    required this.saglayici,
+    required this.baglantiTestEt,
+    required this.duzenle,
+    required this.sil,
+    required this.aktifYap,
+    required this.oncelikYukselt,
+    required this.oncelikDusur,
+    required this.yukariTasinabilir,
+    required this.asagiTasinabilir,
+  });
+
+  final KuryeTakipSaglayiciVarligi saglayici;
+  final VoidCallback baglantiTestEt;
+  final VoidCallback duzenle;
+  final VoidCallback sil;
+  final VoidCallback aktifYap;
+  final VoidCallback oncelikYukselt;
+  final VoidCallback oncelikDusur;
+  final bool yukariTasinabilir;
+  final bool asagiTasinabilir;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(
+          color: saglayici.aktifMi
+              ? const Color(0xFFB9F2DC)
+              : const Color(0xFFE8E0F0),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          Row(
+            children: <Widget>[
+              Expanded(
+                child: Text(
+                  saglayici.ad,
+                  style: const TextStyle(fontWeight: FontWeight.w900),
+                ),
+              ),
+              Chip(
+                label: Text(
+                  saglayici.aktifMi ? 'Aktif' : 'Pasif',
+                  style: TextStyle(
+                    color: saglayici.aktifMi
+                        ? const Color(0xFF0F8A5C)
+                        : const Color(0xFF6D6079),
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Text(
+            '${saglayici.tur.etiket} - Oncelik ${saglayici.oncelik}',
+            style: const TextStyle(color: Color(0xFF6D6079)),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            saglayici.apiTabanUrl,
+            style: const TextStyle(color: Color(0xFF6D6079)),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            saglayici.aciklama,
+            style: const TextStyle(color: Color(0xFF6D6079)),
+          ),
+          const SizedBox(height: 10),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: <Widget>[
+              FilledButton.tonalIcon(
+                onPressed: baglantiTestEt,
+                icon: const Icon(Icons.health_and_safety_rounded),
+                label: const Text('Test et'),
+              ),
+              FilledButton.tonalIcon(
+                onPressed: duzenle,
+                icon: const Icon(Icons.edit_outlined),
+                label: const Text('Duzenle'),
+              ),
+              FilledButton.tonalIcon(
+                onPressed: saglayici.aktifMi ? null : aktifYap,
+                icon: const Icon(Icons.check_circle_outline_rounded),
+                label: const Text('Aktif yap'),
+              ),
+              IconButton(
+                onPressed: yukariTasinabilir ? oncelikYukselt : null,
+                icon: const Icon(Icons.keyboard_arrow_up_rounded),
+                tooltip: 'Onceligi artir',
+              ),
+              IconButton(
+                onPressed: asagiTasinabilir ? oncelikDusur : null,
+                icon: const Icon(Icons.keyboard_arrow_down_rounded),
+                tooltip: 'Onceligi azalt',
+              ),
+              TextButton(onPressed: sil, child: const Text('Sil')),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class AdminKuryeEslesmeSatiri extends StatelessWidget {
+  const AdminKuryeEslesmeSatiri({
+    super.key,
+    required this.eslesme,
+    required this.saglayiciAdi,
+    required this.duzenle,
+    required this.sil,
+  });
+
+  final KuryeCihazEslesmesiVarligi eslesme;
+  final String saglayiciAdi;
+  final VoidCallback duzenle;
+  final VoidCallback sil;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(
+          color: eslesme.aktifMi
+              ? const Color(0xFFE8E0F0)
+              : const Color(0xFFF2EDF6),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          Row(
+            children: <Widget>[
+              Expanded(
+                child: Text(
+                  eslesme.kuryeAdi,
+                  style: const TextStyle(fontWeight: FontWeight.w900),
+                ),
+              ),
+              Text(
+                eslesme.aktifMi ? 'Aktif' : 'Pasif',
+                style: TextStyle(
+                  color: eslesme.aktifMi
+                      ? const Color(0xFF30C48D)
+                      : const Color(0xFF9987AA),
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          Text('Saglayici: $saglayiciAdi'),
+          const SizedBox(height: 4),
+          Text(
+            'Cihaz kimligi: ${eslesme.cihazKimligi}',
+            style: const TextStyle(color: Color(0xFF6D6079)),
+          ),
+          const SizedBox(height: 10),
+          Row(
+            children: <Widget>[
+              FilledButton.tonalIcon(
+                onPressed: duzenle,
+                icon: const Icon(Icons.edit_outlined),
+                label: const Text('Duzenle'),
+              ),
+              const SizedBox(width: 8),
+              TextButton(onPressed: sil, child: const Text('Sil')),
+            ],
           ),
         ],
       ),

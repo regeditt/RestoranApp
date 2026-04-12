@@ -13,6 +13,9 @@ dependencies:
     sdk: flutter
   cupertino_icons: ^1.0.8
   fl_chart: ^1.2.0
+  flutter_map: ^7.0.2
+  geolocator: ^14.0.2
+  latlong2: ^0.9.1
   qr_flutter: ^4.1.0
   url_launcher: ^6.3.1
   pdf: ^3.11.3
@@ -21,6 +24,8 @@ dependencies:
   sqlite3: ^3.2.0
   path_provider: ^2.1.5
   crypto: ^3.0.6
+  file_picker: ^11.0.2
+  http: ^1.2.2
 
 dev_dependencies:
   flutter_test:
@@ -28,6 +33,18 @@ dev_dependencies:
   flutter_lints: ^6.0.0
   drift_dev: ^2.32.1
   build_runner: ^2.4.12
+  msix: ^3.16.13
 
 flutter:
   uses-material-design: true
+
+msix_config:
+  display_name: VectorPos
+  publisher_display_name: VectorPos
+  identity_name: com.vectorpos.app
+  msix_version: 1.0.0.0
+  logo_path: windows/runner/resources/app_icon_preview.png
+  output_name: vector_pos_installer
+  output_path: build/windows/installer
+  capabilities: internetClient, location
+  install_certificate: false

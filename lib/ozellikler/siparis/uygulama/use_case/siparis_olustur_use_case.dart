@@ -1,7 +1,8 @@
-import 'package:restoran_app/ozellikler/siparis/alan/depolar/siparis_deposu.dart';
+﻿import 'package:restoran_app/ozellikler/siparis/alan/depolar/siparis_deposu.dart';
 import 'package:restoran_app/ozellikler/stok/uygulama/use_case/siparise_gore_stok_dus_use_case.dart';
 import 'package:restoran_app/ozellikler/siparis/alan/varliklar/siparis_varligi.dart';
 
+/// SiparisOlusturUseCase use-case operasyonunu yurutur.
 class SiparisOlusturUseCase {
   const SiparisOlusturUseCase(
     this._siparisDeposu, {
@@ -11,6 +12,7 @@ class SiparisOlusturUseCase {
   final SiparisDeposu _siparisDeposu;
   final SipariseGoreStokDusUseCase? _stokDusUseCase;
 
+  /// Use-case operasyonunu calistirir ve sonucu dondurur.
   Future<SiparisVarligi> call(SiparisVarligi siparis) async {
     final SiparisVarligi sonuc = await _siparisDeposu.siparisOlustur(siparis);
     await _stokDusUseCase?.call(sonuc);

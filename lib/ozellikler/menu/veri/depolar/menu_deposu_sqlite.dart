@@ -11,6 +11,7 @@ class MenuDeposuSqlite implements MenuDeposu {
 
   final UygulamaVeritabani _veritabani;
   final SeedVerisiSaglayici _seedSaglayici = const SeedVerisiSaglayici();
+  static const int _menuSeedSurumu = 2;
   bool _seedKontrolEdildi = false;
 
   @override
@@ -170,8 +171,9 @@ class MenuDeposuSqlite implements MenuDeposu {
     if (_seedKontrolEdildi) {
       return;
     }
-    final String? seedDurumu = await _veritabani.ayarOku('menu_seeded');
-    if (seedDurumu == 'true') {
+    final String? seedSurumHam = await _veritabani.ayarOku('menu_seed_surum');
+    final int seedSurum = int.tryParse(seedSurumHam ?? '') ?? 0;
+    if (seedSurum >= _menuSeedSurumu) {
       _seedKontrolEdildi = true;
       return;
     }
@@ -181,13 +183,18 @@ class MenuDeposuSqlite implements MenuDeposu {
     final Map<String, String> kategoriIdHaritasi = <String, String>{};
     await _veritabani.transaction(() async {
       for (final kategori in kategoriler) {
-        final String kategoriId = await _veritabani.sonrakiNumerikKimlikGetir(
-          tabloAdi: 'kategori_kayitlari',
-        );
+        final KategoriKayitlariData? mevcutKategori = await (_veritabani.select(
+          _veritabani.kategoriKayitlari,
+        )..where((tbl) => tbl.ad.equals(kategori.ad))).getSingleOrNull();
+        final String kategoriId =
+            mevcutKategori?.id ??
+            await _veritabani.sonrakiNumerikKimlikGetir(
+              tabloAdi: 'kategori_kayitlari',
+            );
         kategoriIdHaritasi[kategori.id] = kategoriId;
         await _veritabani
             .into(_veritabani.kategoriKayitlari)
-            .insert(
+            .insertOnConflictUpdate(
               KategoriKayitlariCompanion(
                 id: Value(kategoriId),
                 ad: Value(kategori.ad),
@@ -201,12 +208,21 @@ class MenuDeposuSqlite implements MenuDeposu {
         if (kategoriId == null) {
           continue;
         }
-        final String urunId = await _veritabani.sonrakiNumerikKimlikGetir(
-          tabloAdi: 'urun_kayitlari',
-        );
+        final UrunKayitlariData? mevcutUrun =
+            await (_veritabani.select(_veritabani.urunKayitlari)..where(
+                  (tbl) =>
+                      tbl.ad.equals(urun.ad) &
+                      tbl.kategoriId.equals(kategoriId),
+                ))
+                .getSingleOrNull();
+        final String urunId =
+            mevcutUrun?.id ??
+            await _veritabani.sonrakiNumerikKimlikGetir(
+              tabloAdi: 'urun_kayitlari',
+            );
         await _veritabani
             .into(_veritabani.urunKayitlari)
-            .insert(
+            .insertOnConflictUpdate(
               UrunKayitlariCompanion(
                 id: Value(urunId),
                 kategoriId: Value(kategoriId),
@@ -222,6 +238,7 @@ class MenuDeposuSqlite implements MenuDeposu {
       }
     });
     await _veritabani.ayarYaz('menu_seeded', 'true');
+    await _veritabani.ayarYaz('menu_seed_surum', '$_menuSeedSurumu');
     _seedKontrolEdildi = true;
   }
 }

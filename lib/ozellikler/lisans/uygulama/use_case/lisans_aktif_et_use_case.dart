@@ -1,7 +1,9 @@
+import 'package:restoran_app/ortak/platform/cihaz_kimligi_saglayici.dart';
 import 'package:restoran_app/ozellikler/lisans/alan/depolar/lisans_deposu.dart';
 import 'package:restoran_app/ozellikler/lisans/alan/varliklar/lisans_durumu_varligi.dart';
 import 'package:restoran_app/ozellikler/lisans/uygulama/servisler/lisans_anahtari_dogrulayici.dart';
 
+/// LisansAktifEtSonucu use-case operasyonunu yurutur.
 class LisansAktifEtSonucu {
   const LisansAktifEtSonucu._({
     required this.basariliMi,
@@ -20,18 +22,27 @@ class LisansAktifEtSonucu {
   final LisansDurumuVarligi? durum;
 }
 
+/// LisansAktifEtUseCase use-case operasyonunu yurutur.
 class LisansAktifEtUseCase {
-  const LisansAktifEtUseCase(this._lisansDeposu, this._dogrulayici);
+  const LisansAktifEtUseCase(
+    this._lisansDeposu,
+    this._dogrulayici,
+    this._cihazKimligiSaglayici,
+  );
 
   final LisansDeposu _lisansDeposu;
   final LisansAnahtariDogrulayici _dogrulayici;
+  final CihazKimligiSaglayici _cihazKimligiSaglayici;
 
+  /// Use-case operasyonunu calistirir ve sonucu dondurur.
   Future<LisansAktifEtSonucu> call(
     String girilenAnahtar, {
     DateTime? simdi,
   }) async {
+    final String cihazKodu = _cihazKimligiSaglayici.cihazKoduGetir();
     final LisansAnahtariDogrulamaSonucu sonuc = _dogrulayici.dogrula(
       girilenAnahtar,
+      cihazKodu: cihazKodu,
       simdi: simdi,
     );
     if (!sonuc.gecerliMi) {
@@ -40,10 +51,11 @@ class LisansAktifEtUseCase {
 
     await _lisansDeposu.lisansAnahtariKaydet(sonuc.duzenlenmisAnahtar!);
     return LisansAktifEtSonucu.basarili(
-      LisansDurumuVarligi.aktif(
+      LisansDurumuVarligi.aktifLisansli(
         mesaj: 'Lisans aktif.',
         anahtar: sonuc.duzenlenmisAnahtar!,
         gecerlilikTarihi: sonuc.gecerlilikTarihi!,
+        cihazKodu: cihazKodu,
       ),
     );
   }

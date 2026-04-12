@@ -1,24 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:restoran_app/bagimlilik_enjeksiyonu/servis_kaydi.dart';
+import 'package:restoran_app/ortak/bilesenler/ana_sayfaya_donus.dart';
 import 'package:restoran_app/ortak/responsive/ekran_boyutu.dart';
 import 'package:restoran_app/ortak/sabitler/uygulama_sabitleri.dart';
+import 'package:restoran_app/ortak/tema/ana_sayfa_renk_sablonu.dart';
 import 'package:restoran_app/ortak/yonlendirme/rota_yapisi.dart';
 import 'package:restoran_app/ozellikler/siparis/alan/enumlar/siparis_durumu.dart';
 import 'package:restoran_app/ozellikler/siparis/alan/enumlar/teslimat_tipi.dart';
 import 'package:restoran_app/ozellikler/siparis/alan/varliklar/siparis_varligi.dart';
-import 'package:restoran_app/ozellikler/stok/alan/varliklar/stok_ozeti_varligi.dart';
 import 'package:restoran_app/ozellikler/yonetim/alan/varliklar/personel_durumu_varligi.dart';
-import 'package:restoran_app/ozellikler/yonetim/alan/varliklar/saatlik_siparis_ozeti_varligi.dart';
 import 'package:restoran_app/ozellikler/yonetim/alan/varliklar/salon_bolumu_varligi.dart';
 import 'package:restoran_app/ozellikler/yonetim/alan/varliklar/yazici_durumu_varligi.dart';
 import 'package:restoran_app/ozellikler/yonetim/alan/varliklar/yonetim_paneli_ozeti_varligi.dart';
-import 'package:restoran_app/ozellikler/yonetim/sunum/bilesenler/yonetim_analiz_kartlari.dart';
 import 'package:restoran_app/ozellikler/yonetim/sunum/bilesenler/masa_plani_karti.dart';
-import 'package:restoran_app/ozellikler/yonetim/sunum/bilesenler/paket_servis_operasyon_karti.dart';
 import 'package:restoran_app/ozellikler/yonetim/sunum/bilesenler/personel_yonetimi_karti.dart';
 import 'package:restoran_app/ozellikler/yonetim/sunum/bilesenler/yonetim_ayarlari_dialogu.dart';
 import 'package:restoran_app/ozellikler/yonetim/sunum/bilesenler/yazici_form_dialogu.dart';
-import 'package:restoran_app/ozellikler/yonetim/sunum/bilesenler/yonetim_rapor_kartlari.dart';
 import 'package:restoran_app/ozellikler/yonetim/sunum/bilesenler/yazici_yonetimi_karti.dart';
 import 'package:restoran_app/ozellikler/yonetim/sunum/viewmodel/yonetim_paneli_viewmodel.dart';
 
@@ -70,7 +67,16 @@ class _YonetimPaneliSayfasiState extends State<YonetimPaneliSayfasi> {
 
   Future<void> _yukle() async {
     final YonetimPaneliIslemSonucu sonuc = await widget.viewModel.yukle();
-    if (!mounted || sonuc.basarili) {
+    if (!mounted) {
+      return;
+    }
+    if (sonuc.basarili && sonuc.mesaj.isNotEmpty) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(sonuc.mesaj)));
+      return;
+    }
+    if (sonuc.basarili) {
       return;
     }
     ScaffoldMessenger.of(
@@ -159,7 +165,79 @@ class _YonetimPaneliSayfasiState extends State<YonetimPaneliSayfasi> {
   Future<void> _yonetimVerileriniYenile() async {
     final YonetimPaneliIslemSonucu sonuc = await widget.viewModel
         .yonetimVerileriniYenile();
-    if (!mounted || sonuc.basarili) {
+    if (!mounted) {
+      return;
+    }
+    if (sonuc.basarili && sonuc.mesaj.isNotEmpty) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(sonuc.mesaj)));
+      return;
+    }
+    if (sonuc.basarili) {
+      return;
+    }
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(sonuc.mesaj)));
+  }
+
+  Future<void> _personelSil(PersonelDurumuVarligi personel) async {
+    final bool? onay = await showDialog<bool>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Personeli sil'),
+          content: Text(
+            '${personel.adSoyad} kaydi kaldirilsin mi? Bagli giris hesabi varsa o da silinecek.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: const Text('Vazgec'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              child: const Text('Sil'),
+            ),
+          ],
+        );
+      },
+    );
+    if (onay != true) {
+      return;
+    }
+
+    final YonetimPaneliIslemSonucu sonuc = await widget.viewModel.personelSil(
+      personel,
+    );
+    if (!mounted) {
+      return;
+    }
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(sonuc.mesaj)));
+  }
+
+  Future<void> _garsonEkle() async {
+    final _GarsonHesapFormSonucu? formSonucu =
+        await showDialog<_GarsonHesapFormSonucu>(
+          context: context,
+          builder: (BuildContext context) {
+            return const _GarsonHesapFormDialog();
+          },
+        );
+    if (formSonucu == null) {
+      return;
+    }
+
+    final YonetimPaneliIslemSonucu sonuc = await widget.viewModel
+        .garsonHesabiOlustur(
+          adSoyad: formSonucu.adSoyad,
+          kullaniciAdi: formSonucu.kullaniciAdi,
+          sifre: formSonucu.sifre,
+        );
+    if (!mounted) {
       return;
     }
     ScaffoldMessenger.of(
@@ -195,20 +273,18 @@ class _YonetimPaneliSayfasiState extends State<YonetimPaneliSayfasi> {
         final List<SiparisVarligi> filtreliSiparisler =
             viewModel.filtreliSiparisler;
         final YonetimPaneliOzetiVarligi ozet = viewModel.panelOzeti;
-        final List<SaatlikSiparisOzetiVarligi> saatlikVeriler =
-            viewModel.saatlikVeriler;
 
         return Scaffold(
-          backgroundColor: const Color(0xFF110D18),
+          backgroundColor: AnaSayfaRenkSablonu.arkaPlanKoyu,
           body: DecoratedBox(
             decoration: const BoxDecoration(
               gradient: LinearGradient(
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
                 colors: [
-                  Color(0xFF17111F),
-                  Color(0xFF241733),
-                  Color(0xFF321A45),
+                  AnaSayfaRenkSablonu.arkaPlanKoyu,
+                  AnaSayfaRenkSablonu.arkaPlanOrta,
+                  AnaSayfaRenkSablonu.arkaPlanUst,
                 ],
               ),
             ),
@@ -240,6 +316,8 @@ class _YonetimPaneliSayfasiState extends State<YonetimPaneliSayfasi> {
                                       _yonetimAyarlariniAc(0),
                                   menuYonetimiAc: () => _yonetimAyarlariniAc(1),
                                   stokYonetimiAc: () => _yonetimAyarlariniAc(2),
+                                  entegrasyonYonetimiAc: () =>
+                                      _yonetimAyarlariniAc(3),
                                 ),
                                 const SizedBox(height: 18),
                                 masaustu
@@ -262,15 +340,11 @@ class _YonetimPaneliSayfasiState extends State<YonetimPaneliSayfasi> {
                                           Expanded(
                                             flex: 5,
                                             child: _YanPanel(
-                                              ozet: ozet,
-                                              saatlikVeriler: saatlikVeriler,
                                               siparisler: filtreliSiparisler,
                                               salonBolumleri:
                                                   viewModel.salonBolumleri,
-                                              stokOzeti: viewModel.stokOzeti,
-                                              yaziciEkle: _yaziciEkle,
-                                              yaziciSil: _yaziciSil,
-                                              yaziciGuncelle: _yaziciGuncelle,
+                                              personelEkle: _garsonEkle,
+                                              personelSil: _personelSil,
                                               personeller:
                                                   viewModel.personeller,
                                             ),
@@ -288,15 +362,11 @@ class _YonetimPaneliSayfasiState extends State<YonetimPaneliSayfasi> {
                                           ),
                                           const SizedBox(height: 18),
                                           _YanPanel(
-                                            ozet: ozet,
-                                            saatlikVeriler: saatlikVeriler,
                                             siparisler: filtreliSiparisler,
                                             salonBolumleri:
                                                 viewModel.salonBolumleri,
-                                            stokOzeti: viewModel.stokOzeti,
-                                            yaziciEkle: _yaziciEkle,
-                                            yaziciSil: _yaziciSil,
-                                            yaziciGuncelle: _yaziciGuncelle,
+                                            personelEkle: _garsonEkle,
+                                            personelSil: _personelSil,
                                             personeller: viewModel.personeller,
                                           ),
                                         ],
@@ -442,6 +512,8 @@ class _FiltreCubugu extends StatelessWidget {
       (_PanelFiltre.gelAl, 'Gel al'),
       (_PanelFiltre.paketServis, 'Paket'),
       (_PanelFiltre.restorandaYe, 'Salon'),
+      (_PanelFiltre.kvkkOnayli, 'KVKK'),
+      (_PanelFiltre.iletisimIzinli, 'Iletisim'),
     ];
 
     return Wrap(
@@ -457,7 +529,7 @@ class _FiltreCubugu extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
             decoration: BoxDecoration(
               color: seciliMi
-                  ? const Color(0xFFFF5D8F)
+                  ? AnaSayfaRenkSablonu.birincilAksiyon
                   : Colors.white.withValues(alpha: 0.08),
               borderRadius: BorderRadius.circular(999),
               border: Border.all(
@@ -493,6 +565,7 @@ class _KompaktUstAlan extends StatelessWidget {
     required this.salonYonetimiAc,
     required this.menuYonetimiAc,
     required this.stokYonetimiAc,
+    required this.entegrasyonYonetimiAc,
   });
 
   final YonetimPaneliOzetiVarligi ozet;
@@ -506,6 +579,7 @@ class _KompaktUstAlan extends StatelessWidget {
   final Future<void> Function() salonYonetimiAc;
   final Future<void> Function() menuYonetimiAc;
   final Future<void> Function() stokYonetimiAc;
+  final Future<void> Function() entegrasyonYonetimiAc;
 
   @override
   Widget build(BuildContext context) {
@@ -551,6 +625,51 @@ class _KompaktUstAlan extends StatelessWidget {
                 spacing: 8,
                 runSpacing: 8,
                 children: [
+                  FilledButton.tonalIcon(
+                    onPressed: () => anaSayfayaDon(context),
+                    style: FilledButton.styleFrom(
+                      foregroundColor: Colors.white,
+                      backgroundColor: Colors.white.withValues(alpha: 0.12),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 14,
+                      ),
+                    ),
+                    icon: const Icon(Icons.home_rounded, size: 18),
+                    label: const Text('Ana sayfaya don'),
+                  ),
+                  FilledButton.tonalIcon(
+                    onPressed: () {
+                      Navigator.of(context).pushNamed(RotaYapisi.raporlar);
+                    },
+                    style: FilledButton.styleFrom(
+                      foregroundColor: Colors.white,
+                      backgroundColor: Colors.white.withValues(alpha: 0.12),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 14,
+                      ),
+                    ),
+                    icon: const Icon(Icons.bar_chart_rounded, size: 18),
+                    label: const Text('Rapor merkezi'),
+                  ),
+                  FilledButton.tonalIcon(
+                    onPressed: () {
+                      Navigator.of(
+                        context,
+                      ).pushReplacementNamed(RotaYapisi.mutfak);
+                    },
+                    style: FilledButton.styleFrom(
+                      foregroundColor: Colors.white,
+                      backgroundColor: Colors.white.withValues(alpha: 0.12),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 14,
+                      ),
+                    ),
+                    icon: const Icon(Icons.soup_kitchen_rounded, size: 18),
+                    label: const Text('Mutfak ekrani'),
+                  ),
                   FilledButton.tonalIcon(
                     onPressed: () {
                       Navigator.of(
@@ -636,6 +755,19 @@ class _KompaktUstAlan extends StatelessWidget {
                 icon: const Icon(Icons.inventory_2_rounded),
                 label: const Text('Stok yonetimi'),
               ),
+              FilledButton.tonalIcon(
+                onPressed: entegrasyonYonetimiAc,
+                style: FilledButton.styleFrom(
+                  foregroundColor: Colors.white,
+                  backgroundColor: Colors.white.withValues(alpha: 0.12),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 18,
+                    vertical: 14,
+                  ),
+                ),
+                icon: const Icon(Icons.route_rounded),
+                label: const Text('Kurye entegrasyon'),
+              ),
               FilledButton.icon(
                 onPressed: yaziciYonetimiAc,
                 style: FilledButton.styleFrom(
@@ -650,7 +782,7 @@ class _KompaktUstAlan extends StatelessWidget {
                 label: const Text('Yazici yonetimi'),
               ),
               Text(
-                'Yazici ayarlari popup pencerede acilir.',
+                'Yazici ve kurye entegrasyon ayarlari popup pencerede acilir.',
                 style: const TextStyle(
                   color: Color(0xFFE8DDF0),
                   fontWeight: FontWeight.w600,
@@ -673,6 +805,21 @@ class _KompaktUstAlan extends StatelessWidget {
                 baslik: 'Gunluk ciro',
                 deger: paraYaz(ozet.toplamCiro),
                 renk: const Color(0xFF7FE7B3),
+              ),
+              _OperasyonMetrigi(
+                baslik: 'Kampanya indirimi',
+                deger: paraYaz(ozet.toplamIndirim),
+                renk: const Color(0xFFFFC27A),
+              ),
+              _OperasyonMetrigi(
+                baslik: 'KVKK onayli',
+                deger: '${ozet.aydinlatmaOnayliSiparis}',
+                renk: const Color(0xFF9DE7D3),
+              ),
+              _OperasyonMetrigi(
+                baslik: 'Iletisim izinli',
+                deger: '${ozet.ticariIletisimOnayliSiparis}',
+                renk: const Color(0xFFFFA6B8),
               ),
               _OperasyonMetrigi(
                 baslik: 'Salon',
@@ -798,12 +945,6 @@ class _SiparisAkisi extends StatelessWidget {
                       },
                       icon: const Icon(Icons.close_rounded),
                     ),
-              filled: true,
-              fillColor: Colors.white,
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(18),
-                borderSide: BorderSide.none,
-              ),
             ),
           ),
           const SizedBox(height: 16),
@@ -915,30 +1056,17 @@ class _SiparisSatiri extends StatelessWidget {
 
 class _YanPanel extends StatelessWidget {
   const _YanPanel({
-    required this.ozet,
-    required this.saatlikVeriler,
     required this.siparisler,
     required this.salonBolumleri,
-    required this.stokOzeti,
-    required this.yaziciEkle,
-    required this.yaziciSil,
-    required this.yaziciGuncelle,
+    required this.personelEkle,
+    required this.personelSil,
     required this.personeller,
   });
 
-  final YonetimPaneliOzetiVarligi ozet;
-  final List<SaatlikSiparisOzetiVarligi> saatlikVeriler;
   final List<SiparisVarligi> siparisler;
   final List<SalonBolumuVarligi> salonBolumleri;
-  final StokOzetiVarligi? stokOzeti;
-  final Future<void> Function() yaziciEkle;
-  final Future<void> Function(YaziciDurumuVarligi yazici) yaziciSil;
-  final Future<void> Function(
-    YaziciDurumuVarligi yazici, {
-    String? rolEtiketi,
-    YaziciBaglantiDurumu? durum,
-  })
-  yaziciGuncelle;
+  final Future<void> Function() personelEkle;
+  final Future<void> Function(PersonelDurumuVarligi personel) personelSil;
   final List<PersonelDurumuVarligi> personeller;
 
   @override
@@ -955,34 +1083,14 @@ class _YanPanel extends StatelessWidget {
           children: [
             SizedBox(
               width: yariGenislik,
-              child: KanalDagilimiKarti(ozet: ozet),
-            ),
-            SizedBox(
-              width: yariGenislik,
-              child: PaketServisOperasyonKarti(siparisler: siparisler),
-            ),
-            SizedBox(
-              width: yariGenislik,
-              child: SaatlikTrendKarti(veriler: saatlikVeriler),
-            ),
-            if (stokOzeti != null)
-              SizedBox(
-                width: yariGenislik,
-                child: StokVeMaliyetKarti(ozet: stokOzeti!),
-              ),
-            SizedBox(
-              width: yariGenislik,
-              child: PatronRaporuKarti(
-                siparisler: siparisler,
-                saatlikVeriler: saatlikVeriler,
+              child: PersonelYonetimiKarti(
+                personeller: personeller,
+                personelEkle: personelEkle,
+                personelSil: personelSil,
               ),
             ),
             SizedBox(
               width: yariGenislik,
-              child: PersonelYonetimiKarti(personeller: personeller),
-            ),
-            SizedBox(
-              width: genislik,
               child: MasaPlaniKarti(
                 siparisler: siparisler,
                 salonBolumleri: salonBolumleri,
@@ -991,6 +1099,115 @@ class _YanPanel extends StatelessWidget {
           ],
         );
       },
+    );
+  }
+}
+
+class _GarsonHesapFormSonucu {
+  const _GarsonHesapFormSonucu({
+    required this.adSoyad,
+    required this.kullaniciAdi,
+    required this.sifre,
+  });
+
+  final String adSoyad;
+  final String kullaniciAdi;
+  final String sifre;
+}
+
+class _GarsonHesapFormDialog extends StatefulWidget {
+  const _GarsonHesapFormDialog();
+
+  @override
+  State<_GarsonHesapFormDialog> createState() => _GarsonHesapFormDialogState();
+}
+
+class _GarsonHesapFormDialogState extends State<_GarsonHesapFormDialog> {
+  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+  final TextEditingController _adSoyadDenetleyici = TextEditingController();
+  final TextEditingController _kullaniciAdiDenetleyici =
+      TextEditingController();
+  final TextEditingController _sifreDenetleyici = TextEditingController();
+
+  @override
+  void dispose() {
+    _adSoyadDenetleyici.dispose();
+    _kullaniciAdiDenetleyici.dispose();
+    _sifreDenetleyici.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('Garson hesabi olustur'),
+      content: Form(
+        key: _formKey,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextFormField(
+              controller: _adSoyadDenetleyici,
+              decoration: const InputDecoration(labelText: 'Ad soyad'),
+              validator: (String? deger) {
+                if (deger == null || deger.trim().isEmpty) {
+                  return 'Ad soyad gerekli';
+                }
+                return null;
+              },
+            ),
+            const SizedBox(height: 12),
+            TextFormField(
+              controller: _kullaniciAdiDenetleyici,
+              decoration: const InputDecoration(
+                labelText: 'Kullanici adi / telefon',
+              ),
+              validator: (String? deger) {
+                if (deger == null || deger.trim().isEmpty) {
+                  return 'Kullanici adi gerekli';
+                }
+                return null;
+              },
+            ),
+            const SizedBox(height: 12),
+            TextFormField(
+              controller: _sifreDenetleyici,
+              obscureText: true,
+              decoration: const InputDecoration(labelText: 'Sifre'),
+              validator: (String? deger) {
+                if (deger == null || deger.trim().isEmpty) {
+                  return 'Sifre gerekli';
+                }
+                if (deger.trim().length < 6) {
+                  return 'Sifre en az 6 karakter olmali';
+                }
+                return null;
+              },
+            ),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('Vazgec'),
+        ),
+        FilledButton(
+          onPressed: () {
+            if (!(_formKey.currentState?.validate() ?? false)) {
+              return;
+            }
+            Navigator.of(context).pop(
+              _GarsonHesapFormSonucu(
+                adSoyad: _adSoyadDenetleyici.text.trim(),
+                kullaniciAdi: _kullaniciAdiDenetleyici.text.trim(),
+                sifre: _sifreDenetleyici.text.trim(),
+              ),
+            );
+          },
+          child: const Text('Olustur'),
+        ),
+      ],
     );
   }
 }

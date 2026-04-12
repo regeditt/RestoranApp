@@ -1,53 +1,54 @@
 import 'package:flutter/material.dart';
+import 'package:restoran_app/ortak/tema/ana_sayfa_renk_sablonu.dart';
 import 'package:restoran_app/ortak/tema/tema_tokenlari.dart';
 
 class GeceMoruSicakBejTemaTokenlari implements TemaTokenlari {
   const GeceMoruSicakBejTemaTokenlari();
 
   @override
-  Color get birincilAksiyon => const Color(0xFFE57A3D);
+  Color get birincilAksiyon => AnaSayfaRenkSablonu.birincilAksiyon;
 
   @override
-  Color get ikincilAksiyon => const Color(0xFF7B5CFF);
+  Color get ikincilAksiyon => AnaSayfaRenkSablonu.ikincilAksiyon;
 
   @override
-  Color get vurguAksiyon => const Color(0xFFFF5D8F);
+  Color get vurguAksiyon => AnaSayfaRenkSablonu.ucunculAksiyon;
 
   @override
-  Color get anaArkaPlan => const Color(0xFF110D18);
+  Color get anaArkaPlan => AnaSayfaRenkSablonu.arkaPlanKoyu;
 
   @override
-  Color get anaArkaPlanIkincil => const Color(0xFF1A1324);
+  Color get anaArkaPlanIkincil => AnaSayfaRenkSablonu.arkaPlanOrta;
 
   @override
-  Color get anaArkaPlanUcuncul => const Color(0xFF2B1B3A);
+  Color get anaArkaPlanUcuncul => AnaSayfaRenkSablonu.arkaPlanUst;
 
   @override
-  Color get popupYuzey => const Color(0xFFF1EBF3);
+  Color get popupYuzey => AnaSayfaRenkSablonu.panelKoyu;
 
   @override
-  Color get popupAltYuzey => const Color(0xFFF1EBF3);
+  Color get popupAltYuzey => AnaSayfaRenkSablonu.panelYuksek;
 
   @override
-  Color get kartYuzey => const Color(0xFFF1EBF3);
+  Color get kartYuzey => AnaSayfaRenkSablonu.panelKoyu;
 
   @override
-  Color get inceKenar => const Color(0xFFE3D6CD);
+  Color get inceKenar => AnaSayfaRenkSablonu.cerceve;
 
   @override
-  Color get metinBirincilKoyu => const Color(0xFF2D2140);
+  Color get metinBirincilKoyu => AnaSayfaRenkSablonu.metinAna;
 
   @override
-  Color get metinIkincilKoyu => const Color(0xFF6D6079);
+  Color get metinIkincilKoyu => AnaSayfaRenkSablonu.metinIkincil;
 
   @override
-  Color get metinBirincilAcik => const Color(0xFFF8F3FB);
+  Color get metinBirincilAcik => AnaSayfaRenkSablonu.metinAna;
 
   @override
-  Color get metinIkincilAcik => const Color(0xFFD8CDE3);
+  Color get metinIkincilAcik => AnaSayfaRenkSablonu.metinIkincil;
 
   @override
-  Color get suruklemeTutamaci => const Color(0x806D6079);
+  Color get suruklemeTutamaci => Colors.white.withValues(alpha: 0.5);
 
   @override
   String get govdeYaziAilesi => 'Trebuchet MS';

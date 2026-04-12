@@ -2,6 +2,7 @@ import 'package:restoran_app/ozellikler/lisans/alan/depolar/lisans_deposu.dart';
 
 class LisansDeposuGercek implements LisansDeposu {
   String? _lisansAnahtari;
+  DateTime? _denemeBaslangicTarihi;
 
   @override
   Future<String?> kayitliLisansAnahtariGetir() async {
@@ -14,6 +15,20 @@ class LisansDeposuGercek implements LisansDeposu {
   @override
   Future<void> lisansAnahtariKaydet(String lisansAnahtari) async {
     _lisansAnahtari = lisansAnahtari.trim();
+  }
+
+  @override
+  Future<DateTime?> denemeBaslangicTarihiGetir() async {
+    return _denemeBaslangicTarihi;
+  }
+
+  @override
+  Future<void> denemeBaslangicTarihiKaydet(DateTime baslangicTarihi) async {
+    _denemeBaslangicTarihi = DateTime(
+      baslangicTarihi.year,
+      baslangicTarihi.month,
+      baslangicTarihi.day,
+    );
   }
 
   @override

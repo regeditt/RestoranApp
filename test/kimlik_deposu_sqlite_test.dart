@@ -91,6 +91,84 @@ void main() {
       throwsA(isA<StateError>()),
     );
   });
+
+  test(
+    'KimlikDeposuSqlite personel hesabi olusturup aktif kullanici yapar',
+    () async {
+      final UygulamaVeritabani veritabani = UygulamaVeritabani.test(
+        NativeDatabase.memory(),
+      );
+      addTearDown(veritabani.close);
+      final KimlikDeposuSqlite depo = KimlikDeposuSqlite(veritabani);
+
+      final KullaniciVarligi kullanici = await depo.hesapOlustur(
+        telefon: 'garson_yeni',
+        sifre: '123456',
+        adSoyad: 'Yeni Garson',
+        rol: KullaniciRolu.garson,
+      );
+
+      expect(kullanici.telefon, 'garson_yeni');
+      expect(kullanici.adSoyad, 'Yeni Garson');
+      expect(kullanici.rol, KullaniciRolu.garson);
+
+      final aktif = await depo.aktifKullaniciGetir();
+      final sifreBilgisi = await veritabani.kullaniciSifreBilgisiGetir(
+        'garson_yeni',
+      );
+      final personeller = await veritabani
+          .select(veritabani.personelKayitlari)
+          .get();
+
+      expect(aktif?.telefon, 'garson_yeni');
+      expect(sifreBilgisi, isNotNull);
+      expect(personeller.single.adSoyad, 'Yeni Garson');
+      expect(personeller.single.rolEtiketi, 'Garson');
+    },
+  );
+
+  test(
+    'KimlikDeposuSqlite aktifYap false ile yeni garson hesabi acarken mevcut oturumu bozmaz',
+    () async {
+      final UygulamaVeritabani veritabani = UygulamaVeritabani.test(
+        NativeDatabase.memory(),
+      );
+      addTearDown(veritabani.close);
+      final KimlikDeposuSqlite depo = KimlikDeposuSqlite(veritabani);
+      await _kullaniciEkle(
+        veritabani: veritabani,
+        id: '1',
+        telefon: 'yonetici',
+        rol: KullaniciRolu.yonetici,
+        adSoyad: 'Aktif Yonetici',
+        sifre: '123456',
+      );
+
+      await depo.girisYap(
+        telefon: 'yonetici',
+        sifre: '123456',
+        rol: KullaniciRolu.yonetici,
+      );
+
+      final KullaniciVarligi kullanici = await depo.hesapOlustur(
+        telefon: 'garson_yeni',
+        sifre: '123456',
+        adSoyad: 'Yeni Garson',
+        rol: KullaniciRolu.garson,
+        aktifYap: false,
+      );
+
+      final aktif = await depo.aktifKullaniciGetir();
+      final kayitliGarson = await veritabani.kullaniciTelefonaGoreGetir(
+        'garson_yeni',
+      );
+
+      expect(kullanici.aktifMi, isFalse);
+      expect(aktif?.telefon, 'yonetici');
+      expect(kayitliGarson?.aktifMi, isFalse);
+      expect(kayitliGarson?.rol, KullaniciRolu.garson);
+    },
+  );
 }
 
 Future<void> _kullaniciEkle({

@@ -9,6 +9,8 @@ class MenuDeposuMock implements MenuDeposu {
     KategoriVarligi(id: 'kat_002', ad: 'Pizza', sira: 2),
     KategoriVarligi(id: 'kat_003', ad: 'Icecek', sira: 3),
     KategoriVarligi(id: 'kat_004', ad: 'Tatli', sira: 4),
+    KategoriVarligi(id: 'kat_005', ad: 'Turk Mutfagi', sira: 5),
+    KategoriVarligi(id: 'kat_006', ad: 'Corbalar', sira: 6),
   ];
 
   final List<UrunVarligi> _urunler = <UrunVarligi>[
@@ -124,6 +126,131 @@ class MenuDeposuMock implements MenuDeposu {
           ad: 'Paylasim tabagi',
           fiyatFarki: 45,
         ),
+      ],
+    ),
+    UrunVarligi(
+      id: 'urn_006',
+      kategoriId: 'kat_005',
+      ad: 'Adana Kebap',
+      aciklama: 'Kozlenmis biber ve lavas ile servis edilir.',
+      fiyat: 395,
+      oneCikanMi: true,
+      secenekler: <UrunSecenegiVarligi>[
+        UrunSecenegiVarligi(
+          id: 'urn_006_sec_001',
+          ad: 'Standart porsiyon',
+          varsayilanMi: true,
+        ),
+        UrunSecenegiVarligi(
+          id: 'urn_006_sec_002',
+          ad: 'Duble porsiyon',
+          fiyatFarki: 170,
+        ),
+        UrunSecenegiVarligi(id: 'urn_006_sec_003', ad: 'Acisiz'),
+      ],
+    ),
+    UrunVarligi(
+      id: 'urn_007',
+      kategoriId: 'kat_005',
+      ad: 'Lahmacun',
+      aciklama: 'Ince hamur, bol maydanoz ve limon ile.',
+      fiyat: 135,
+      secenekler: <UrunSecenegiVarligi>[
+        UrunSecenegiVarligi(
+          id: 'urn_007_sec_001',
+          ad: 'Klasik servis',
+          varsayilanMi: true,
+        ),
+        UrunSecenegiVarligi(
+          id: 'urn_007_sec_002',
+          ad: 'Cift adet',
+          fiyatFarki: 120,
+        ),
+        UrunSecenegiVarligi(id: 'urn_007_sec_003', ad: 'Bol aci'),
+      ],
+    ),
+    UrunVarligi(
+      id: 'urn_008',
+      kategoriId: 'kat_005',
+      ad: 'Etli Kuru Fasulye',
+      aciklama: 'Pilav ve tursu ile ev usulu servis edilir.',
+      fiyat: 275,
+      secenekler: <UrunSecenegiVarligi>[
+        UrunSecenegiVarligi(
+          id: 'urn_008_sec_001',
+          ad: 'Pilavli servis',
+          varsayilanMi: true,
+        ),
+        UrunSecenegiVarligi(id: 'urn_008_sec_002', ad: 'Pilavsiz'),
+      ],
+    ),
+    UrunVarligi(
+      id: 'urn_009',
+      kategoriId: 'kat_006',
+      ad: 'Mercimek Corbasi',
+      aciklama: 'Limon ve kruton ile sicak servis edilir.',
+      fiyat: 115,
+      oneCikanMi: true,
+      secenekler: <UrunSecenegiVarligi>[
+        UrunSecenegiVarligi(
+          id: 'urn_009_sec_001',
+          ad: 'Klasik servis',
+          varsayilanMi: true,
+        ),
+        UrunSecenegiVarligi(
+          id: 'urn_009_sec_002',
+          ad: 'Tereyagli sos',
+          fiyatFarki: 20,
+        ),
+      ],
+    ),
+    UrunVarligi(
+      id: 'urn_010',
+      kategoriId: 'kat_006',
+      ad: 'Ezogelin Corbasi',
+      aciklama: 'Baharatli geleneksel tarif.',
+      fiyat: 125,
+      secenekler: <UrunSecenegiVarligi>[
+        UrunSecenegiVarligi(
+          id: 'urn_010_sec_001',
+          ad: 'Klasik servis',
+          varsayilanMi: true,
+        ),
+        UrunSecenegiVarligi(id: 'urn_010_sec_002', ad: 'Acili'),
+      ],
+    ),
+    UrunVarligi(
+      id: 'urn_011',
+      kategoriId: 'kat_003',
+      ad: 'Ayran',
+      aciklama: 'Yayik usulu soguk ayran.',
+      fiyat: 70,
+      secenekler: <UrunSecenegiVarligi>[
+        UrunSecenegiVarligi(
+          id: 'urn_011_sec_001',
+          ad: 'Kucuk boy',
+          varsayilanMi: true,
+        ),
+        UrunSecenegiVarligi(
+          id: 'urn_011_sec_002',
+          ad: 'Buyuk boy',
+          fiyatFarki: 20,
+        ),
+      ],
+    ),
+    UrunVarligi(
+      id: 'urn_012',
+      kategoriId: 'kat_004',
+      ad: 'Firinda Sutlac',
+      aciklama: 'Gunluk sutten hazirlanan geleneksel tatli.',
+      fiyat: 145,
+      secenekler: <UrunSecenegiVarligi>[
+        UrunSecenegiVarligi(
+          id: 'urn_012_sec_001',
+          ad: 'Standart servis',
+          varsayilanMi: true,
+        ),
+        UrunSecenegiVarligi(id: 'urn_012_sec_002', ad: 'Bol tarcin'),
       ],
     ),
   ];

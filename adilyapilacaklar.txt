@@ -1,0 +1,33 @@
+Süper bir noktadayız. Bu projeye en çok değer katacak özellikler:
+
+Rezervasyon Modülü
+Masalar için saatlik rezervasyon, no-show takibi, otomatik masa atama.
+
+Online Sipariş Kanalı
+Web/QR dışından doğrudan paket sipariş alma, canlı sipariş durumu ekranı.
+
+Ödeme ve Kasa
+Parçalı ödeme, nakit/kart, iade, gün sonu kasa raporu.
+
+Kampanya & Kupon
+Yüzde/tutar indirim, “2 al 1 öde”, saat bazlı kampanya.
+
+Sadakat Programı
+Puan biriktirme, müşteri seviyesi, özel teklifler.
+
+Stok Uyarı Sistemi
+Minimum stok eşiği, kritik ürün alarmı, otomatik satın alma listesi.
+
+Mutfak Ekranı Geliştirmesi
+Hazırlık süre tahmini, istasyon bazlı iş paylaşımı, geciken sipariş alarmı.
+
+Kurye Performans Paneli
+Teslimat süresi, bölge bazlı yoğunluk, kurye başına başarı metriği.
+
+Rol & Yetki Yönetimi
+Ekran/buton bazlı izinler, işlem logları (audit trail).
+
+Yedekleme & Veri Aktarım
+Tek tık export/import, şube taşıma, felaket kurtarma senaryosu.
+
+İstersen bir sonraki adımda bunları hızlı etki / geliştirme maliyeti matrisine koyup en doğru 3 özelliği seçelim.

@@ -94,6 +94,12 @@ class SiparisKayitlari extends Table {
   TextColumn get masaNo => text().nullable()();
   TextColumn get bolumAdi => text().nullable()();
   TextColumn get kaynak => text().nullable()();
+  TextColumn get kuponKodu => text().nullable()();
+  RealColumn get indirimTutari => real().withDefault(const Constant(0.0))();
+  BoolColumn get aydinlatmaOnayi =>
+      boolean().withDefault(const Constant(false))();
+  BoolColumn get ticariIletisimOnayi =>
+      boolean().withDefault(const Constant(false))();
   BoolColumn get sahipMisafir => boolean()();
   TextColumn get sahipAdSoyad => text()();
   TextColumn get sahipTelefon => text()();
@@ -179,8 +185,24 @@ class HammaddeKayitlari extends Table {
   TextColumn get ad => text()();
   TextColumn get birim => text()();
   RealColumn get mevcutMiktar => real()();
+  RealColumn get uyariEsigi => real().withDefault(const Constant(0.0))();
   RealColumn get kritikEsik => real()();
   RealColumn get birimMaliyet => real()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+class StokAlarmGecmisKayitlari extends Table {
+  TextColumn get id => text()();
+  DateTimeColumn get zaman => dateTime()();
+  TextColumn get hammaddeId => text()();
+  TextColumn get hammaddeAdi => text()();
+  RealColumn get oncekiMiktar => real()();
+  RealColumn get yeniMiktar => real()();
+  IntColumn get oncekiDurum => integer()();
+  IntColumn get yeniDurum => integer()();
+  TextColumn get tetikleyenIslem => text()();
 
   @override
   Set<Column> get primaryKey => {id};
@@ -213,6 +235,7 @@ class ReceteKalemKayitlari extends Table {
     SalonBolumKayitlari,
     MasaKayitlari,
     HammaddeKayitlari,
+    StokAlarmGecmisKayitlari,
     ReceteKalemKayitlari,
   ],
 )
@@ -223,7 +246,7 @@ class UygulamaVeritabani extends _$UygulamaVeritabani
   static final RegExp _sayisalKimlikDeseni = RegExp(r'^\d+$');
 
   @override
-  int get schemaVersion => 7;
+  int get schemaVersion => 11;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -246,6 +269,40 @@ class UygulamaVeritabani extends _$UygulamaVeritabani
       if (from < 7) {
         await _kullaniciKimlikTablosunuHazirla();
         await _kullaniciKayitlariniTekillestirVeIndeksle();
+      }
+      if (from < 8) {
+        await migrator.addColumn(
+          hammaddeKayitlari,
+          hammaddeKayitlari.uyariEsigi,
+        );
+        await customStatement(
+          'UPDATE hammadde_kayitlari '
+          'SET uyari_esigi = CASE '
+          'WHEN kritik_esik <= 0 THEN 0 '
+          'ELSE kritik_esik * 1.35 '
+          'END '
+          'WHERE uyari_esigi = 0 OR uyari_esigi < kritik_esik',
+        );
+      }
+      if (from < 9) {
+        await _indeksleriOlustur();
+      }
+      if (from < 10) {
+        await migrator.addColumn(siparisKayitlari, siparisKayitlari.kuponKodu);
+        await migrator.addColumn(
+          siparisKayitlari,
+          siparisKayitlari.indirimTutari,
+        );
+      }
+      if (from < 11) {
+        await customStatement(
+          'ALTER TABLE siparis_kayitlari '
+          'ADD COLUMN aydinlatma_onayi INTEGER NOT NULL DEFAULT 0',
+        );
+        await customStatement(
+          'ALTER TABLE siparis_kayitlari '
+          'ADD COLUMN ticari_iletisim_onayi INTEGER NOT NULL DEFAULT 0',
+        );
       }
     },
     beforeOpen: (details) async {
@@ -336,6 +393,24 @@ class UygulamaVeritabani extends _$UygulamaVeritabani
     );
   }
 
+  Future<KullaniciVarligi?> kullaniciKimligeGoreGetir(String kimlik) async {
+    final KullaniciKayitlariData? kayit = await (select(
+      kullaniciKayitlari,
+    )..where((tbl) => tbl.id.equals(kimlik.trim()))).getSingleOrNull();
+    if (kayit == null) {
+      return null;
+    }
+    return KullaniciVarligi(
+      id: kayit.id,
+      adSoyad: kayit.adSoyad,
+      telefon: kayit.telefon,
+      eposta: kayit.eposta,
+      rol: KullaniciRolu.values[kayit.rol],
+      aktifMi: kayit.aktifMi,
+      adresMetni: kayit.adresMetni,
+    );
+  }
+
   Future<void> kullaniciSifreBilgisiKaydet({
     required String telefon,
     required String sifreHash,
@@ -356,6 +431,17 @@ class UygulamaVeritabani extends _$UygulamaVeritabani
         DateTime.now().millisecondsSinceEpoch,
       ],
     );
+  }
+
+  Future<void> kullaniciSil({
+    required String id,
+    required String telefon,
+  }) async {
+    await customStatement(
+      'DELETE FROM kullanici_giris_bilgileri WHERE telefon = ?',
+      <Object?>[telefon.trim()],
+    );
+    await (delete(kullaniciKayitlari)..where((tbl) => tbl.id.equals(id))).go();
   }
 
   Future<({String sifreHash, String sifreTuz})?> kullaniciSifreBilgisiGetir(
@@ -577,6 +663,14 @@ class UygulamaVeritabani extends _$UygulamaVeritabani
       'CREATE INDEX IF NOT EXISTS idx_recete_kalem_kayitlari_hammadde '
       'ON recete_kalem_kayitlari (hammadde_id)',
     );
+    await customStatement(
+      'CREATE INDEX IF NOT EXISTS idx_stok_alarm_gecmis_zaman '
+      'ON stok_alarm_gecmis_kayitlari (zaman)',
+    );
+    await customStatement(
+      'CREATE INDEX IF NOT EXISTS idx_stok_alarm_gecmis_hammadde '
+      'ON stok_alarm_gecmis_kayitlari (hammadde_id)',
+    );
   }
 
   Future<void> _eskiJsonVerisiniYeniTablolaraTasi() async {
@@ -721,6 +815,10 @@ class UygulamaVeritabani extends _$UygulamaVeritabani
           ad: Value(hammadde['ad'] as String),
           birim: Value(hammadde['birim'] as String),
           mevcutMiktar: Value((hammadde['mevcutMiktar'] as num).toDouble()),
+          uyariEsigi: Value(
+            (hammadde['uyariEsigi'] as num?)?.toDouble() ??
+                ((hammadde['kritikEsik'] as num).toDouble() * 1.35),
+          ),
           kritikEsik: Value((hammadde['kritikEsik'] as num).toDouble()),
           birimMaliyet: Value((hammadde['birimMaliyet'] as num).toDouble()),
         ),
@@ -955,6 +1053,10 @@ class UygulamaVeritabani extends _$UygulamaVeritabani
                 masaNo: Value(kayit.masaNo),
                 bolumAdi: Value(kayit.bolumAdi),
                 kaynak: Value(kayit.kaynak),
+                kuponKodu: Value(kayit.kuponKodu),
+                indirimTutari: Value(kayit.indirimTutari),
+                aydinlatmaOnayi: Value(kayit.aydinlatmaOnayi),
+                ticariIletisimOnayi: Value(kayit.ticariIletisimOnayi),
                 sahipMisafir: kayit.sahipMisafir,
                 sahipAdSoyad: kayit.sahipAdSoyad,
                 sahipTelefon: kayit.sahipTelefon,
@@ -985,6 +1087,7 @@ class UygulamaVeritabani extends _$UygulamaVeritabani
                 ad: kayit.ad,
                 birim: kayit.birim,
                 mevcutMiktar: kayit.mevcutMiktar,
+                uyariEsigi: Value(kayit.uyariEsigi),
                 kritikEsik: kayit.kritikEsik,
                 birimMaliyet: kayit.birimMaliyet,
               ),

@@ -2,9 +2,11 @@ import 'package:restoran_app/ozellikler/siparis/alan/depolar/siparis_deposu.dart
 import 'package:restoran_app/ozellikler/siparis/alan/enumlar/paket_teslimat_durumu.dart';
 import 'package:restoran_app/ozellikler/siparis/alan/enumlar/siparis_durumu.dart';
 import 'package:restoran_app/ozellikler/siparis/alan/enumlar/teslimat_tipi.dart';
+import 'package:restoran_app/ozellikler/siparis/alan/servisler/siparis_operasyon_akisi.dart';
 import 'package:restoran_app/ozellikler/siparis/alan/varliklar/siparis_kalemi_varligi.dart';
 import 'package:restoran_app/ozellikler/siparis/alan/varliklar/siparis_sahibi_varligi.dart';
 import 'package:restoran_app/ozellikler/siparis/alan/varliklar/siparis_varligi.dart';
+import 'package:restoran_app/ozellikler/siparis/veri/depolar/siparis_durumu_yardimcisi.dart';
 import 'package:restoran_app/ozellikler/kimlik/alan/varliklar/misafir_bilgisi_varligi.dart';
 
 class SiparisDeposuMock implements SiparisDeposu {
@@ -36,6 +38,10 @@ class SiparisDeposuMock implements SiparisDeposu {
       masaNo: siparis.masaNo,
       bolumAdi: siparis.bolumAdi,
       kaynak: siparis.kaynak,
+      kuponKodu: siparis.kuponKodu,
+      indirimTutari: siparis.indirimTutari,
+      aydinlatmaOnayi: siparis.aydinlatmaOnayi,
+      ticariIletisimOnayi: siparis.ticariIletisimOnayi,
     );
 
     _siparisler.add(kaydedilenSiparis);
@@ -45,22 +51,34 @@ class SiparisDeposuMock implements SiparisDeposu {
   @override
   Future<SiparisVarligi> siparisDurumuGuncelle(
     String siparisId,
-    SiparisDurumu yeniDurum,
-  ) async {
+    SiparisDurumu yeniDurum, {
+    String? kuryeAdi,
+  }) async {
     final int index = _siparisler.indexWhere(
       (SiparisVarligi siparis) => siparis.id == siparisId,
     );
     if (index < 0) {
       throw StateError('Siparis bulunamadi');
     }
+    final SiparisDurumDogrulamaSonucu dogrulamaSonucu =
+        SiparisOperasyonAkisi.gecisDogrula(
+          siparis: _siparisler[index],
+          hedefDurum: yeniDurum,
+        );
+    if (!dogrulamaSonucu.basarili) {
+      throw StateError(dogrulamaSonucu.mesaj);
+    }
+    final PaketServisDurumGuncellemesi durumGuncellemesi =
+        paketServisDurumGuncellemesiniHesapla(
+          _siparisler[index],
+          yeniDurum,
+          kuryeAdi: kuryeAdi,
+        );
 
     final SiparisVarligi guncelSiparis = _siparisler[index].copyWith(
       durum: yeniDurum,
-      paketTeslimatDurumu: _paketTeslimatDurumuHesapla(
-        _siparisler[index],
-        yeniDurum,
-      ),
-      kuryeAdi: _kuryeAdiHesapla(_siparisler[index], yeniDurum),
+      paketTeslimatDurumu: durumGuncellemesi.paketTeslimatDurumu,
+      kuryeAdi: durumGuncellemesi.kuryeAdi,
     );
     _siparisler[index] = guncelSiparis;
     return guncelSiparis;
@@ -217,40 +235,5 @@ class SiparisDeposuMock implements SiparisDeposu {
         paketTeslimatDurumu: PaketTeslimatDurumu.kuryeYolda,
       ),
     ];
-  }
-
-  PaketTeslimatDurumu? _paketTeslimatDurumuHesapla(
-    SiparisVarligi siparis,
-    SiparisDurumu yeniDurum,
-  ) {
-    if (siparis.teslimatTipi != TeslimatTipi.paketServis) {
-      return null;
-    }
-
-    switch (yeniDurum) {
-      case SiparisDurumu.alindi:
-      case SiparisDurumu.hazirlaniyor:
-        return PaketTeslimatDurumu.adresDogrulandi;
-      case SiparisDurumu.hazir:
-        return PaketTeslimatDurumu.kuryeBekliyor;
-      case SiparisDurumu.yolda:
-        return PaketTeslimatDurumu.kuryeYolda;
-      case SiparisDurumu.teslimEdildi:
-        return PaketTeslimatDurumu.teslimEdildi;
-      case SiparisDurumu.iptalEdildi:
-        return siparis.paketTeslimatDurumu;
-    }
-  }
-
-  String? _kuryeAdiHesapla(SiparisVarligi siparis, SiparisDurumu yeniDurum) {
-    if (siparis.teslimatTipi != TeslimatTipi.paketServis) {
-      return null;
-    }
-
-    if (yeniDurum == SiparisDurumu.yolda) {
-      return siparis.kuryeAdi ?? 'Moto Kurye';
-    }
-
-    return siparis.kuryeAdi;
   }
 }

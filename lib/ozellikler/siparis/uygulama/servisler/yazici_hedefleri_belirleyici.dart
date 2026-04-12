@@ -1,4 +1,4 @@
-import 'package:restoran_app/ozellikler/siparis/alan/enumlar/teslimat_tipi.dart';
+﻿import 'package:restoran_app/ozellikler/siparis/alan/enumlar/teslimat_tipi.dart';
 import 'package:restoran_app/ozellikler/siparis/alan/varliklar/siparis_varligi.dart';
 
 abstract class YaziciHedefleriBelirleyici {
@@ -7,6 +7,7 @@ abstract class YaziciHedefleriBelirleyici {
   Set<String> hedefRolleri(SiparisVarligi siparis);
 }
 
+/// Siparis icerigine ve teslimat tipine gore varsayilan yazici rollerini belirler.
 class VarsayilanYaziciHedefleriBelirleyici
     implements YaziciHedefleriBelirleyici {
   const VarsayilanYaziciHedefleriBelirleyici();

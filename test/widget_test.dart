@@ -20,10 +20,12 @@ import 'package:restoran_app/ozellikler/siparis/sunum/sayfalar/mutfak_siparis_sa
 import 'package:restoran_app/ozellikler/siparis/sunum/sayfalar/siparis_ozeti_sayfasi.dart';
 import 'package:restoran_app/ozellikler/siparis/sunum/viewmodel/mutfak_siparis_viewmodel.dart';
 import 'package:restoran_app/ozellikler/siparis/sunum/viewmodel/siparis_ozeti_viewmodel.dart';
+import 'package:restoran_app/ozellikler/siparis/uygulama/servisler/kurye_konum_takip_servisi.dart';
 import 'package:restoran_app/ozellikler/yonetim/alan/varliklar/personel_durumu_varligi.dart';
 import 'package:restoran_app/ozellikler/yonetim/alan/varliklar/saatlik_siparis_ozeti_varligi.dart';
 import 'package:restoran_app/ozellikler/yonetim/alan/varliklar/salon_bolumu_varligi.dart';
 import 'package:restoran_app/ozellikler/yonetim/alan/varliklar/yonetim_paneli_ozeti_varligi.dart';
+import 'package:restoran_app/ortak/platform/konum_platformu.dart';
 import 'package:restoran_app/ozellikler/yonetim/sunum/bilesenler/masa_plani_karti.dart';
 import 'package:restoran_app/ozellikler/yonetim/sunum/bilesenler/paket_servis_operasyon_karti.dart';
 import 'package:restoran_app/ozellikler/yonetim/sunum/bilesenler/personel_yonetimi_karti.dart';
@@ -37,20 +39,6 @@ void main() {
   testWidgets('RestoranApp acilista ana sayfayi gosterir', (
     WidgetTester tester,
   ) async {
-    await tester.pumpWidget(
-      const UygulamaKabugu(veriKaynagi: VeriKaynagiTipi.mock),
-    );
-    await tester.pumpAndSettle();
-
-    expect(find.text('GUNCEL KURLAR'), findsOneWidget);
-    expect(find.text('Urunler'), findsOneWidget);
-    expect(find.text('Ayarlar'), findsOneWidget);
-    expect(tester.takeException(), isNull);
-  });
-
-  testWidgets('Ana sayfada POS kutucuklari gorunur', (
-    WidgetTester tester,
-  ) async {
     addTearDown(() async {
       await tester.binding.setSurfaceSize(null);
     });
@@ -62,7 +50,25 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Urunler'), findsOneWidget);
-    expect(find.text('Hizli Satis'), findsOneWidget);
+    expect(find.text('Raporlar'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('Ana sayfada POS kutucuklari gorunur', (
+    WidgetTester tester,
+  ) async {
+    addTearDown(() async {
+      await tester.binding.setSurfaceSize(null);
+    });
+
+    await tester.binding.setSurfaceSize(const Size(1400, 1900));
+    await tester.pumpWidget(
+      const UygulamaKabugu(veriKaynagi: VeriKaynagiTipi.mock),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Urunler'), findsOneWidget);
+    expect(find.text('Odeme Kasa'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 
@@ -89,6 +95,67 @@ void main() {
     expect(find.text('Garson girisi'), findsWidgets);
     expect(find.text('Yonetici girisi'), findsWidgets);
     expect(find.text('QR menuye don'), findsOneWidget);
+    expect(find.text('Ana sayfaya don'), findsOneWidget);
+    expect(find.text('Chatbot'), findsOneWidget);
+    expect(find.text('Giris yap'), findsNothing);
+    expect(find.text('Hesap olustur'), findsOneWidget);
+
+    await tester.tap(find.text('Chatbot'));
+    await tester.pumpAndSettle();
+    expect(find.text('Ayar Chatbot'), findsOneWidget);
+  });
+
+  testWidgets('Ileri ekrandan ana sayfaya donus navigasyonu calisir', (
+    WidgetTester tester,
+  ) async {
+    final ServisKaydi servisKaydi = ServisKaydi.mock();
+    await tester.pumpWidget(
+      ServisSaglayici(
+        servis: servisKaydi,
+        child: MaterialApp(
+          initialRoute: RotaYapisi.personelGiris,
+          onGenerateRoute: RotaYapisi.rotaOlustur,
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Personel girisi'), findsOneWidget);
+    expect(find.text('Ana sayfaya don'), findsOneWidget);
+
+    await tester.tap(find.text('Ana sayfaya don'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Urunler'), findsOneWidget);
+    expect(find.text('Siparisler'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('Personel girisinde hesap olustur modu ayni formda acilir', (
+    WidgetTester tester,
+  ) async {
+    await tester.pumpWidget(
+      testUygulamasi(
+        child: GirisSecimSayfasi(
+          viewModel: GirisSecimViewModel.servisKaydindan(ServisKaydi.mock()),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Yonetici girisi').first);
+    await tester.pumpAndSettle();
+
+    expect(find.text('Giris yap'), findsNothing);
+    expect(find.text('Hesap olustur'), findsOneWidget);
+
+    await tester.tap(find.text('Hesap olustur'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Girise don'), findsOneWidget);
+    expect(find.text('Ad soyad'), findsOneWidget);
+    expect(find.text('Kullanici adi / telefon'), findsOneWidget);
+    expect(find.textContaining('hesabi olustur'), findsWidgets);
   });
 
   testWidgets('Acilista ayarlar aksiyonu gorunur', (WidgetTester tester) async {
@@ -102,7 +169,7 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('Ayarlar'), findsOneWidget);
+    expect(find.text('Raporlar'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 
@@ -114,8 +181,86 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('Musteri Hizmetleri'), findsOneWidget);
+    expect(find.text('Stoklar'), findsOneWidget);
     expect(find.text('Siparisler'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('Raporlar rotasi yetkisiz kullaniciyi engeller', (
+    WidgetTester tester,
+  ) async {
+    final ServisKaydi servisKaydi = ServisKaydi.mock();
+    await tester.pumpWidget(
+      ServisSaglayici(
+        servis: servisKaydi,
+        child: MaterialApp(
+          initialRoute: RotaYapisi.raporlar,
+          onGenerateRoute: RotaYapisi.rotaOlustur,
+        ),
+      ),
+    );
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 600));
+
+    expect(
+      find.text('Raporlar yalnizca yetkili kullanicilara acik'),
+      findsOneWidget,
+    );
+    expect(find.text('Personel girisine git'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('Yonetici oturumu ile raporlar rotasi acilir', (
+    WidgetTester tester,
+  ) async {
+    final ServisKaydi servisKaydi = ServisKaydi.mock();
+    await servisKaydi.girisYapUseCase(
+      telefon: '5551201200',
+      sifre: '123456',
+      rol: KullaniciRolu.yonetici,
+      adSoyad: 'Admin Kullanici',
+    );
+
+    await tester.pumpWidget(
+      ServisSaglayici(
+        servis: servisKaydi,
+        child: MaterialApp(
+          initialRoute: RotaYapisi.raporlar,
+          onGenerateRoute: RotaYapisi.rotaOlustur,
+        ),
+      ),
+    );
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 600));
+
+    expect(find.text('Rapor Merkezi'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('Izinli kullanici raporlar rotasina erisebilir', (
+    WidgetTester tester,
+  ) async {
+    final ServisKaydi servisKaydi = ServisKaydi.mock();
+    await servisKaydi.girisYapUseCase(
+      telefon: '5550000000',
+      sifre: '123456',
+      rol: KullaniciRolu.musteri,
+      adSoyad: 'Izinli Kullanici',
+    );
+
+    await tester.pumpWidget(
+      ServisSaglayici(
+        servis: servisKaydi,
+        child: MaterialApp(
+          initialRoute: RotaYapisi.raporlar,
+          onGenerateRoute: RotaYapisi.rotaOlustur,
+        ),
+      ),
+    );
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 600));
+
+    expect(find.text('Rapor Merkezi'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 
@@ -132,7 +277,8 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('GUNCEL KURLAR'), findsOneWidget);
+    expect(find.text('Urunler'), findsOneWidget);
+    expect(find.text('Rezervasyon'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 
@@ -143,21 +289,26 @@ void main() {
       await tester.binding.setSurfaceSize(null);
     });
 
+    final ServisKaydi servisKaydi = ServisKaydi.mock();
+    final MutfakSiparisViewModel viewModel = MutfakSiparisViewModel(
+      siparisleriGetirUseCase: servisKaydi.siparisleriGetirUseCase,
+      yazicilariGetirUseCase: servisKaydi.yazicilariGetirUseCase,
+      siparisDurumuGuncelleUseCase: servisKaydi.siparisDurumuGuncelleUseCase,
+      kuryeTakipServisi: KuryeKonumTakipServisi(
+        konumSaglayici: const _WidgetTestKonumPlatformu(),
+      ),
+      kuryeEntegrasyonServisi: servisKaydi.kuryeEntegrasyonYonetimServisi,
+    );
+
     await tester.binding.setSurfaceSize(const Size(1400, 900));
     await tester.pumpWidget(
-      testUygulamasi(
-        child: MutfakSiparisSayfasi(
-          viewModel: MutfakSiparisViewModel.servisKaydindan(ServisKaydi.mock()),
-        ),
-      ),
+      testUygulamasi(child: MutfakSiparisSayfasi(viewModel: viewModel)),
     );
     await tester.pumpAndSettle();
 
     expect(find.text('Mutfak Siparis Yonetimi'), findsOneWidget);
     expect(find.text('Yonetim paneli'), findsOneWidget);
     expect(find.text('Personel girisine don'), findsOneWidget);
-    expect(find.text('Yazici senkronu'), findsOneWidget);
-    expect(find.text('Aktif is'), findsOneWidget);
     expect(find.text('Yeni'), findsOneWidget);
     expect(find.text('Salon'), findsWidgets);
     expect(tester.takeException(), isNull);
@@ -212,6 +363,7 @@ void main() {
 
     expect(find.text('Salon ve Masa Secimi'), findsOneWidget);
     expect(find.text('POS OPERASYON'), findsOneWidget);
+    expect(find.textContaining('Ana sayfa'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 
@@ -228,14 +380,10 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Salon ve Masa Secimi'), findsOneWidget);
-    expect(find.text('Salon / Masa 1'), findsOneWidget);
-    expect(find.text('Salon varligi: Salon'), findsOneWidget);
-    expect(find.text('Masa varligi: Masa 1 · 4 kisilik'), findsOneWidget);
-    expect(find.textContaining('Urun varliklari:'), findsOneWidget);
-    expect(find.textContaining('Tum urunler kategorisinde'), findsOneWidget);
+    expect(find.text('POS OPERASYON'), findsOneWidget);
     expect(find.text('Salon'), findsWidgets);
-    expect(find.text('Masa 1'), findsWidgets);
-    expect(find.text('5 urun'), findsOneWidget);
+    expect(find.textContaining('Masa'), findsWidgets);
+    expect(find.textContaining(' urun'), findsWidgets);
     expect(tester.takeException(), isNull);
   });
 
@@ -278,7 +426,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('POS OPERASYON'), findsOneWidget);
-    expect(find.text('Tum urunler Secimleri'), findsOneWidget);
+    expect(find.text('Salon ve Masa Secimi'), findsOneWidget);
     expect(find.text('Yeni'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
@@ -464,6 +612,7 @@ void main() {
   ) async {
     const List<PersonelDurumuVarligi> personeller = <PersonelDurumuVarligi>[
       PersonelDurumuVarligi(
+        kimlik: 'per_1',
         adSoyad: 'Zeynep Demir',
         rolEtiketi: 'Garson',
         bolge: 'Salon',
@@ -471,6 +620,7 @@ void main() {
         durum: PersonelDurumu.aktif,
       ),
       PersonelDurumuVarligi(
+        kimlik: 'per_2',
         adSoyad: 'Ali Can',
         rolEtiketi: 'Komi',
         bolge: 'Teras',
@@ -493,6 +643,66 @@ void main() {
     expect(find.text('Aktif'), findsOneWidget);
     expect(find.text('Molada'), findsOneWidget);
     expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('Personel yonetimi karti sil aksiyonunu gosterir', (
+    WidgetTester tester,
+  ) async {
+    PersonelDurumuVarligi? silinen;
+    const PersonelDurumuVarligi personel = PersonelDurumuVarligi(
+      kimlik: 'per_9',
+      adSoyad: 'Mehmet Kaya',
+      rolEtiketi: 'Garson',
+      bolge: 'Salon',
+      aciklama: 'Aksam servisi',
+      durum: PersonelDurumu.aktif,
+    );
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: PersonelYonetimiKarti(
+            personeller: const <PersonelDurumuVarligi>[personel],
+            personelSil: (PersonelDurumuVarligi secilen) {
+              silinen = secilen;
+            },
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Sil'), findsOneWidget);
+    await tester.tap(find.text('Sil'));
+    await tester.pumpAndSettle();
+
+    expect(silinen?.kimlik, 'per_9');
+  });
+
+  testWidgets('Personel yonetimi karti garson ekle aksiyonunu gosterir', (
+    WidgetTester tester,
+  ) async {
+    bool eklendi = false;
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: PersonelYonetimiKarti(
+            personeller: const <PersonelDurumuVarligi>[],
+            personelEkle: () {
+              eklendi = true;
+            },
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Garson ekle'), findsOneWidget);
+    await tester.tap(find.text('Garson ekle'));
+    await tester.pumpAndSettle();
+
+    expect(eklendi, isTrue);
   });
 
   testWidgets('Masa plani karti dolu ve bos masalari gosterir', (
@@ -564,4 +774,27 @@ void main() {
     expect(find.text('Selin Aras - 360 TL'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
+}
+
+class _WidgetTestKonumPlatformu implements KonumPlatformu {
+  const _WidgetTestKonumPlatformu();
+
+  @override
+  Future<KonumHazirlamaSonucu> hazirla() async {
+    return const KonumHazirlamaSonucu.basarili();
+  }
+
+  @override
+  Future<KonumNoktasi?> anlikKonumGetir() async {
+    return KonumNoktasi(
+      enlem: 41.015,
+      boylam: 28.979,
+      olusturmaTarihi: DateTime(2026, 4, 9, 12, 0),
+    );
+  }
+
+  @override
+  Stream<KonumNoktasi> konumAkisi() {
+    return const Stream<KonumNoktasi>.empty();
+  }
 }

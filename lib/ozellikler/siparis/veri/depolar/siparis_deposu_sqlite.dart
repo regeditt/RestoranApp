@@ -4,10 +4,12 @@ import 'package:restoran_app/ozellikler/siparis/alan/depolar/siparis_deposu.dart
 import 'package:restoran_app/ozellikler/siparis/alan/enumlar/paket_teslimat_durumu.dart';
 import 'package:restoran_app/ozellikler/siparis/alan/enumlar/siparis_durumu.dart';
 import 'package:restoran_app/ozellikler/siparis/alan/enumlar/teslimat_tipi.dart';
+import 'package:restoran_app/ozellikler/siparis/alan/servisler/siparis_operasyon_akisi.dart';
 import 'package:restoran_app/ozellikler/siparis/alan/varliklar/siparis_kalemi_varligi.dart';
 import 'package:restoran_app/ozellikler/siparis/alan/varliklar/siparis_sahibi_varligi.dart';
 import 'package:restoran_app/ozellikler/siparis/alan/varliklar/siparis_varligi.dart';
 import 'package:restoran_app/ortak/veri/veritabani.dart';
+import 'package:restoran_app/ozellikler/siparis/veri/depolar/siparis_durumu_yardimcisi.dart';
 
 class SiparisDeposuSqlite implements SiparisDeposu {
   SiparisDeposuSqlite(this._veritabani);
@@ -62,6 +64,12 @@ class SiparisDeposuSqlite implements SiparisDeposu {
               masaNo: Value(kaydedilecekSiparis.masaNo),
               bolumAdi: Value(kaydedilecekSiparis.bolumAdi),
               kaynak: Value(kaydedilecekSiparis.kaynak),
+              kuponKodu: Value(kaydedilecekSiparis.kuponKodu),
+              indirimTutari: Value(kaydedilecekSiparis.indirimTutari),
+              aydinlatmaOnayi: Value(kaydedilecekSiparis.aydinlatmaOnayi),
+              ticariIletisimOnayi: Value(
+                kaydedilecekSiparis.ticariIletisimOnayi,
+              ),
               sahipMisafir: Value(kaydedilecekSiparis.sahip.misafirMi),
               sahipAdSoyad: Value(
                 kaydedilecekSiparis.sahip.misafirBilgisi?.adSoyad ??
@@ -108,11 +116,39 @@ class SiparisDeposuSqlite implements SiparisDeposu {
   @override
   Future<SiparisVarligi> siparisDurumuGuncelle(
     String siparisId,
-    SiparisDurumu yeniDurum,
-  ) async {
-    await (_veritabani.update(_veritabani.siparisKayitlari)
-          ..where((tbl) => tbl.id.equals(siparisId)))
-        .write(SiparisKayitlariCompanion(durum: Value(yeniDurum.index)));
+    SiparisDurumu yeniDurum, {
+    String? kuryeAdi,
+  }) async {
+    final SiparisVarligi? mevcutSiparis = await siparisGetir(siparisId);
+    if (mevcutSiparis == null) {
+      throw StateError('Siparis bulunamadi');
+    }
+    final SiparisDurumDogrulamaSonucu dogrulamaSonucu =
+        SiparisOperasyonAkisi.gecisDogrula(
+          siparis: mevcutSiparis,
+          hedefDurum: yeniDurum,
+        );
+    if (!dogrulamaSonucu.basarili) {
+      throw StateError(dogrulamaSonucu.mesaj);
+    }
+    final PaketServisDurumGuncellemesi durumGuncellemesi =
+        paketServisDurumGuncellemesiniHesapla(
+          mevcutSiparis,
+          yeniDurum,
+          kuryeAdi: kuryeAdi,
+        );
+
+    await (_veritabani.update(
+      _veritabani.siparisKayitlari,
+    )..where((tbl) => tbl.id.equals(siparisId))).write(
+      SiparisKayitlariCompanion(
+        durum: Value(yeniDurum.index),
+        kuryeAdi: Value(durumGuncellemesi.kuryeAdi),
+        paketTeslimatDurumu: Value(
+          durumGuncellemesi.paketTeslimatDurumu?.index,
+        ),
+      ),
+    );
     final SiparisVarligi? siparis = await siparisGetir(siparisId);
     if (siparis == null) {
       throw StateError('Siparis bulunamadi');
@@ -201,6 +237,10 @@ class SiparisDeposuSqlite implements SiparisDeposu {
       masaNo: kayit.masaNo,
       bolumAdi: kayit.bolumAdi,
       kaynak: kayit.kaynak,
+      kuponKodu: kayit.kuponKodu,
+      indirimTutari: kayit.indirimTutari,
+      aydinlatmaOnayi: kayit.aydinlatmaOnayi,
+      ticariIletisimOnayi: kayit.ticariIletisimOnayi,
     );
   }
 }

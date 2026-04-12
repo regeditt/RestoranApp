@@ -89,13 +89,13 @@ BEGIN
     BEGIN
         BLOCK "040904e4"
         BEGIN
-            VALUE "CompanyName", "com.restoranapp" "\0"
-            VALUE "FileDescription", "restoran_app" "\0"
+            VALUE "CompanyName", "VectorPos" "\0"
+            VALUE "FileDescription", "VectorPos" "\0"
             VALUE "FileVersion", VERSION_AS_STRING "\0"
-            VALUE "InternalName", "restoran_app" "\0"
-            VALUE "LegalCopyright", "Copyright (C) 2026 com.restoranapp. All rights reserved." "\0"
-            VALUE "OriginalFilename", "restoran_app.exe" "\0"
-            VALUE "ProductName", "restoran_app" "\0"
+            VALUE "InternalName", "vector_pos" "\0"
+            VALUE "LegalCopyright", "Copyright (C) 2026 VectorPos. All rights reserved." "\0"
+            VALUE "OriginalFilename", "vector_pos.exe" "\0"
+            VALUE "ProductName", "VectorPos" "\0"
             VALUE "ProductVersion", VERSION_AS_STRING "\0"
         END
     END

@@ -3,6 +3,7 @@ import 'package:restoran_app/ozellikler/siparis/alan/enumlar/teslimat_tipi.dart'
 import 'package:restoran_app/ozellikler/siparis/alan/varliklar/siparis_varligi.dart';
 import 'package:restoran_app/ozellikler/yonetim/alan/varliklar/yazici_durumu_varligi.dart';
 
+/// Siparis ve yazici bilgisine gore termal fis metnini olusturur.
 class SiparisFisiOlusturucu {
   const SiparisFisiOlusturucu._();
 
@@ -43,6 +44,9 @@ class SiparisFisiOlusturucu {
     if (siparis.teslimatNotu != null && siparis.teslimatNotu!.isNotEmpty) {
       tampon.writeln(_satir('Not', siparis.teslimatNotu!));
     }
+    if (siparis.kuponKodu != null && siparis.kuponKodu!.isNotEmpty) {
+      tampon.writeln(_satir('Kupon', siparis.kuponKodu!));
+    }
 
     tampon.writeln(_cizgi());
     tampon.writeln('URUNLER');
@@ -61,6 +65,10 @@ class SiparisFisiOlusturucu {
 
     tampon.writeln(_cizgi());
     tampon.writeln(_satir('Kalem', '${siparis.kalemler.length}'));
+    tampon.writeln(_satir('Ara toplam', _paraYaz(siparis.araToplam)));
+    if (siparis.indirimTutari > 0) {
+      tampon.writeln(_satir('Indirim', '-${_paraYaz(siparis.indirimTutari)}'));
+    }
     tampon.writeln(_satir('Toplam', _paraYaz(siparis.toplamTutar)));
     tampon.writeln(_cizgi());
     tampon.writeln(_ortala('Afiyet olsun'));

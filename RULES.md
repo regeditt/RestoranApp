@@ -1,6 +1,7 @@
 # Proje Kurallari
 
 Bu dosya, proje boyunca uyulacak temel kurallari icerir. Tum gelistirme adimlari bu dosyaya bakilarak yapilacaktir.
+SOLID ve modul bagimlilik kurallarinin detayli surumu icin: `RULES_SOLID.md`.
 ## MCP SERVER KURALI
 Çalışırken Dart ve Flutter Mcp Server Sürekli Kullanılacak.
 
@@ -87,12 +88,19 @@ Bu dosya, proje boyunca uyulacak temel kurallari icerir. Tum gelistirme adimlari
 
 ## Tema ve Tasarim Kurallari
 
-- Projenin varsayilan tema dili `Gece Moru + Sicak Bej` olacak.
+- Projenin varsayilan tema dili `Ana Sayfa Moru + Pembe Vurgu` olacak.
 - Tema mimarisi `SOLID` bagli olacak:
   - `TemaTokenlari` soyutlamasi uzerinden karar verilecek.
   - Somut tema implementasyonlari bu soyutlamayi implemente edecek.
   - `ThemeData` olusturma sorumlulugu ayri bir olusturucu sinifta olacak.
 - Renk, yazi ailesi, yaricap, dokunmatik hedef ve popup tutamac stili gibi tasarim kararlarinin tek kaynagi `lib/ortak/tema` olacak.
+- Tum UI sayfalari ve yeni UI bilesenleri renk secimini `lib/ortak/tema/ana_sayfa_renk_sablonu.dart` uzerinden yapacak.
+- Yeni sayfa acarken varsayilan sablon olarak `AnaSayfaRenkSablonu.anaArkaPlanGradient` + `AnaSayfaRenkSablonu.panelKoyu/panelYuksek` kombinasyonu kullanilacak.
+- Ic ekranlarda rastgele `siyah/siyaha yakin` zemin kullanimi yasak; koyu yuzeyler `panelKoyu`, `panelYuksek`, `arkaPlanOrta` ve `icYuzeyGradient` ile kurulacak.
+- `Beyaz ustune beyaz` veya dusuk kontrastli metin kullanimi yasak.
+- Acik zeminlerde metin rengi `AnaSayfaRenkSablonu.kontrastliMetinRengi(zeminRengi)` veya `metinAcikZemin/metinAcikZeminIkincil` ile secilecek.
+- Form alanlari (`TextField`, `TextFormField`, `DropdownButtonFormField`) gorunumu proje genelinde `ThemeData.inputDecorationTheme` uzerinden standardize edilecek; sayfa icinde elle renk/border tanimi sadece zorunlu tasarim istisnasinda yapilacak.
+- Dusuk kontrastli etiket/ipucu metni kullanilmayacak; form etiketleri okunurluk icin belirgin agirlikta olacak.
 - Sunum dosyalarinda dogrudan `Color(0x...)` ve rastgele `Colors.*` kullanimi yeni kod icin yasak; tema tokeni/ThemeExtension kullanimi zorunlu.
 - Tum popup pencereleri ortak surukleme davranisi icin `SuruklenebilirPopupSablonu` uzerinden acilacak.
 - Popup tutamac tasarimi (8 nokta, yatay duzen, merkez hizasi) ortak bilesen uzerinden yonetilecek; ekranda tek tek elle cizilmeyecek.
@@ -254,6 +262,15 @@ Bu plan, sektordeki benzer urunlerle rekabette ayrisma alanlarini netlestirir.
 2. menu, urun, varyant ve fiyat esleme tablolari.
 3. event kuyruğu ve offline senkronizasyon stratejisi.
 
+### Saglayici Onboarding Kurali (Online Siparis Kanali)
+
+1. Yeni saglayici ekleme surecinde endpoint, secret ve benzeri baglanti bilgileri kod degisimi olmadan konfigrasyon uzerinden tanimlanacak.
+2. Saglayici aktivasyonu `provider_id` bazli ac/kapa mekanizmasi ile yonetilecek; deploy zorunlulugu olmayacak.
+3. Payload mevcut normalize siparis modeline uyuyorsa dogrudan kural tabanli esleme ile kabul edilecek.
+4. Payload formati ciddi farklilik gosteriyorsa normalize mapping katmani uygulanacak.
+5. Mapping ihtiyaci icin once no-code middleware/transform kurallari kullanilacak; kod yazimi son tercih olacak.
+6. Mapping ve gizli anahtar degisiklikleri versiyonlanacak ve geri alma (rollback) adimi tanimli olacak.
+
 ### Dalga 1 Entegrasyonlar
 
 1. Yemeksepeti: siparis cekme, durum guncelleme, iptal akisleri.
@@ -279,6 +296,52 @@ Bir sonraki teknik sira su olacak:
 2. urunlere recete ve stok dusum baglantisi ekle
 3. mutfak siparis yonetimi icin ayri ekran olustur
 4. paket servis akisina adres ve teslimat durumu katmani ekle
+
+## Oncelikli Ozellik Sirasi (1-10)
+
+Asagidaki sira, urun backlog planinda korunacak ve adimlar bu oncelige gore alinacak.
+
+1. Rezervasyon modulu
+2. Online siparis kanali
+3. Odeme ve kasa
+4. Kampanya ve kupon
+5. Sadakat programi
+6. Stok uyari sistemi
+7. Mutfak ekrani gelistirmesi
+8. Kurye performans paneli
+9. Rol ve yetki yonetimi
+10. Yedekleme ve veri aktarim
+   - Yonetim panelinde tek tik disa aktar / ice aktar aksiyonlari olacak.
+   - JSON tabanli yedek formati surumlu ilerleyecek.
+   - Felaket kurtarma ve sube tasima senaryosu desteklenecek.
+
+## Stok Uyari Sistemi Kurallari
+
+- Stok uyarisi urun bazli degil, `hammadde` bazli takip edilecek.
+- Her hammadde icin en az iki esik olacak:
+  - `kritik_esik`: stok bu degerin altina inerse kirmizi kritik uyari.
+  - `uyari_esigi`: stok bu degerin altina inerse sari on-uyari.
+- Stok seviyesi `0` oldugunda durum otomatik `tukendi` olarak isaretlenecek.
+- Uyari hesaplama tetikleyicileri:
+  - siparis tamamlandiginda recete uzerinden stok dusumu sonrasi
+  - manuel stok giris/cikis islemi sonrasi
+  - sistem acilisinda ve periyodik arka plan kontrolunde
+- Uyari gorunurlugu:
+  - yonetim paneli ana ozet kartinda `kritik stok adedi` gosterilecek
+  - stok ekraninda liste filtreleri olacak: `tum`, `uyari`, `kritik`, `tukendi`
+  - kritik durumda renk + ikon + metin ayni anda kullanilacak (tek basina renk kullanilmayacak)
+- Yetki:
+  - `yonetici` ve `patron` esik degerlerini degistirebilir
+  - `garson` sadece goruntuleyebilir, esik degeri degistiremez
+- Bildirim:
+  - kritik esik asildiginda tekil degil, gruplanmis bildirim modeli kullanilacak
+  - ayni hammadde icin kisa surede tekrar eden bildirimler throttle edilecek
+- Raporlama:
+  - gunluk `stok alarm gecmisi` kaydi tutulacak (zaman, hammadde, onceki/yeni miktar, tetikleyen islem)
+  - haftalik panelde en cok kritik seviyeye dusen ilk 10 hammadde listelenecek
+- Test zorunlulugu:
+  - esik gecisleri icin alan/use-case testleri zorunlu
+  - UI tarafinda durum rozeti (uyari/kritik/tukendi) widget testleri zorunlu
 
 ## Kod Kalitesi Notlari
 

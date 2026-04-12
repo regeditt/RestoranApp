@@ -1,8 +1,24 @@
+import 'dart:async';
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'package:restoran_app/ortak/platform/konum_platformu.dart';
 import 'package:restoran_app/ortak/responsive/ekran_boyutu.dart';
 import 'package:restoran_app/ortak/sabitler/uygulama_sabitleri.dart';
-import 'package:restoran_app/ortak/tema/restoran_tema_uzantilari.dart';
+import 'package:restoran_app/ortak/tema/ana_sayfa_renk_sablonu.dart';
 import 'package:restoran_app/ortak/yonlendirme/rota_yapisi.dart';
+
+const Color _anaArkaPlanKoyu = AnaSayfaRenkSablonu.arkaPlanKoyu;
+const Color _anaArkaPlanOrta = AnaSayfaRenkSablonu.arkaPlanOrta;
+const Color _anaArkaPlanUst = AnaSayfaRenkSablonu.arkaPlanUst;
+const Color _anaPembe = AnaSayfaRenkSablonu.birincilAksiyon;
+const Color _anaMor = AnaSayfaRenkSablonu.ikincilAksiyon;
+const Color _panelKoyu = AnaSayfaRenkSablonu.panelKoyu;
+const Color _metinAna = AnaSayfaRenkSablonu.metinAna;
+const Color _metinIkincil = AnaSayfaRenkSablonu.metinIkincil;
+const Color _cizgi = AnaSayfaRenkSablonu.cerceve;
+const Color _yesilDurum = AnaSayfaRenkSablonu.basari;
 
 class AnaSayfa extends StatelessWidget {
   const AnaSayfa({super.key});
@@ -10,18 +26,17 @@ class AnaSayfa extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final bool masaustu = EkranBoyutu.masaustu(context);
-    final RestoranTemaRenkleri tema = context.restoranTema;
 
     return Scaffold(
       body: DecoratedBox(
-        decoration: BoxDecoration(
+        decoration: const BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [
-              tema.anaArkaPlan,
-              tema.anaArkaPlanIkincil,
-              tema.anaArkaPlanUcuncul,
+            colors: <Color>[
+              _anaArkaPlanUst,
+              _anaArkaPlanOrta,
+              _anaArkaPlanKoyu,
             ],
           ),
         ),
@@ -55,21 +70,18 @@ class _PanelCercevesi extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final RestoranTemaRenkleri tema = context.restoranTema;
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: Color.lerp(
-          tema.anaArkaPlanIkincil,
-          tema.anaArkaPlanUcuncul,
-          0.65,
+        gradient: const LinearGradient(
+          colors: <Color>[_anaPembe, _anaMor, _anaArkaPlanKoyu],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(36),
-        border: Border.all(
-          color: tema.metinIkincilAcik.withValues(alpha: 0.12),
-        ),
+        border: Border.all(color: _cizgi),
         boxShadow: [
           BoxShadow(
-            color: tema.anaArkaPlan.withValues(alpha: 0.38),
+            color: Colors.black.withValues(alpha: 0.38),
             blurRadius: 26,
             spreadRadius: 4,
             offset: const Offset(0, 12),
@@ -86,7 +98,6 @@ class _MasaustuYerlesim extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final RestoranTemaRenkleri tema = context.restoranTema;
     return LayoutBuilder(
       builder: (context, kisit) {
         final double solGenislik = kisit.maxWidth * 0.38;
@@ -94,21 +105,14 @@ class _MasaustuYerlesim extends StatelessWidget {
           children: [
             Positioned.fill(
               child: DecoratedBox(
-                decoration: BoxDecoration(
+                decoration: const BoxDecoration(
                   gradient: LinearGradient(
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
-                    colors: [
-                      Color.lerp(
-                        tema.anaArkaPlanIkincil,
-                        tema.anaArkaPlanUcuncul,
-                        0.35,
-                      )!,
-                      Color.lerp(
-                        tema.anaArkaPlan,
-                        tema.anaArkaPlanIkincil,
-                        0.25,
-                      )!,
+                    colors: <Color>[
+                      _anaArkaPlanUst,
+                      _anaArkaPlanOrta,
+                      _anaArkaPlanKoyu,
                     ],
                   ),
                 ),
@@ -144,17 +148,7 @@ class _MobilYerlesim extends StatelessWidget {
   Widget build(BuildContext context) {
     return ListView(
       padding: const EdgeInsets.all(10),
-      children: const [
-        SizedBox(
-          height: 420,
-          child: ClipRRect(
-            borderRadius: BorderRadius.all(Radius.circular(26)),
-            child: _SolPanel(),
-          ),
-        ),
-        SizedBox(height: 10),
-        _SagPanel(masaustu: false),
-      ],
+      children: const [_SagPanel(masaustu: false)],
     );
   }
 }
@@ -187,20 +181,14 @@ class _SolPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final RestoranTemaRenkleri tema = context.restoranTema;
     final ThemeData temaVerisi = Theme.of(context);
-    final Color pembe = temaVerisi.colorScheme.tertiary;
-    final Color mor = temaVerisi.colorScheme.secondary;
 
     return DecoratedBox(
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomCenter,
-          colors: [
-            Color.lerp(pembe, temaVerisi.colorScheme.primary, 0.30)!,
-            Color.lerp(mor, tema.anaArkaPlanUcuncul, 0.60)!,
-          ],
+          colors: <Color>[_anaPembe, _anaMor, _anaArkaPlanOrta],
         ),
       ),
       child: LayoutBuilder(
@@ -214,53 +202,26 @@ class _SolPanel extends StatelessWidget {
             child: ConstrainedBox(
               constraints: BoxConstraints(minHeight: minYukseklik),
               child: Column(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        '${UygulamaSabitleri.restoranAdi.toUpperCase()} Pos',
-                        style: temaVerisi.textTheme.headlineMedium?.copyWith(
-                          color: tema.metinBirincilAcik,
-                          fontWeight: FontWeight.w800,
-                        ),
-                      ),
-                      Text(
-                        UygulamaSabitleri.tamMarkaAdi.toUpperCase(),
-                        style: temaVerisi.textTheme.labelLarge?.copyWith(
-                          color: tema.metinIkincilAcik.withValues(alpha: 0.95),
-                          letterSpacing: 1.6,
-                        ),
-                      ),
-                      const SizedBox(height: 28),
-                      const _SaatHavaAlani(),
-                      const SizedBox(height: 26),
-                      const _KurListesi(),
-                    ],
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.only(top: 20),
-                    child: Row(
-                      children: [
-                        Icon(
-                          Icons.support_agent_rounded,
-                          color: tema.metinBirincilAcik,
-                        ),
-                        const SizedBox(width: 10),
-                        Text(
-                          'Musteri Hizmetleri',
-                          style: temaVerisi.textTheme.titleMedium?.copyWith(
-                            color: tema.metinBirincilAcik.withValues(
-                              alpha: 0.95,
-                            ),
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                      ],
+                  Text(
+                    UygulamaSabitleri.restoranAdi,
+                    style: temaVerisi.textTheme.headlineMedium?.copyWith(
+                      color: _metinAna,
+                      fontWeight: FontWeight.w800,
                     ),
                   ),
+                  Text(
+                    'Canli operasyon paneli',
+                    style: temaVerisi.textTheme.labelLarge?.copyWith(
+                      color: _metinIkincil,
+                      letterSpacing: 0.8,
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  const _SaatHavaAlani(),
+                  const SizedBox(height: 24),
+                  const _KurListesi(),
                 ],
               ),
             ),
@@ -271,8 +232,22 @@ class _SolPanel extends StatelessWidget {
   }
 }
 
-class _SaatHavaAlani extends StatelessWidget {
+class _SaatHavaAlani extends StatefulWidget {
   const _SaatHavaAlani();
+
+  @override
+  State<_SaatHavaAlani> createState() => _SaatHavaAlaniState();
+}
+
+class _SaatHavaAlaniState extends State<_SaatHavaAlani> {
+  DateTime _zaman = DateTime.now();
+  _AnlikHavaDurumu? _havaDurumu;
+  double _havaEnlem = UygulamaSabitleri.restoranKonumEnlem;
+  double _havaBoylam = UygulamaSabitleri.restoranKonumBoylam;
+  bool _konumHazirlamaDenendi = false;
+  bool _konumKullanilabilir = false;
+  Timer? _saatZamanlayicisi;
+  Timer? _havaZamanlayicisi;
 
   static const List<String> _gunler = [
     'Pazartesi',
@@ -300,117 +275,272 @@ class _SaatHavaAlani extends StatelessWidget {
   ];
 
   @override
-  Widget build(BuildContext context) {
-    final RestoranTemaRenkleri tema = context.restoranTema;
-    final ThemeData temaVerisi = Theme.of(context);
-    return StreamBuilder<DateTime>(
-      stream: Stream<DateTime>.periodic(
-        const Duration(seconds: 1),
-        (_) => DateTime.now(),
-      ),
-      initialData: DateTime.now(),
-      builder: (context, snapshot) {
-        final DateTime zaman = snapshot.data ?? DateTime.now();
-        final String tarih =
-            '${zaman.day} ${_aylar[zaman.month - 1]} ${_gunler[zaman.weekday - 1]}';
-        final String saat =
-            '${_ikiBasamak(zaman.hour)}:${_ikiBasamak(zaman.minute)}';
+  void initState() {
+    super.initState();
+    _havaDurumuYukle();
+    _saatZamanlayicisi = Timer.periodic(const Duration(seconds: 1), (_) {
+      if (!mounted) {
+        return;
+      }
+      setState(() {
+        _zaman = DateTime.now();
+      });
+    });
+    _havaZamanlayicisi = Timer.periodic(const Duration(minutes: 10), (_) {
+      _havaDurumuYukle();
+    });
+  }
 
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+  @override
+  void dispose() {
+    _saatZamanlayicisi?.cancel();
+    _havaZamanlayicisi?.cancel();
+    super.dispose();
+  }
+
+  Future<void> _havaDurumuYukle() async {
+    await _havaKonumunuGuncelle();
+    final _AnlikHavaDurumu? guncelDurum = await _HavaDurumuServisi.getir(
+      enlem: _havaEnlem,
+      boylam: _havaBoylam,
+    );
+    if (!mounted || guncelDurum == null) {
+      return;
+    }
+    setState(() {
+      _havaDurumu = guncelDurum;
+    });
+  }
+
+  Future<void> _havaKonumunuGuncelle() async {
+    if (!_konumHazirlamaDenendi) {
+      final KonumHazirlamaSonucu hazirlamaSonucu = await konumPlatformu
+          .hazirla();
+      _konumKullanilabilir = hazirlamaSonucu.basarili;
+      _konumHazirlamaDenendi = true;
+    }
+    if (!_konumKullanilabilir) {
+      return;
+    }
+    final KonumNoktasi? konum = await konumPlatformu.anlikKonumGetir();
+    if (konum == null) {
+      return;
+    }
+    _havaEnlem = konum.enlem;
+    _havaBoylam = konum.boylam;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final ThemeData temaVerisi = Theme.of(context);
+    final DateTime zaman = _zaman;
+    final String tarih =
+        '${zaman.day} ${_aylar[zaman.month - 1]} ${_gunler[zaman.weekday - 1]}';
+    final String saat =
+        '${_ikiBasamak(zaman.hour)}:${_ikiBasamak(zaman.minute)}';
+    final _AnlikHavaDurumu? hava = _havaDurumu;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          tarih,
+          style: temaVerisi.textTheme.titleMedium?.copyWith(
+            color: _metinIkincil.withValues(alpha: 0.96),
+          ),
+        ),
+        const SizedBox(height: 10),
+        Wrap(
+          crossAxisAlignment: WrapCrossAlignment.center,
+          spacing: 12,
+          runSpacing: 8,
           children: [
             Text(
-              tarih,
-              style: temaVerisi.textTheme.titleMedium?.copyWith(
-                color: tema.metinIkincilAcik.withValues(alpha: 0.96),
+              saat,
+              style: temaVerisi.textTheme.displayLarge?.copyWith(
+                color: _metinAna,
+                fontWeight: FontWeight.w300,
+                height: 0.96,
               ),
             ),
-            const SizedBox(height: 10),
-            Wrap(
-              crossAxisAlignment: WrapCrossAlignment.center,
-              spacing: 12,
-              runSpacing: 8,
+            Row(
+              mainAxisSize: MainAxisSize.min,
               children: [
-                Text(
-                  saat,
-                  style: temaVerisi.textTheme.displayLarge?.copyWith(
-                    color: tema.metinBirincilAcik,
-                    fontWeight: FontWeight.w300,
-                    height: 0.96,
-                  ),
+                Icon(
+                  hava?.ikon ?? Icons.cloud_rounded,
+                  size: 40,
+                  color: _metinAna.withValues(alpha: 0.95),
                 ),
-                Row(
-                  mainAxisSize: MainAxisSize.min,
+                const SizedBox(width: 8),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Icon(
-                      Icons.cloud_rounded,
-                      size: 40,
-                      color: tema.metinBirincilAcik.withValues(alpha: 0.95),
+                    Text(
+                      hava?.sicaklikEtiketi ?? '-- C',
+                      style: temaVerisi.textTheme.headlineMedium?.copyWith(
+                        color: _metinAna,
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
-                    const SizedBox(width: 8),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          '20°',
-                          style: temaVerisi.textTheme.headlineMedium?.copyWith(
-                            color: tema.metinBirincilAcik,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                        Text(
-                          'Parcali bulutlu',
-                          style: temaVerisi.textTheme.bodyLarge?.copyWith(
-                            color: tema.metinIkincilAcik.withValues(
-                              alpha: 0.95,
-                            ),
-                          ),
-                        ),
-                      ],
+                    Text(
+                      hava?.aciklama ?? 'Hava durumu yukleniyor...',
+                      style: temaVerisi.textTheme.bodyLarge?.copyWith(
+                        color: _metinIkincil.withValues(alpha: 0.95),
+                      ),
                     ),
                   ],
                 ),
               ],
             ),
           ],
-        );
-      },
+        ),
+      ],
     );
   }
 
   String _ikiBasamak(int deger) => deger.toString().padLeft(2, '0');
 }
 
-class _KurListesi extends StatelessWidget {
+class _AnlikHavaDurumu {
+  const _AnlikHavaDurumu({required this.sicaklik, required this.havaKodu});
+
+  final double sicaklik;
+  final int havaKodu;
+
+  String get sicaklikEtiketi => '${sicaklik.round()} C';
+
+  String get aciklama => switch (havaKodu) {
+    0 => 'Acik',
+    1 => 'Az bulutlu',
+    2 => 'Parcali bulutlu',
+    3 => 'Bulutlu',
+    45 || 48 => 'Sisli',
+    51 || 53 || 55 || 56 || 57 => 'Cisenti',
+    61 || 63 || 65 || 66 || 67 => 'Yagmurlu',
+    71 || 73 || 75 || 77 => 'Karla karisik',
+    80 || 81 || 82 => 'Saganak yagmur',
+    85 || 86 => 'Kar yagisi',
+    95 || 96 || 99 => 'Firtinali',
+    _ => 'Bilinmiyor',
+  };
+
+  IconData get ikon => switch (havaKodu) {
+    0 => Icons.wb_sunny_rounded,
+    1 || 2 => Icons.wb_cloudy_rounded,
+    3 => Icons.cloud_rounded,
+    45 || 48 => Icons.foggy,
+    51 || 53 || 55 || 56 || 57 => Icons.grain_rounded,
+    61 || 63 || 65 || 66 || 67 || 80 || 81 || 82 => Icons.umbrella_rounded,
+    71 || 73 || 75 || 77 || 85 || 86 => Icons.ac_unit_rounded,
+    95 || 96 || 99 => Icons.thunderstorm_rounded,
+    _ => Icons.cloud_rounded,
+  };
+}
+
+abstract final class _HavaDurumuServisi {
+  static Future<_AnlikHavaDurumu?> getir({
+    required double enlem,
+    required double boylam,
+  }) async {
+    try {
+      final Uri uri =
+          Uri.https('api.open-meteo.com', '/v1/forecast', <String, String>{
+            'latitude': enlem.toStringAsFixed(4),
+            'longitude': boylam.toStringAsFixed(4),
+            'current': 'temperature_2m,weather_code',
+            'timezone': 'auto',
+          });
+      final http.Response yanit = await http
+          .get(uri)
+          .timeout(const Duration(seconds: 8));
+      if (yanit.statusCode != 200) {
+        return null;
+      }
+      final Map<String, dynamic> veri =
+          jsonDecode(yanit.body) as Map<String, dynamic>;
+      final Map<String, dynamic>? current =
+          veri['current'] as Map<String, dynamic>?;
+      final num? sicaklik = current?['temperature_2m'] as num?;
+      final int? havaKodu = _tamSayiCevir(current?['weather_code']);
+      if (sicaklik == null || havaKodu == null) {
+        return null;
+      }
+      return _AnlikHavaDurumu(
+        sicaklik: sicaklik.toDouble(),
+        havaKodu: havaKodu,
+      );
+    } catch (_) {
+      return null;
+    }
+  }
+
+  static int? _tamSayiCevir(Object? deger) {
+    if (deger is int) {
+      return deger;
+    }
+    if (deger is num) {
+      return deger.toInt();
+    }
+    return int.tryParse('$deger');
+  }
+}
+
+class _KurListesi extends StatefulWidget {
   const _KurListesi();
 
   @override
-  Widget build(BuildContext context) {
-    final RestoranTemaRenkleri tema = context.restoranTema;
-    final ThemeData temaVerisi = Theme.of(context);
-    const List<_KurSatiriVerisi> kurlar = [
-      _KurSatiriVerisi(
-        simge: '\$',
-        kod: 'USD',
-        deger: '34.2002',
-        fark: '+0.06',
-      ),
-      _KurSatiriVerisi(simge: '€', kod: 'EUR', deger: '37.5182', fark: '+0.12'),
-      _KurSatiriVerisi(simge: '£', kod: 'GBP', deger: '44.8793', fark: '+0.16'),
-    ];
+  State<_KurListesi> createState() => _KurListesiState();
+}
 
+class _KurListesiState extends State<_KurListesi> {
+  List<_KurSatiriVerisi> _kurlar = const <_KurSatiriVerisi>[
+    _KurSatiriVerisi(simge: '\$', kod: 'USD', deger: '34.2002'),
+    _KurSatiriVerisi(simge: 'EUR', kod: 'EUR', deger: '37.5182'),
+    _KurSatiriVerisi(simge: 'GBP', kod: 'GBP', deger: '44.8793'),
+  ];
+  Timer? _kurYenilemeZamanlayicisi;
+
+  @override
+  void initState() {
+    super.initState();
+    _kurlariYenile();
+    _kurYenilemeZamanlayicisi = Timer.periodic(
+      const Duration(minutes: 30),
+      (_) => _kurlariYenile(),
+    );
+  }
+
+  @override
+  void dispose() {
+    _kurYenilemeZamanlayicisi?.cancel();
+    super.dispose();
+  }
+
+  Future<void> _kurlariYenile() async {
+    final List<_KurSatiriVerisi>? guncelKurlar = await _KurServisi.getir();
+    if (!mounted || guncelKurlar == null) {
+      return;
+    }
+    setState(() {
+      _kurlar = guncelKurlar;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final ThemeData temaVerisi = Theme.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           'GUNCEL KURLAR',
           style: temaVerisi.textTheme.labelLarge?.copyWith(
-            color: tema.metinBirincilAcik.withValues(alpha: 0.86),
+            color: _metinAna.withValues(alpha: 0.86),
             letterSpacing: 1.0,
           ),
         ),
         const SizedBox(height: 10),
-        ...kurlar.map(
+        ..._kurlar.map(
           (kur) => Padding(
             padding: const EdgeInsets.only(bottom: 10),
             child: _KurSatiri(veri: kur),
@@ -428,27 +558,27 @@ class _KurSatiri extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final RestoranTemaRenkleri tema = context.restoranTema;
     final ThemeData temaVerisi = Theme.of(context);
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
-        color: tema.anaArkaPlan.withValues(alpha: 0.20),
+        color: _anaArkaPlanKoyu.withValues(alpha: 0.20),
         borderRadius: BorderRadius.circular(15),
-        border: Border.all(
-          color: tema.metinIkincilAcik.withValues(alpha: 0.14),
-        ),
+        border: Border.all(color: _metinIkincil.withValues(alpha: 0.14)),
       ),
       child: Row(
         children: [
           SizedBox(
-            width: 34,
-            child: Text(
-              veri.simge,
-              textAlign: TextAlign.center,
-              style: temaVerisi.textTheme.titleLarge?.copyWith(
-                color: tema.metinBirincilAcik,
-                fontWeight: FontWeight.w800,
+            width: 52,
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Text(
+                veri.simge,
+                textAlign: TextAlign.center,
+                style: temaVerisi.textTheme.titleLarge?.copyWith(
+                  color: _metinAna,
+                  fontWeight: FontWeight.w800,
+                ),
               ),
             ),
           ),
@@ -460,24 +590,17 @@ class _KurSatiri extends StatelessWidget {
                 Text(
                   veri.kod,
                   style: temaVerisi.textTheme.titleSmall?.copyWith(
-                    color: tema.metinBirincilAcik,
+                    color: _metinAna,
                     fontWeight: FontWeight.w700,
                   ),
                 ),
                 Text(
                   veri.deger,
                   style: temaVerisi.textTheme.bodyMedium?.copyWith(
-                    color: tema.metinIkincilAcik,
+                    color: _metinIkincil,
                   ),
                 ),
               ],
-            ),
-          ),
-          Text(
-            veri.fark,
-            style: temaVerisi.textTheme.titleSmall?.copyWith(
-              color: tema.metinBirincilAcik,
-              fontWeight: FontWeight.w700,
             ),
           ),
         ],
@@ -510,8 +633,6 @@ class _DurumSatiri extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final RestoranTemaRenkleri tema = context.restoranTema;
-    final Color yesil = Color.lerp(Colors.green, tema.metinBirincilAcik, 0.2)!;
     return Align(
       alignment: Alignment.centerRight,
       child: Wrap(
@@ -522,25 +643,26 @@ class _DurumSatiri extends StatelessWidget {
             ikon: Icons.storage_rounded,
             baslik: 'Server',
             alt: 'Online',
-            vurgu: yesil,
+            vurgu: _yesilDurum,
           ),
           _DurumRozeti(
             ikon: Icons.wifi_rounded,
             baslik: 'Internet',
             alt: 'Online',
-            vurgu: yesil,
+            vurgu: _yesilDurum,
           ),
           _DurumRozeti(
             ikon: Icons.location_city_rounded,
             baslik: UygulamaSabitleri.restoranAdi,
             alt: 'Sube',
-            vurgu: tema.metinIkincilAcik,
+            vurgu: _metinIkincil,
           ),
           _DurumRozeti(
             ikon: Icons.person_rounded,
             baslik: 'Yonetici',
             alt: 'aktif',
-            vurgu: tema.metinIkincilAcik,
+            vurgu: _metinIkincil,
+            onTap: () => Navigator.of(context).pushNamed(RotaYapisi.hesabim),
           ),
         ],
       ),
@@ -554,22 +676,24 @@ class _DurumRozeti extends StatelessWidget {
     required this.baslik,
     required this.alt,
     required this.vurgu,
+    this.onTap,
   });
 
   final IconData ikon;
   final String baslik;
   final String alt;
   final Color vurgu;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
-    final RestoranTemaRenkleri tema = context.restoranTema;
     final ThemeData temaVerisi = Theme.of(context);
-    return Container(
+    final Widget icerik = Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
       decoration: BoxDecoration(
-        color: tema.anaArkaPlan.withValues(alpha: 0.26),
+        color: _panelKoyu.withValues(alpha: 0.88),
         borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: _cizgi),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -582,19 +706,32 @@ class _DurumRozeti extends StatelessWidget {
               Text(
                 baslik,
                 style: temaVerisi.textTheme.labelLarge?.copyWith(
-                  color: tema.metinBirincilAcik,
+                  color: _metinAna,
                   fontWeight: FontWeight.w700,
                 ),
               ),
               Text(
                 alt,
                 style: temaVerisi.textTheme.labelSmall?.copyWith(
-                  color: tema.metinIkincilAcik.withValues(alpha: 0.92),
+                  color: _metinIkincil.withValues(alpha: 0.92),
                 ),
               ),
             ],
           ),
         ],
+      ),
+    );
+
+    if (onTap == null) {
+      return icerik;
+    }
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(12),
+        child: icerik,
       ),
     );
   }
@@ -619,14 +756,14 @@ class _MenuIzgarasi extends StatelessWidget {
         rota: RotaYapisi.personelGiris,
       ),
       _AnaMenuKartVerisi(
-        ikon: Icons.badge_outlined,
-        baslik: 'Cariler',
-        rota: RotaYapisi.hesabim,
+        ikon: Icons.point_of_sale_rounded,
+        baslik: 'Odeme Kasa',
+        rota: RotaYapisi.odemeKasa,
       ),
       _AnaMenuKartVerisi(
         ikon: Icons.bar_chart_rounded,
         baslik: 'Raporlar',
-        rota: RotaYapisi.personelGiris,
+        rota: RotaYapisi.raporlar,
       ),
       _AnaMenuKartVerisi(
         ikon: Icons.room_service_outlined,
@@ -635,21 +772,21 @@ class _MenuIzgarasi extends StatelessWidget {
         rozet: '7',
       ),
       _AnaMenuKartVerisi(
-        ikon: Icons.shopping_basket_outlined,
-        baslik: 'Hizli Satis',
-        rota: RotaYapisi.personelGiris,
-        rozet: '1',
+        ikon: Icons.event_seat_rounded,
+        baslik: 'Rezervasyon',
+        rota: RotaYapisi.rezervasyon,
+        rozet: '2',
       ),
       _AnaMenuKartVerisi(
         ikon: Icons.delivery_dining_rounded,
-        baslik: 'Paketler',
-        rota: RotaYapisi.personelGiris,
+        baslik: 'Online Siparis',
+        rota: RotaYapisi.onlineSiparisKanali,
         rozet: '0',
       ),
       _AnaMenuKartVerisi(
         ikon: Icons.soup_kitchen_outlined,
         baslik: 'Mutfak',
-        rota: RotaYapisi.personelGiris,
+        rota: RotaYapisi.mutfak,
         rozet: '0',
       ),
     ];
@@ -676,67 +813,86 @@ class _MenuKarti extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final RestoranTemaRenkleri tema = context.restoranTema;
     final ThemeData temaVerisi = Theme.of(context);
-    final Color ikonArkaPlan = Color.lerp(
-      temaVerisi.colorScheme.tertiary,
-      temaVerisi.colorScheme.primary,
-      0.40,
-    )!;
+    final Color ikonArkaPlan = Color.lerp(_anaPembe, _anaMor, 0.45)!;
 
     return Material(
-      color: Color.lerp(tema.anaArkaPlan, tema.anaArkaPlanIkincil, 0.28),
+      color: _panelKoyu.withValues(alpha: 0.88),
       borderRadius: BorderRadius.circular(24),
       child: InkWell(
         borderRadius: BorderRadius.circular(24),
         onTap: () => Navigator.of(context).pushNamed(veri.rota),
         child: Padding(
           padding: const EdgeInsets.all(16),
-          child: Stack(
-            alignment: Alignment.center,
-            children: [
-              if (veri.rozet != null)
-                Positioned(
-                  top: 0,
-                  right: 0,
-                  child: Text(
-                    veri.rozet!,
-                    style: temaVerisi.textTheme.titleSmall?.copyWith(
-                      color: tema.metinIkincilAcik,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                ),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                mainAxisAlignment: MainAxisAlignment.center,
+          child: LayoutBuilder(
+            builder: (BuildContext context, BoxConstraints constraints) {
+              final bool darKarti = constraints.maxHeight < 170;
+              final double ikonKutuBoyutu = darKarti ? 58 : 72;
+              final double ikonBoyutu = darKarti ? 30 : 38;
+              final double satirAraligi = darKarti ? 10 : 16;
+
+              return Stack(
+                alignment: Alignment.center,
                 children: [
-                  Container(
-                    width: 72,
-                    height: 72,
-                    alignment: Alignment.center,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(20),
-                      color: ikonArkaPlan.withValues(alpha: 0.22),
+                  if (veri.rozet != null)
+                    Positioned(
+                      top: 0,
+                      right: 0,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 3,
+                        ),
+                        decoration: BoxDecoration(
+                          color: _anaPembe,
+                          borderRadius: BorderRadius.circular(999),
+                        ),
+                        child: Text(
+                          veri.rozet!,
+                          style: temaVerisi.textTheme.labelLarge?.copyWith(
+                            color: _metinAna,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                      ),
                     ),
-                    child: Icon(
-                      veri.ikon,
-                      color: tema.metinBirincilAcik,
-                      size: 38,
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    veri.baslik,
-                    textAlign: TextAlign.center,
-                    style: temaVerisi.textTheme.titleLarge?.copyWith(
-                      color: tema.metinBirincilAcik,
-                      fontWeight: FontWeight.w700,
-                    ),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Container(
+                        width: ikonKutuBoyutu,
+                        height: ikonKutuBoyutu,
+                        alignment: Alignment.center,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(20),
+                          color: ikonArkaPlan.withValues(alpha: 0.30),
+                        ),
+                        child: Icon(
+                          veri.ikon,
+                          color: _metinAna,
+                          size: ikonBoyutu,
+                        ),
+                      ),
+                      SizedBox(height: satirAraligi),
+                      Flexible(
+                        child: Text(
+                          veri.baslik,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          textAlign: TextAlign.center,
+                          style: temaVerisi.textTheme.titleMedium?.copyWith(
+                            color: _metinAna,
+                            fontWeight: FontWeight.w700,
+                            height: 1.1,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ],
-              ),
-            ],
+              );
+            },
           ),
         ),
       ),
@@ -749,34 +905,18 @@ class _AltSatir extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final RestoranTemaRenkleri tema = context.restoranTema;
-    final ThemeData temaVerisi = Theme.of(context);
-    final Color ayarRenk = Color.lerp(
-      temaVerisi.colorScheme.secondary,
-      temaVerisi.colorScheme.tertiary,
-      0.5,
-    )!;
+    final Color ayarRenk = Color.lerp(_anaMor, _anaPembe, 0.4)!;
 
     return Row(
+      mainAxisAlignment: MainAxisAlignment.end,
       children: [
-        Expanded(
-          child: Text(
-            '${UygulamaSabitleri.tamMarkaAdi.toUpperCase()} CENTURY',
-            style: temaVerisi.textTheme.titleSmall?.copyWith(
-              color: tema.metinIkincilAcik.withValues(alpha: 0.76),
-              fontWeight: FontWeight.w700,
-              letterSpacing: 1.1,
-            ),
-          ),
-        ),
         FilledButton.icon(
-          onPressed: () =>
-              Navigator.of(context).pushNamed(RotaYapisi.personelGiris),
+          onPressed: () => Navigator.of(context).pushNamed(RotaYapisi.hesabim),
           icon: const Icon(Icons.settings_rounded),
-          label: const Text('Ayarlar'),
+          label: const Text('Hesabim'),
           style: FilledButton.styleFrom(
             backgroundColor: ayarRenk,
-            foregroundColor: tema.metinBirincilAcik,
+            foregroundColor: _metinAna,
             padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 13),
           ),
         ),
@@ -790,13 +930,77 @@ class _KurSatiriVerisi {
     required this.simge,
     required this.kod,
     required this.deger,
-    required this.fark,
   });
 
   final String simge;
   final String kod;
   final String deger;
-  final String fark;
+}
+
+abstract final class _KurServisi {
+  static Future<List<_KurSatiriVerisi>?> getir() async {
+    try {
+      final Uri uri = Uri.https('open.er-api.com', '/v6/latest/TRY');
+      final http.Response yanit = await http
+          .get(uri)
+          .timeout(const Duration(seconds: 8));
+      if (yanit.statusCode != 200) {
+        return null;
+      }
+
+      final Map<String, dynamic> veri =
+          jsonDecode(yanit.body) as Map<String, dynamic>;
+      final Map<String, dynamic>? rates =
+          veri['rates'] as Map<String, dynamic>?;
+      if (rates == null) {
+        return null;
+      }
+
+      final double? tryUsd = _yabanciBirimBasinaTry(rates['USD']);
+      final double? tryEur = _yabanciBirimBasinaTry(rates['EUR']);
+      final double? tryGbp = _yabanciBirimBasinaTry(rates['GBP']);
+      if (tryUsd == null || tryEur == null || tryGbp == null) {
+        return null;
+      }
+
+      return <_KurSatiriVerisi>[
+        _KurSatiriVerisi(
+          simge: '\$',
+          kod: 'USD',
+          deger: _dortBasamakYaz(tryUsd),
+        ),
+        _KurSatiriVerisi(
+          simge: 'EUR',
+          kod: 'EUR',
+          deger: _dortBasamakYaz(tryEur),
+        ),
+        _KurSatiriVerisi(
+          simge: 'GBP',
+          kod: 'GBP',
+          deger: _dortBasamakYaz(tryGbp),
+        ),
+      ];
+    } catch (_) {
+      return null;
+    }
+  }
+
+  static double? _yabanciBirimBasinaTry(Object? tryBasinaYabanciDegeri) {
+    final double? deger = _doubleCevir(tryBasinaYabanciDegeri);
+    if (deger == null || deger <= 0) {
+      return null;
+    }
+    return 1 / deger;
+  }
+
+  static double? _doubleCevir(Object? deger) {
+    if (deger is num) {
+      return deger.toDouble();
+    }
+    return double.tryParse('$deger');
+  }
+
+  static String _dortBasamakYaz(double deger) => deger.toStringAsFixed(4);
 }
 
 class _AnaMenuKartVerisi {

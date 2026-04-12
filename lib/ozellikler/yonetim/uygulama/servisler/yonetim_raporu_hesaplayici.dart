@@ -5,9 +5,11 @@ import 'package:restoran_app/ozellikler/yonetim/alan/varliklar/patron_raporu_oze
 import 'package:restoran_app/ozellikler/yonetim/alan/varliklar/saatlik_siparis_ozeti_varligi.dart';
 import 'package:restoran_app/ozellikler/yonetim/alan/varliklar/yonetim_paneli_ozeti_varligi.dart';
 
+/// Siparis verilerinden panel ozetleri, saatlik dagilim ve patron metriklerini hesaplar.
 class YonetimRaporuHesaplayici {
   const YonetimRaporuHesaplayici._();
 
+  /// Siparis listesinden yonetim paneli icin temel operasyon metriklerini uretir.
   static YonetimPaneliOzetiVarligi panelOzetiniHesapla(
     List<SiparisVarligi> siparisler,
   ) {
@@ -18,9 +20,19 @@ class YonetimRaporuHesaplayici {
     int gelAl = 0;
     int paketServis = 0;
     double toplamCiro = 0;
+    double toplamIndirim = 0;
+    int aydinlatmaOnayliSiparis = 0;
+    int ticariIletisimOnayliSiparis = 0;
 
     for (final SiparisVarligi siparis in siparisler) {
       toplamCiro += siparis.toplamTutar;
+      toplamIndirim += siparis.indirimTutari;
+      if (siparis.aydinlatmaOnayi) {
+        aydinlatmaOnayliSiparis++;
+      }
+      if (siparis.ticariIletisimOnayi) {
+        ticariIletisimOnayliSiparis++;
+      }
 
       switch (siparis.durum) {
         case SiparisDurumu.hazirlaniyor:
@@ -46,6 +58,9 @@ class YonetimRaporuHesaplayici {
     return YonetimPaneliOzetiVarligi(
       toplamSiparis: siparisler.length,
       toplamCiro: toplamCiro,
+      toplamIndirim: toplamIndirim,
+      aydinlatmaOnayliSiparis: aydinlatmaOnayliSiparis,
+      ticariIletisimOnayliSiparis: ticariIletisimOnayliSiparis,
       hazirlananSiparis: hazirlanan,
       hazirSiparis: hazir,
       yoldaSiparis: yolda,
@@ -55,6 +70,7 @@ class YonetimRaporuHesaplayici {
     );
   }
 
+  /// Siparisleri olusturma saatine gore gruplandirip saatlik adet dagilimi cikarir.
   static List<SaatlikSiparisOzetiVarligi> saatlikVeriUret(
     List<SiparisVarligi> siparisler,
   ) {
@@ -95,6 +111,7 @@ class YonetimRaporuHesaplayici {
     return sonuc;
   }
 
+  /// Panel verilerinden patron gorunumu icin ozet KPI metriklerini hesaplar.
   static PatronRaporuOzetiVarligi patronRaporunuHesapla({
     required List<SiparisVarligi> siparisler,
     required List<SaatlikSiparisOzetiVarligi> saatlikVeriler,

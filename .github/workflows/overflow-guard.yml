@@ -1,0 +1,34 @@
+name: Overflow Guard
+
+on:
+  push:
+  pull_request:
+
+concurrency:
+  group: overflow-guard-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  overflow-tests:
+    name: Overflow Safety Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Flutter Pub Get
+        run: flutter pub get
+
+      - name: Overflow Regression Suite
+        run: |
+          flutter test test/overflow_guvenligi_test.dart
+          flutter test test/sistem_alanlari_overflow_test.dart
+
